@@ -1,3 +1,4 @@
+DOI:10.5281/zenodo.17589818
 
 # The Mersenne-Collatz Correspondence: A Novel Connection Between Prime Numbers and Dynamical Systems
 
