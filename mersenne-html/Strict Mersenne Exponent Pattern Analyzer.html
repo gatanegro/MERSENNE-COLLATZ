@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strict Mersenne Exponent Pattern Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #1a1a2e;
+            color: #e6e6e6;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #162447;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #4cc9f0;
+            text-align: center;
+            margin-top: 0;
+            border-bottom: 2px solid #4cc9f0;
+            padding-bottom: 15px;
+        }
+        
+        h2, h3 {
+            color: #72efdd;
+        }
+        
+        .section {
+            background-color: #1f4068;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid #4cc9f0;
+        }
+        
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4cc9f0;
+            background-color: #0f3460;
+            color: #e6e6e6;
+            font-size: 16px;
+            resize: vertical;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button {
+            background-color: #4361ee;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        
+        button:hover {
+            background-color: #3a56d4;
+            transform: translateY(-2px);
+        }
+        
+        #analyzeBtn {
+            background-color: #4cc9f0;
+        }
+        
+        #analyzeBtn:hover {
+            background-color: #3ab4d9;
+        }
+        
+        #clearBtn {
+            background-color: #f72585;
+        }
+        
+        #clearBtn:hover {
+            background-color: #e11575;
+        }
+        
+        .filters {
+            background-color: rgba(114, 239, 221, 0.1);
+            border-left: 5px solid #72efdd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .filter-option input {
+            margin-right: 10px;
+        }
+        
+        .filter-option label {
+            display: flex;
+            align-items: center;
+        }
+        
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .result-box {
+            background-color: #0f3460;
+            border-radius: 8px;
+            padding: 15px;
+            border-top: 4px solid #4cc9f0;
+        }
+        
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #72efdd;
+            font-size: 1.1em;
+        }
+        
+        .result-list {
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #1a1a2e;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .result-item {
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid #4361ee;
+        }
+        
+        .result-item.strict-match {
+            border-left-color: #4ade80;
+            background-color: rgba(74, 222, 128, 0.15);
+        }
+        
+        .result-item.partial-match {
+            border-left-color: #fbbf24;
+            background-color: rgba(251, 191, 36, 0.1);
+        }
+        
+        .result-item.no-match {
+            border-left-color: #f87171;
+            background-color: rgba(248, 113, 113, 0.1);
+        }
+        
+        .number-details {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .number-value {
+            font-weight: bold;
+            flex: 1;
+            min-width: 120px;
+            font-family: monospace;
+        }
+        
+        .number-properties {
+            font-size: 0.85em;
+            color: #a5b4cb;
+            flex: 2;
+            min-width: 200px;
+        }
+        
+        .pattern-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .pattern-333 {
+            background-color: rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+        
+        .pattern-666 {
+            background-color: rgba(139, 92, 246, 0.3);
+            color: #c4b5fd;
+        }
+        
+        .summary {
+            background-color: #1f4068;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        
+        .summary-item {
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .summary-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4cc9f0;
+        }
+        
+        .summary-label {
+            font-size: 0.85em;
+            color: #a5b4cb;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #a5b4cb;
+            font-size: 0.9em;
+            border-top: 1px solid #1f4068;
+            padding-top: 15px;
+        }
+        
+        .exact-pattern {
+            font-family: monospace;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 2px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .number-details {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Strict Mersenne Exponent Pattern Analyzer</h1>
+        
+        <div class="section">
+            <h2>Analysis Filters</h2>
+            <div class="filters">
+                <div class="filter-option">
+                    <input type="checkbox" id="filterEnding" checked>
+                    <label for="filterEnding">
+                        <strong>Ending Digit:</strong> Must end with 1, 3, 7, or 9
+                    </label>
+                </div>
+                
+                <div class="filter-option">
+                    <input type="checkbox" id="filterDigitalRoot" checked>
+                    <label for="filterDigitalRoot">
+                        <strong>Digital Root:</strong> Must NOT be 3, 6, or 9
+                    </label>
+                </div>
+                
+                <div class="filter-option">
+                    <input type="checkbox" id="filterExactPattern" checked>
+                    <label for="filterExactPattern">
+                        <strong>Exact Pattern:</strong> Must match one of these exact decimal patterns when ÷3:
+                    </label>
+                </div>
+                
+                <div style="margin-left: 25px; margin-top: 5px;">
+                    <div><span class="exact-pattern">.666666664</span> (8 sixes then 4)</div>
+                    <div><span class="exact-pattern">.666666668</span> (8 sixes then 8)</div>
+                    <div><span class="exact-pattern">.333333332</span> (8 threes then 2)</div>
+                    <div><span class="exact-pattern">.333333337</span> (8 threes then 7)</div>
+                </div>
+                
+                <div class="filter-option">
+                    <input type="checkbox" id="filterStrictMode">
+                    <label for="filterStrictMode">
+                        <strong>Strict Mode:</strong> Must meet ALL selected criteria (default: any criteria)
+                    </label>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <textarea id="numberInput" placeholder="Enter numbers separated by commas or spaces (e.g., 136279841, 82589933, 77232917, ...)">136279841, 82589933, 77232917, 74207281, 57885161, 43112609, 42643801, 37156667, 32582657, 30402457, 25964951, 24036583, 20996011, 13466917, 6972593, 3021377, 2976221, 1398269, 1257787, 859433, 756839, 216091, 132049, 110503, 86243, 44497, 23209, 21701, 19937, 11213, 9941, 9689, 4423, 4253, 3217, 2281, 2203, 1279, 607, 521, 127, 107, 89, 61, 31, 19, 17, 13, 7, 5, 3, 2</textarea>
+                
+                <div class="button-group">
+                    <button id="analyzeBtn">Analyze Numbers</button>
+                    <button id="clearBtn">Clear Results</button>
+                    <button id="loadExampleBtn">Load Example Data</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultsSection" style="display: none;">
+            <div class="section">
+                <h2>Analysis Results</h2>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <div class="summary-value" id="totalNumbers">0</div>
+                        <div class="summary-label">Total Numbers</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="strictMatches">0</div>
+                        <div class="summary-label">Strict Matches</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="patternMatches">0</div>
+                        <div class="summary-label">Pattern Matches</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="filteredMatches">0</div>
+                        <div class="summary-label">Filtered Results</div>
+                    </div>
+                </div>
+                
+                <div class="results-container">
+                    <div class="result-box">
+                        <div class="result-title">Strict Mersenne Pattern Matches</div>
+                        <div class="result-list" id="strictMatchesList">
+                            <!-- Strict pattern matches will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <div class="result-title">All Pattern Matches (÷3 results)</div>
+                        <div class="result-list" id="patternMatchesList">
+                            <!-- Pattern matches will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <div class="result-title">Filtered Results (Your Criteria)</div>
+                        <div class="result-list" id="filteredResultsList">
+                            <!-- Filtered results will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <div class="result-title">Detailed Analysis</div>
+                        <div class="result-list" id="detailedAnalysisList">
+                            <!-- Detailed analysis will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Strict Mersenne Exponent Pattern Analyzer | Focuses on exact patterns from known Mersenne exponents</p>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const numberInput = document.getElementById('numberInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loadExampleBtn = document.getElementById('loadExampleBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        
+        // Filter elements
+        const filterEnding = document.getElementById('filterEnding');
+        const filterDigitalRoot = document.getElementById('filterDigitalRoot');
+        const filterExactPattern = document.getElementById('filterExactPattern');
+        const filterStrictMode = document.getElementById('filterStrictMode');
+        
+        // Results display elements
+        const totalNumbersEl = document.getElementById('totalNumbers');
+        const strictMatchesEl = document.getElementById('strictMatches');
+        const patternMatchesEl = document.getElementById('patternMatches');
+        const filteredMatchesEl = document.getElementById('filteredMatches');
+        
+        // Result list elements
+        const strictMatchesList = document.getElementById('strictMatchesList');
+        const patternMatchesList = document.getElementById('patternMatchesList');
+        const filteredResultsList = document.getElementById('filteredResultsList');
+        const detailedAnalysisList = document.getElementById('detailedAnalysisList');
+        
+        // Known Mersenne exponent patterns from your data
+        const KNOWN_MERSENNE_PATTERNS = [
+            '666666664',  // 136279841 ÷ 3
+            '666666668',  // 82589933 ÷ 3, 77232917 ÷ 3
+            '333333332',  // 74207281 ÷ 3
+            '333333337'   // New pattern you mentioned
+        ];
+        
+        // Function to calculate digital root
+        function calculateDigitalRoot(num) {
+            let n = Math.abs(num);
+            while (n >= 10) {
+                n = n.toString().split('').reduce((sum, digit) => sum + parseInt(digit), 0);
+            }
+            return n;
+        }
+        
+        // Function to check if a number ends with 1, 3, 7, or 9
+        function hasValidEnding(num) {
+            const lastDigit = num % 10;
+            return [1, 3, 7, 9].includes(lastDigit);
+        }
+        
+        // Function to check if digital root is NOT 3, 6, or 9
+        function hasValidDigitalRoot(num) {
+            const digitalRoot = calculateDigitalRoot(num);
+            return ![3, 6, 9].includes(digitalRoot);
+        }
+        
+        // Function to perform exact division and pattern detection
+        function checkExactPattern(num) {
+            const result = (num / 3).toFixed(12);
+            const decimalIndex = result.indexOf('.');
+            
+            if (decimalIndex === -1) {
+                return { isValid: false, pattern: '', exactDecimal: '' };
+            }
+            
+            const decimalPart = result.substring(decimalIndex + 1);
+            
+            // Check for known Mersenne patterns
+            for (const pattern of KNOWN_MERSENNE_PATTERNS) {
+                if (decimalPart.includes(pattern)) {
+                    const position = decimalPart.indexOf(pattern);
+                    return {
+                        isValid: true,
+                        pattern: pattern,
+                        position: position,
+                        exactDecimal: decimalPart,
+                        result: result,
+                        patternType: pattern.startsWith('666') ? '66666666x' : '33333333x'
+                    };
+                }
+            }
+            
+            // Check for similar patterns (8 identical digits followed by different digit)
+            if (decimalPart.length >= 9) {
+                for (let i = 0; i <= decimalPart.length - 9; i++) {
+                    const segment = decimalPart.substring(i, i + 9);
+                    const firstChar = segment[0];
+                    
+                    // Check if first 8 characters are the same
+                    const firstEightSame = segment.substring(0, 8).split('').every(c => c === firstChar);
+                    // Check if 9th character is different
+                    const ninthDifferent = segment[8] !== firstChar;
+                    
+                    if (firstEightSame && ninthDifferent) {
+                        return {
+                            isValid: true,
+                            pattern: segment,
+                            position: i,
+                            exactDecimal: decimalPart,
+                            result: result,
+                            patternType: segment.startsWith('666') ? '66666666x' : 
+                                      segment.startsWith('333') ? '33333333x' : 'other'
+                        };
+                    }
+                }
+            }
+            
+            return { isValid: false, pattern: '', exactDecimal: decimalPart };
+        }
+        
+        // Parse input numbers
+        function parseInputNumbers(input) {
+            return input.split(/[,\s]+/)
+                .map(item => item.trim())
+                .filter(item => item !== '')
+                .map(item => {
+                    const num = parseInt(item, 10);
+                    return isNaN(num) ? null : num;
+                })
+                .filter(item => item !== null);
+        }
+        
+        // Analyze numbers with current filter settings
+        function analyzeNumbers() {
+            const input = numberInput.value.trim();
+            if (!input) {
+                alert('Please enter some numbers to analyze.');
+                return;
+            }
+            
+            const numbers = parseInputNumbers(input);
+            if (numbers.length === 0) {
+                alert('No valid numbers found in the input.');
+                return;
+            }
+            
+            // Clear previous results
+            clearResults();
+            
+            // Show results section
+            resultsSection.style.display = 'block';
+            
+            // Update total count
+            totalNumbersEl.textContent = numbers.length;
+            
+            // Get current filter settings
+            const useEndingFilter = filterEnding.checked;
+            const useDigitalRootFilter = filterDigitalRoot.checked;
+            const usePatternFilter = filterExactPattern.checked;
+            const useStrictMode = filterStrictMode.checked;
+            
+            // Arrays to store results
+            const strictMersenneMatches = [];
+            const allPatternMatches = [];
+            const filteredResults = [];
+            
+            // Process each number
+            numbers.forEach(num => {
+                const endingValid = hasValidEnding(num);
+                const digitalRootValid = hasValidDigitalRoot(num);
+                const patternResult = checkExactPattern(num);
+                const digitalRoot = calculateDigitalRoot(num);
+                
+                // Check if it's a strict Mersenne pattern match
+                const isStrictMersennePattern = patternResult.isValid && 
+                    KNOWN_MERSENNE_PATTERNS.includes(patternResult.pattern);
+                
+                // Apply filters
+                let passesFilters = true;
+                let filterReasons = [];
+                
+                if (useStrictMode) {
+                    // ALL filters must pass
+                    if (useEndingFilter && !endingValid) {
+                        passesFilters = false;
+                        filterReasons.push('ending digit');
+                    }
+                    if (useDigitalRootFilter && !digitalRootValid) {
+                        passesFilters = false;
+                        filterReasons.push('digital root');
+                    }
+                    if (usePatternFilter && !patternResult.isValid) {
+                        passesFilters = false;
+                        filterReasons.push('pattern');
+                    }
+                } else {
+                    // ANY filter can pass
+                    passesFilters = false;
+                    if (useEndingFilter && endingValid) {
+                        passesFilters = true;
+                        filterReasons.push('ending digit');
+                    }
+                    if (useDigitalRootFilter && digitalRootValid) {
+                        passesFilters = true;
+                        filterReasons.push('digital root');
+                    }
+                    if (usePatternFilter && patternResult.isValid) {
+                        passesFilters = true;
+                        filterReasons.push('pattern');
+                    }
+                }
+                
+                // Store results
+                if (isStrictMersennePattern) {
+                    strictMersenneMatches.push({
+                        num,
+                        patternResult,
+                        endingValid,
+                        digitalRootValid
+                    });
+                }
+                
+                if (patternResult.isValid) {
+                    allPatternMatches.push({
+                        num,
+                        patternResult,
+                        endingValid,
+                        digitalRootValid
+                    });
+                }
+                
+                if (passesFilters) {
+                    filteredResults.push({
+                        num,
+                        patternResult,
+                        endingValid,
+                        digitalRootValid,
+                        digitalRoot,
+                        filterReasons
+                    });
+                }
+                
+                // Add to detailed analysis
+                addDetailedAnalysis(num, endingValid, digitalRootValid, patternResult, 
+                                   isStrictMersennePattern, passesFilters, filterReasons);
+            });
+            
+            // Update summary counts
+            strictMatchesEl.textContent = strictMersenneMatches.length;
+            patternMatchesEl.textContent = allPatternMatches.length;
+            filteredMatchesEl.textContent = filteredResults.length;
+            
+            // Display strict Mersenne matches
+            strictMersenneMatches.forEach(item => {
+                addToResultList(strictMatchesList, item, 'strict-match', true);
+            });
+            
+            // Display all pattern matches
+            allPatternMatches.forEach(item => {
+                const isStrict = KNOWN_MERSENNE_PATTERNS.includes(item.patternResult.pattern);
+                addToResultList(patternMatchesList, item, 
+                    isStrict ? 'strict-match' : 'partial-match', false);
+            });
+            
+            // Display filtered results
+            filteredResults.forEach(item => {
+                const isStrict = item.patternResult.isValid && 
+                    KNOWN_MERSENNE_PATTERNS.includes(item.patternResult.pattern);
+                addToResultList(filteredResultsList, item, 
+                    isStrict ? 'strict-match' : 'partial-match', true);
+            });
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Helper function to add items to result lists
+        function addToResultList(listElement, item, className, showFilters) {
+            const { num, patternResult, endingValid, digitalRootValid, digitalRoot, filterReasons } = item;
+            const listItem = document.createElement('div');
+            listItem.className = `result-item ${className}`;
+            
+            const content = document.createElement('div');
+            content.className = 'number-details';
+            
+            const value = document.createElement('div');
+            value.className = 'number-value';
+            value.textContent = num.toLocaleString();
+            
+            const properties = document.createElement('div');
+            properties.className = 'number-properties';
+            
+            const props = [];
+            
+            if (showFilters) {
+                props.push(`End:${num % 10}${endingValid ? '✓' : '✗'}`);
+                props.push(`DR:${digitalRoot || calculateDigitalRoot(num)}${digitalRootValid ? '✓' : '✗'}`);
+            }
+            
+            if (patternResult.isValid) {
+                const patternClass = patternResult.pattern.startsWith('666') ? 'pattern-666' : 'pattern-333';
+                props.push(`÷3: <span class="pattern-badge ${patternClass}">${patternResult.pattern}</span>`);
+            } else {
+                props.push('÷3: no pattern');
+            }
+            
+            if (filterReasons && filterReasons.length > 0) {
+                props.push(`Filters: ${filterReasons.join(', ')}`);
+            }
+            
+            properties.innerHTML = props.join(' | ');
+            
+            content.appendChild(value);
+            content.appendChild(properties);
+            listItem.appendChild(content);
+            listElement.appendChild(listItem);
+        }
+        
+        // Add to detailed analysis list
+        function addDetailedAnalysis(num, endingValid, digitalRootValid, patternResult, 
+                                    isStrictMersennePattern, passesFilters, filterReasons) {
+            const listItem = document.createElement('div');
+            
+            let className = 'no-match';
+            if (isStrictMersennePattern) {
+                className = 'strict-match';
+            } else if (patternResult.isValid) {
+                className = 'partial-match';
+            }
+            
+            listItem.className = `result-item ${className}`;
+            
+            const content = document.createElement('div');
+            content.className = 'number-details';
+            
+            const value = document.createElement('div');
+            value.className = 'number-value';
+            value.textContent = num.toLocaleString();
+            
+            const properties = document.createElement('div');
+            properties.className = 'number-properties';
+            
+            const props = [];
+            props.push(`End:${num % 10} (${endingValid ? '✓' : '✗'})`);
+            props.push(`DR:${calculateDigitalRoot(num)} (${digitalRootValid ? '✓' : '✗'})`);
+            
+            if (patternResult.isValid) {
+                const patternType = patternResult.pattern.startsWith('666') ? '666' : 
+                                  patternResult.pattern.startsWith('333') ? '333' : 'other';
+                props.push(`Pattern: ${patternResult.pattern} (${patternType})`);
+            } else {
+                props.push('Pattern: none');
+            }
+            
+            props.push(`Filters: ${passesFilters ? '✓' : '✗'} ${filterReasons ? '(' + filterReasons.join(', ') + ')' : ''}`);
+            props.push(`Strict: ${isStrictMersennePattern ? '✓' : '✗'}`);
+            
+            properties.textContent = props.join(' | ');
+            
+            content.appendChild(value);
+            content.appendChild(properties);
+            listItem.appendChild(content);
+            detailedAnalysisList.appendChild(listItem);
+        }
+        
+        // Clear results
+        function clearResults() {
+            strictMatchesList.innerHTML = '';
+            patternMatchesList.innerHTML = '';
+            filteredResultsList.innerHTML = '';
+            detailedAnalysisList.innerHTML = '';
+            resultsSection.style.display = 'none';
+        }
+        
+        // Load example data
+        function loadExampleData() {
+            numberInput.value = `136279841, 82589933, 77232917, 74207281, 57885161, 43112609, 42643801, 37156667, 32582657, 30402457, 25964951, 24036583, 20996011, 13466917, 6972593, 3021377, 2976221, 1398269, 1257787, 859433, 756839, 216091, 132049, 110503, 86243, 44497, 23209, 21701, 19937, 11213, 9941, 9689, 4423, 4253, 3217, 2281, 2203, 1279, 607, 521, 127, 107, 89, 61, 31, 19, 17, 13, 7, 5, 3, 2`;
+        }
+        
+        // Event listeners
+        analyzeBtn.addEventListener('click', analyzeNumbers);
+        
+        clearBtn.addEventListener('click', () => {
+            clearResults();
+            numberInput.value = '';
+        });
+        
+        loadExampleBtn.addEventListener('click', loadExampleData);
+        
+        // Initialize with example data and analyze
+        window.addEventListener('DOMContentLoaded', () => {
+            loadExampleData();
+            // Auto-analyze after a short delay
+            setTimeout(analyzeNumbers, 500);
+        });
+    </script>
+</body>
+</html>

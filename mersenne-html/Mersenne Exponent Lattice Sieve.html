@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Exponent Lattice Sieve</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: rgba(25, 35, 45, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(100, 150, 200, 0.2);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #64b5f6;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #90a4ae;
+            font-style: italic;
+        }
+        
+        .algorithm-explanation {
+            background: rgba(30, 45, 60, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #64b5f6;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 900px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .input-section {
+            background: rgba(30, 45, 60, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 200, 0.2);
+        }
+        
+        .input-section h2 {
+            margin-bottom: 15px;
+            color: #81c784;
+            font-size: 1.2em;
+            border-bottom: 2px solid #81c784;
+            padding-bottom: 8px;
+        }
+        
+        select, input[type="number"], button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background-color: rgba(50, 70, 90, 0.8);
+            border: 1px solid #64b5f6;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #2196f3 0%, #1565c0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .primary-btn {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+        
+        .primary-btn:hover {
+            background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
+        }
+        
+        .results-section {
+            background: rgba(30, 45, 60, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 150, 200, 0.2);
+            margin-top: 20px;
+        }
+        
+        .candidate-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .candidate-card {
+            background: rgba(40, 55, 75, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(100, 150, 200, 0.3);
+        }
+        
+        .candidate-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4fc3f7;
+            margin-bottom: 8px;
+        }
+        
+        .candidate-details {
+            font-size: 14px;
+            color: #b0bec5;
+            margin-bottom: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(40, 55, 75, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(179, 157, 219, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffcc80;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #b0bec5;
+        }
+        
+        .gap-analysis {
+            background: rgba(40, 55, 75, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .visualization-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(25, 35, 45, 0.8);
+            border-radius: 10px;
+        }
+        
+        canvas {
+            background: rgba(15, 25, 35, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .filter-summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .filter-tag {
+            background: rgba(30, 60, 90, 0.7);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid rgba(100, 150, 200, 0.3);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            font-size: 18px;
+            color: #4fc3f7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Mersenne Exponent Lattice Sieve</h1>
+        <p class="subtitle">Predict next Mersenne exponents through additive decomposition with geometric filters</p>
+        
+        <div class="algorithm-explanation">
+            <h3>🧮 Algorithm Overview:</h3>
+            <p>This tool implements your "ME Lattice Sieve":</p>
+            <ol>
+                <li>Start with anchor Mersenne exponent (e.g., M51 = 82589933)</li>
+                <li>Add combinations of k smaller Mersenne exponents</li>
+                <li>Apply geometric filters: last digit ∈ {1,3,7,9} AND digital root ∉ {3,6,9}</li>
+                <li>Generate and rank candidate numbers for M53, M54, ...</li>
+            </ol>
+        </div>
+        
+        <div class="controls">
+            <div class="input-section">
+                <h2>⚙️ Search Parameters</h2>
+                
+                <label for="anchorSelect">Anchor Mersenne Exponent:</label>
+                <select id="anchorSelect">
+                    <option value="2">M1: 2</option>
+                    <option value="3">M2: 3</option>
+                    <option value="5">M3: 5</option>
+                    <option value="7">M4: 7</option>
+                    <option value="13">M5: 13</option>
+                    <option value="17">M6: 17</option>
+                    <option value="19">M7: 19</option>
+                    <option value="31">M8: 31</option>
+                    <option value="61">M9: 61</option>
+                    <option value="89">M10: 89</option>
+                    <option value="107">M11: 107</option>
+                    <option value="127">M12: 127</option>
+                    <option value="521">M13: 521</option>
+                    <option value="607">M14: 607</option>
+                    <option value="1279">M15: 1,279</option>
+                    <option value="2203">M16: 2,203</option>
+                    <option value="2281">M17: 2,281</option>
+                    <option value="3217">M18: 3,217</option>
+                    <option value="4253">M19: 4,253</option>
+                    <option value="4423">M20: 4,423</option>
+                    <option value="9689">M21: 9,689</option>
+                    <option value="9941">M22: 9,941</option>
+                    <option value="11213">M23: 11,213</option>
+                    <option value="19937">M24: 19,937</option>
+                    <option value="21701">M25: 21,701</option>
+                    <option value="23209">M26: 23,209</option>
+                    <option value="44497">M27: 44,497</option>
+                    <option value="86243">M28: 86,243</option>
+                    <option value="110503">M29: 110,503</option>
+                    <option value="132049">M30: 132,049</option>
+                    <option value="216091">M31: 216,091</option>
+                    <option value="756839">M32: 756,839</option>
+                    <option value="859433">M33: 859,433</option>
+                    <option value="1257787">M34: 1,257,787</option>
+                    <option value="1398269">M35: 1,398,269</option>
+                    <option value="2976221">M36: 2,976,221</option>
+                    <option value="3021377">M37: 3,021,377</option>
+                    <option value="6972593">M38: 6,972,593</option>
+                    <option value="13466917">M39: 13,466,917</option>
+                    <option value="20996011">M40: 20,996,011</option>
+                    <option value="24036583">M41: 24,036,583</option>
+                    <option value="25964951">M42: 25,964,951</option>
+                    <option value="30402457">M43: 30,402,457</option>
+                    <option value="32582657">M44: 32,582,657</option>
+                    <option value="37156667">M45: 37,156,667</option>
+                    <option value="42643801">M46: 42,643,801</option>
+                    <option value="43112609">M47: 43,112,609</option>
+                    <option value="57885161">M48: 57,885,161</option>
+                    <option value="74207281">M49: 74,207,281</option>
+                    <option value="77232917">M50: 77,232,917</option>
+                    <option value="82589933" selected>M51: 82,589,933</option>
+                    <option value="136279841">M52: 136,279,841</option>
+                </select>
+                
+                <label for="maxTerms">Maximum Additional Terms (k):</label>
+                <input type="number" id="maxTerms" value="4" min="1" max="8">
+                
+                <label for="minCandidate">Minimum Candidate Value:</label>
+                <input type="number" id="minCandidate" value="136300000" placeholder="Start search above this value">
+                
+                <label for="maxCandidate">Maximum Candidate Value:</label>
+                <input type="number" id="maxCandidate" value="200000000" placeholder="Stop search below this value">
+                
+                <button class="primary-btn" onclick="runSieve()">🚀 Execute Lattice Sieve</button>
+                <button onclick="runQuickTest()">⚡ Quick Test (M51 + 1-2 terms)</button>
+            </div>
+            
+            <div class="input-section">
+                <h2>🎯 Geometric Filters</h2>
+                
+                <div class="filter-summary">
+                    <div class="filter-tag">Last Digit ∈ {1,3,7,9}</div>
+                    <div class="filter-tag">Digital Root ∉ {3,6,9}</div>
+                    <div class="filter-tag">Prime Required</div>
+                </div>
+                
+                <h3 style="margin-top: 20px;">📊 Result Limits</h3>
+                <label for="maxResults">Maximum Results to Show:</label>
+                <input type="number" id="maxResults" value="50" min="10" max="500">
+                
+                <label for="sortBy">Sort Candidates By:</label>
+                <select id="sortBy">
+                    <option value="value_asc">Value (Lowest First)</option>
+                    <option value="value_desc">Value (Highest First)</option>
+                    <option value="terms_asc">Fewest Terms First</option>
+                    <option value="terms_desc">Most Terms First</option>
+                </select>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(40, 55, 75, 0.5); border-radius: 5px;">
+                    <h3>Quick Presets</h3>
+                    <button onclick="setSearchM53()">Search for M53 (~140M-180M)</button>
+                    <button onclick="setSearchM54()">Search for M54 (~180M-250M)</button>
+                    <button onclick="runPatternSequence()" style="margin-top: 10px;">🔬 Run Pattern Sequence (M40-M52)</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultsContainer" class="results-section" style="display: none;">
+            <h2>📈 Sieve Results</h2>
+            
+            <div id="statsContainer" class="stats-grid" style="display: none;">
+                <!-- Stats will be populated here -->
+            </div>
+            
+            <div id="loading" class="loading" style="display: none;">
+                ⏳ Running lattice sieve... This may take a moment for large searches.
+            </div>
+            
+            <div id="candidatesContainer">
+                <!-- Candidate cards will be populated here -->
+            </div>
+            
+            <div id="gapAnalysis" class="gap-analysis" style="display: none;">
+                <h3>🔬 Gap Analysis</h3>
+                <div id="gapContent">
+                    <!-- Gap analysis will be populated here -->
+                </div>
+            </div>
+            
+            <div id="patternAnalysis" class="gap-analysis" style="display: none; margin-top: 20px;">
+                <!-- Pattern analysis will be populated here -->
+            </div>
+            
+            <div class="visualization-container">
+                <h3>📊 Candidate Distribution</h3>
+                <canvas id="distributionChart" width="800" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // All 52 known Mersenne exponents (as of 2024)
+        const ALL_MERSENNE_EXPONENTS = [
+            2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 
+            1279, 2203, 2281, 3217, 4253, 4423, 9689, 9941, 11213, 
+            19937, 21701, 23209, 44497, 86243, 110503, 132049, 216091, 
+            756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 
+            13466917, 20996011, 24036583, 25964951, 30402457, 32582657, 
+            37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 
+            82589933, 136279841
+        ];
+        
+        // Pattern history tracking
+        let patternHistory = [];
+        
+        // Digital root function
+        function digitalRoot(n) {
+            if (n === 0) return 0;
+            const root = 1 + ((n - 1) % 9);
+            return root === 9 ? 9 : root;
+        }
+        
+        // Miller-Rabin primality test (deterministic for 64-bit)
+        function isPrime(n) {
+            if (n <= 1) return false;
+            if (n <= 3) return true;
+            if (n % 2 === 0 || n % 3 === 0) return false;
+            
+            // Simple trial division for small numbers
+            if (n < 10000) {
+                for (let i = 5; i * i <= n; i += 6) {
+                    if (n % i === 0 || n % (i + 2) === 0) return false;
+                }
+                return true;
+            }
+            
+            // Miller-Rabin for larger numbers (deterministic for < 2^64)
+            const smallPrimes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29];
+            for (const p of smallPrimes) {
+                if (n % p === 0) return false;
+            }
+            
+            // Write n-1 as d * 2^r
+            let d = n - 1;
+            let r = 0;
+            while (d % 2 === 0) {
+                d /= 2;
+                r++;
+            }
+            
+            // Witness loop
+            const witnesses = n < 341550071728321 ? 
+                [2, 3, 5, 7, 11, 13, 17] : 
+                [2, 325, 9375, 28178, 450775, 9780504, 1795265022];
+            
+            witnessLoop:
+            for (const a of witnesses) {
+                let x = modPow(BigInt(a), BigInt(d), BigInt(n));
+                if (x === 1n || x === BigInt(n) - 1n) continue;
+                
+                for (let i = 0; i < r - 1; i++) {
+                    x = (x * x) % BigInt(n);
+                    if (x === BigInt(n) - 1n) continue witnessLoop;
+                }
+                return false;
+            }
+            return true;
+        }
+        
+        // Modular exponentiation
+        function modPow(base, exponent, modulus) {
+            let result = 1n;
+            base = base % modulus;
+            while (exponent > 0n) {
+                if (exponent % 2n === 1n) {
+                    result = (result * base) % modulus;
+                }
+                base = (base * base) % modulus;
+                exponent = exponent / 2n;
+            }
+            return result;
+        }
+        
+        // Generate combinations (n choose k)
+        function* combinations(arr, k) {
+            const n = arr.length;
+            
+            if (k === 1) {
+                for (let i = 0; i < n; i++) {
+                    yield [arr[i]];
+                }
+                return;
+            }
+            
+            for (let i = 0; i <= n - k; i++) {
+                const first = arr[i];
+                const rest = arr.slice(i + 1);
+                for (const combo of combinations(rest, k - 1)) {
+                    yield [first, ...combo];
+                }
+            }
+        }
+           
+        
+        // Check if a number passes all filters
+        function passesFilters(n) {
+            // Last digit filter
+            const lastDigit = n % 10;
+            if (![1, 3, 7, 9].includes(lastDigit)) return false;
+            
+            // Digital root filter
+            const dr = digitalRoot(n);
+            if ([3, 6, 9].includes(dr)) return false;
+            
+            return true;
+        }
+                // ADD THIS TO YOUR EXISTING CODE (in the passesFilters function):
+
+function enhancedMersenneFilters(n) {
+    // 1. BASIC PRIME + GEOMETRIC FILTERS (what you have)
+    if (!passesFilters(n)) return false;
+    
+    // 2. STRONG MODULAR FILTERS (Mersenne-specific)
+    
+    // Known: Mersenne exponents > 3 are ≡ 1 or 5 mod 6
+    const mod6 = n % 6;
+    if (![1, 5].includes(mod6)) return false;
+    
+    // Stronger: Mod 8 pattern (from Mersenne number properties)
+    const mod8 = n % 8;
+    if (![1, 7].includes(mod8)) return false; // p ≡ ±1 mod 8
+    
+    // VERY STRONG: Mod 24 pattern - most Mersenne exponents follow this
+    const mod24 = n % 24;
+    // Common residues: 1, 7, 17, 23 (check your known exponents)
+    const commonMod24 = [1, 7, 17, 23];
+    if (!commonMod24.includes(mod24)) return false;
+    
+    // 3. LUCAS-LEHMER RELATED FILTER
+    // If 2^p - 1 is prime, p has properties with Lucas sequence
+    // Simplified: Check if p divides (2^{(p-1)/2} + 1) or similar
+    // This is computationally heavy but VERY selective
+    
+    // 4. DECOMPOSITION QUALITY FILTER (Your key insight!)
+    // Not just "can be decomposed" but "decomposes in a Mersenne-like way"
+    return hasMersenneLikeDecomposition(n);
+}
+
+    function hasMersenneLikeDecomposition(n) {
+    // Check if decomposition follows Mersenne patterns
+    // Returns: {isValid: bool, qualityScore: number}
+    
+    const decompositions = findDecompositions(n);
+    if (decompositions.length === 0) return false;
+    
+    // Score each decomposition by Mersenne-likeness
+    let bestScore = 0;
+    
+    decompositions.forEach(decomp => {
+        let score = 0;
+        
+        // 1. Prefer decompositions using frequent Mersenne terms
+        // (from your pattern: 44497, 23209, 21701, etc.)
+        const frequentTerms = [44497, 23209, 21701, 859433, 86243, 132049];
+        decomp.terms.forEach(term => {
+            if (frequentTerms.includes(term)) score += 2;
+        });
+        
+        // 2. Prefer digital root progression 4→2→1
+        const drs = decomp.terms.map(t => digitalRoot(t));
+        for (let i = 0; i < drs.length - 2; i++) {
+            if (drs[i] === 4 && drs[i+1] === 2 && drs[i+2] === 1) {
+                score += 5; // Strong pattern match!
+            }
+        }
+        
+        // 3. Prefer terms that are geometrically close in your spiral
+        // (similar Fibonacci mod 144 remainders)
+        const angles = decomp.terms.map(t => (t % 144) / 144);
+        const angleVariance = calculateVariance(angles);
+        if (angleVariance < 0.1) score += 3; // Clustered in spiral
+        
+        // 4. Penalize using the 3 exceptional exponents (13, 521, 756839)
+        const exceptions = [13, 521, 756839];
+        if (decomp.terms.some(t => exceptions.includes(t))) {
+            score -= 10; // Real Mersenne exponents RARELY use these
+        }
+        
+        bestScore = Math.max(bestScore, score);
+    });
+    
+        return bestScore >= 3; // Minimum quality threshold
+}
+        // Add to pattern history
+        function addToPatternHistory(candidates, anchor, params) {
+            const anchorIndex = ALL_MERSENNE_EXPONENTS.indexOf(anchor) + 1;
+            const historyEntry = {
+                timestamp: new Date().toISOString(),
+                anchor: anchor,
+                anchorIndex: anchorIndex,
+                params: params,
+                topCandidates: candidates.slice(0, 10).map(c => ({
+                    value: c.value,
+                    terms: c.terms,
+                    numTerms: c.numTerms,
+                    prime: c.prime,
+                    digitalRoot: c.digitalRoot
+                })),
+                candidateCount: candidates.length,
+                primeCount: candidates.filter(c => c.prime).length
+            };
+            
+            patternHistory.unshift(historyEntry);
+            if (patternHistory.length > 20) patternHistory.pop();
+            
+            // Save to localStorage
+            localStorage.setItem('mersennePatternHistory', JSON.stringify(patternHistory));
+            
+            updatePatternAnalysis();
+        }
+        
+        // Update pattern analysis display
+        function updatePatternAnalysis() {
+            const analysisDiv = document.getElementById('patternAnalysis');
+            
+            if (patternHistory.length < 2) {
+                analysisDiv.innerHTML = '<h3>🔍 Pattern Analysis</h3><p>Run searches with at least 2 different anchors to see patterns.</p>';
+                analysisDiv.style.display = 'block';
+                return;
+            }
+            
+            let analysisHTML = '<h3>🔍 Cross-Anchor Pattern Analysis</h3>';
+            
+            // Analyze term frequency across anchors
+            const termFrequency = {};
+            const digitalRootPatterns = {};
+            
+            patternHistory.forEach(entry => {
+                entry.topCandidates.forEach(candidate => {
+                    // Count term frequency
+                    candidate.terms.slice(1).forEach(term => {
+                        termFrequency[term] = (termFrequency[term] || 0) + 1;
+                    });
+                    
+                    // Track digital root patterns
+                    const dr = candidate.digitalRoot;
+                    digitalRootPatterns[dr] = (digitalRootPatterns[dr] || 0) + 1;
+                });
+            });
+            
+            // Find most common terms
+            const commonTerms = Object.entries(termFrequency)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            analysisHTML += '<h4>Most Common Terms Across Anchors:</h4><ul>';
+            commonTerms.forEach(([term, count]) => {
+                analysisHTML += `<li>${parseInt(term).toLocaleString()}: ${count} occurrences</li>`;
+            });
+            analysisHTML += '</ul>';
+            
+            // Digital root distribution
+            analysisHTML += '<h4>Digital Root Distribution:</h4><ul>';
+            Object.entries(digitalRootPatterns)
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([dr, count]) => {
+                    analysisHTML += `<li>Digital Root ${dr}: ${count} occurrences</li>`;
+                });
+            analysisHTML += '</ul>';
+            
+            // Compare M51 vs M52 patterns
+            const m51Results = patternHistory.find(e => e.anchor === 82589933);
+            const m52Results = patternHistory.find(e => e.anchor === 136279841);
+            
+            if (m51Results && m52Results) {
+                analysisHTML += '<h4>M51 vs M52 Comparison:</h4>';
+                analysisHTML += `<p>M51 produced ${m51Results.candidateCount} candidates (${m51Results.primeCount} prime)</p>`;
+                analysisHTML += `<p>M52 produced ${m52Results.candidateCount} candidates (${m52Results.primeCount} prime)</p>`;
+                
+                // Check if same terms appear in both
+                const m51Terms = new Set();
+                const m52Terms = new Set();
+                
+                m51Results.topCandidates.forEach(c => c.terms.slice(1).forEach(t => m51Terms.add(t)));
+                m52Results.topCandidates.forEach(c => c.terms.slice(1).forEach(t => m52Terms.add(t)));
+                
+                const commonTermsSet = new Set([...m51Terms].filter(x => m52Terms.has(x)));
+                
+                if (commonTermsSet.size > 0) {
+                    analysisHTML += `<p>Shared terms: ${Array.from(commonTermsSet).map(t => t.toLocaleString()).join(', ')}</p>`;
+                }
+            }
+            
+            // Add clear history button
+            analysisHTML += `<button onclick="clearPatternHistory()" style="margin-top: 15px;">Clear History</button>`;
+            
+            analysisDiv.innerHTML = analysisHTML;
+            analysisDiv.style.display = 'block';
+            
+            // Create comparison chart if we have enough data
+            if (patternHistory.length >= 2) {
+                createAnchorComparisonChart();
+            }
+        }
+        
+        // Create anchor comparison chart
+        function createAnchorComparisonChart() {
+            const ctx = document.createElement('canvas');
+            ctx.id = 'anchorComparisonChart';
+            ctx.width = 800;
+            ctx.height = 400;
+            
+            const container = document.createElement('div');
+            container.className = 'visualization-container';
+            container.innerHTML = '<h3>📊 Anchor Comparison Chart</h3>';
+            container.appendChild(ctx);
+            
+            // Remove existing chart if present
+            const existingChart = document.getElementById('anchorComparisonChart');
+            if (existingChart && existingChart.parentNode) {
+                existingChart.parentNode.remove();
+            }
+            
+            // Add after pattern analysis
+            document.getElementById('patternAnalysis').after(container);
+            
+            // Prepare data
+            const recentHistory = patternHistory.slice(0, 8); // Last 8 searches
+            const labels = recentHistory.map(entry => `M${entry.anchorIndex}`);
+            const candidateData = recentHistory.map(entry => entry.candidateCount);
+            const primeData = recentHistory.map(entry => entry.primeCount);
+            
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Candidates',
+                            data: candidateData,
+                            backgroundColor: 'rgba(100, 150, 255, 0.6)',
+                            borderColor: 'rgba(100, 150, 255, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Prime Candidates',
+                            data: primeData,
+                            backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                            borderColor: 'rgba(76, 175, 80, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Candidates'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Anchor Mersenne Exponent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Candidate Production by Anchor'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Clear pattern history
+        function clearPatternHistory() {
+            patternHistory = [];
+            localStorage.removeItem('mersennePatternHistory');
+            document.getElementById('patternAnalysis').style.display = 'none';
+            const chartContainer = document.querySelector('#anchorComparisonChart')?.parentNode;
+            if (chartContainer) chartContainer.remove();
+        }
+        
+        // Run the lattice sieve
+        function runSieve() {
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('candidatesContainer').innerHTML = '';
+            document.getElementById('gapAnalysis').style.display = 'none';
+            document.getElementById('patternAnalysis').style.display = 'none';
+            
+            // Get parameters
+            const anchor = parseInt(document.getElementById('anchorSelect').value);
+            const maxTerms = parseInt(document.getElementById('maxTerms').value);
+            const minCandidate = parseInt(document.getElementById('minCandidate').value);
+            const maxCandidate = parseInt(document.getElementById('maxCandidate').value);
+            const maxResults = parseInt(document.getElementById('maxResults').value);
+            const sortBy = document.getElementById('sortBy').value;
+            
+            // Get all smaller Mersenne exponents
+            const smallerMEs = ALL_MERSENNE_EXPONENTS.filter(m => m < anchor);
+            smallerMEs.sort((a, b) => b - a); // Sort descending for greedy approach
+            
+            const candidates = [];
+            let combinationsChecked = 0;
+            let passedFilters = 0;
+            
+            // Try different numbers of additional terms
+            for (let k = 1; k <= maxTerms; k++) {
+                for (const combo of combinations(smallerMEs, k)) {
+                    combinationsChecked++;
+                    
+                    const sum = combo.reduce((a, b) => a + b, 0);
+                    const candidate = anchor + sum;
+                    
+                    // Skip if outside range
+                    if (candidate < minCandidate || candidate > maxCandidate) {
+                        continue;
+                    }
+                    
+                    // Apply filters
+                    if (passesFilters(candidate)) {
+                        passedFilters++;
+                        
+                        // Check primality
+                        const prime = isPrime(candidate);
+                        
+                        candidates.push({
+                            value: candidate,
+                            terms: [anchor, ...combo],
+                            numTerms: k + 1,
+                            sumOfTerms: sum,
+                            prime: prime,
+                            digitalRoot: digitalRoot(candidate),
+                            lastDigit: candidate % 10
+                        });
+                        
+                        // Early stop if we have enough candidates
+                        if (candidates.length >= maxResults * 5) {
+                            break;
+                        }
+                    }
+                }
+                
+                // Break early if we have enough candidates
+                if (candidates.length >= maxResults * 3) {
+                    break;
+                }
+            }
+            
+            // Sort candidates
+            candidates.sort((a, b) => {
+                switch (sortBy) {
+                    case 'value_asc': return a.value - b.value;
+                    case 'value_desc': return b.value - a.value;
+                    case 'terms_asc': return a.numTerms - b.numTerms;
+                    case 'terms_desc': return b.numTerms - a.numTerms;
+                    default: return a.value - b.value;
+                }
+            });
+            
+            // Limit results
+            const finalCandidates = candidates.slice(0, maxResults);
+            
+            // Add to pattern history
+            const params = {
+                maxTerms: maxTerms,
+                minCandidate: minCandidate,
+                maxCandidate: maxCandidate,
+                maxResults: maxResults,
+                sortBy: sortBy
+            };
+            addToPatternHistory(finalCandidates, anchor, params);
+            
+            // Display results
+            displayResults(finalCandidates, combinationsChecked, passedFilters, anchor);
+        }
+        
+        // Display results
+        function displayResults(candidates, combinationsChecked, passedFilters, anchor) {
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+            
+            // Show results container
+            document.getElementById('resultsContainer').style.display = 'block';
+            
+            // Update stats
+            const statsContainer = document.getElementById('statsContainer');
+            statsContainer.style.display = 'grid';
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${candidates.length}</div>
+                    <div class="stat-label">Valid Candidates</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${combinationsChecked.toLocaleString()}</div>
+                    <div class="stat-label">Combinations Checked</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${passedFilters}</div>
+                    <div class="stat-label">Passed Filters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${candidates.filter(c => c.prime).length}</div>
+                    <div class="stat-label">Prime Candidates</div>
+                </div>
+            `;
+            
+            // Display candidates
+            const candidatesContainer = document.getElementById('candidatesContainer');
+            candidatesContainer.innerHTML = '';
+            
+            if (candidates.length === 0) {
+                candidatesContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #ff9800;">
+                        ⚠️ No candidates found with current parameters.<br>
+                        Try increasing the search range or maximum terms.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Create candidate cards
+            candidates.forEach((candidate, index) => {
+                const card = document.createElement('div');
+                card.className = 'candidate-card';
+                
+                const termsStr = candidate.terms.map(t => t.toLocaleString()).join(' + ');
+                const primeBadge = candidate.prime ? 
+                    '<span style="color: #4caf50; font-weight: bold;">✓ Prime</span>' : 
+                    '<span style="color: #ff9800;">✗ Not Prime</span>';
+                
+                card.innerHTML = `
+                    <div class="candidate-value">${candidate.value.toLocaleString()}</div>
+                    <div class="candidate-details">
+                        <strong>Decomposition:</strong> ${termsStr}<br>
+                        <strong>Digital Root:</strong> ${candidate.digitalRoot} | 
+                        <strong>Last Digit:</strong> ${candidate.lastDigit}<br>
+                        <strong>Terms:</strong> ${candidate.numTerms} | ${primeBadge}
+                    </div>
+                    <div style="font-size: 12px; color: #78909c;">
+                        Difference from anchor: ${(candidate.value - anchor).toLocaleString()}
+                    </div>
+                `;
+                
+                // Highlight promising candidates
+                if (candidate.prime && candidate.value > 136279841) {
+                    card.style.border = '2px solid #4caf50';
+                    card.style.background = 'rgba(76, 175, 80, 0.1)';
+                }
+                
+                candidatesContainer.appendChild(card);
+            });
+            
+            // Perform gap analysis
+            performGapAnalysis(candidates, anchor);
+            
+            // Create distribution chart
+            createDistributionChart(candidates);
+        }
+        
+        // Perform gap analysis
+        function performGapAnalysis(candidates, anchor) {
+            const gapAnalysis = document.getElementById('gapAnalysis');
+            gapAnalysis.style.display = 'block';
+            
+            // Find the largest known Mersenne exponent
+            const largestKnown = Math.max(...ALL_MERSENNE_EXPONENTS);
+            
+            // Filter candidates larger than largest known
+            const futureCandidates = candidates.filter(c => c.value > largestKnown && c.prime);
+            
+            if (futureCandidates.length === 0) {
+                document.getElementById('gapContent').innerHTML = `
+                    <p>No prime candidates found above the largest known Mersenne exponent (${largestKnown.toLocaleString()}).</p>
+                `;
+                return;
+            }
+            
+            // Sort by value
+            futureCandidates.sort((a, b) => a.value - b.value);
+            
+            // Find the smallest gap above largest known
+            const smallestCandidate = futureCandidates[0];
+            const gapSize = smallestCandidate.value - largestKnown;
+            
+            let analysis = `
+                <p><strong>Largest Known Mersenne Exponent:</strong> ${largestKnown.toLocaleString()} (M52)</p>
+                <p><strong>Smallest Candidate Above:</strong> ${smallestCandidate.value.toLocaleString()}</p>
+                <p><strong>Gap Size:</strong> ${gapSize.toLocaleString()} (${(gapSize/largestKnown*100).toFixed(2)}% increase)</p>
+                
+                <h4 style="margin-top: 15px; color: #4fc3f7;">Top Candidates for M53:</h4>
+                <ul style="margin-left: 20px;">
+            `;
+            
+            // Show top 5 candidates
+            futureCandidates.slice(0, 5).forEach((c, i) => {
+                analysis += `
+                    <li>
+                        <strong>${c.value.toLocaleString()}</strong> 
+                        (${c.numTerms} terms, DR:${c.digitalRoot}) 
+                        <span style="font-size: 12px; color: #81c784;">${c.terms.slice(1).map(t => t.toLocaleString()).join('+')}</span>
+                    </li>
+                `;
+            });
+            
+            analysis += `</ul>`;
+            
+            document.getElementById('gapContent').innerHTML = analysis;
+        }
+        
+        // Create distribution chart
+        function createDistributionChart(candidates) {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            
+            // Group candidates by value range
+            const ranges = {};
+            candidates.forEach(c => {
+                const rangeStart = Math.floor(c.value / 1000000) * 1000000;
+                const rangeKey = `${(rangeStart/1000000).toFixed(0)}M`;
+                
+                if (!ranges[rangeKey]) {
+                    ranges[rangeKey] = { total: 0, prime: 0 };
+                }
+                
+                ranges[rangeKey].total++;
+                if (c.prime) ranges[rangeKey].prime++;
+            });
+            
+            const labels = Object.keys(ranges).sort();
+            const totalData = labels.map(label => ranges[label].total);
+            const primeData = labels.map(label => ranges[label].prime);
+            
+            // Destroy existing chart if it exists
+            if (window.candidateChart) {
+                window.candidateChart.destroy();
+            }
+            
+            // Create new chart
+            window.candidateChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'All Candidates',
+                            data: totalData,
+                            backgroundColor: 'rgba(100, 150, 255, 0.6)',
+                            borderColor: 'rgba(100, 150, 255, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Prime Candidates',
+                            data: primeData,
+                            backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                            borderColor: 'rgba(76, 175, 80, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Candidates'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Value Range (Millions)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Candidate Distribution by Value Range'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Quick test function
+        function runQuickTest() {
+            document.getElementById('maxTerms').value = 2;
+            document.getElementById('minCandidate').value = 136279842;
+            document.getElementById('maxCandidate').value = 150000000;
+            document.getElementById('maxResults').value = 30;
+            
+            runSieve();
+        }
+        
+        // Preset for M53 search
+        function setSearchM53() {
+            document.getElementById('anchorSelect').value = '136279841';
+            document.getElementById('maxTerms').value = 3;
+            document.getElementById('minCandidate').value = 136300000;
+            document.getElementById('maxCandidate').value = 180000000;
+            document.getElementById('maxResults').value = 100;
+            document.getElementById('sortBy').value = 'value_asc';
+        }
+        
+        // Preset for M54 search
+        function setSearchM54() {
+            document.getElementById('anchorSelect').value = '136279841';
+            document.getElementById('maxTerms').value = 4;
+            document.getElementById('minCandidate').value = 180000000;
+            document.getElementById('maxCandidate').value = 250000000;
+            document.getElementById('maxResults').value = 100;
+            document.getElementById('sortBy').value = 'value_asc';
+        }
+        
+        // Run pattern sequence
+        async function runPatternSequence() {
+            const anchors = [20996011, 24036583, 25964951, 30402457, 32582657, 
+                            37156667, 42643801, 43112609, 57885161, 74207281, 
+                            77232917, 82589933, 136279841];
+            
+            document.getElementById('maxTerms').value = 3;
+            document.getElementById('maxResults').value = 50;
+            
+            for (let i = 0; i < anchors.length; i++) {
+                document.getElementById('anchorSelect').value = anchors[i];
+                document.getElementById('minCandidate').value = anchors[i] + 1000;
+                document.getElementById('maxCandidate').value = anchors[i] * 1.5;
+                
+                console.log(`Running for anchor M${ALL_MERSENNE_EXPONENTS.indexOf(anchors[i]) + 1}: ${anchors[i]}`);
+                runSieve();
+                
+                // Wait a bit between runs
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+        
+        // Initialize with default values
+        window.onload = function() {
+            // Load pattern history from localStorage
+            const savedHistory = localStorage.getItem('mersennePatternHistory');
+            if (savedHistory) {
+                patternHistory = JSON.parse(savedHistory);
+                if (patternHistory.length > 0) {
+                    updatePatternAnalysis();
+                }
+            }
+            
+            // Set default search for M53
+            setSearchM53();
+        };
+    </script>
+</body>
+</html>

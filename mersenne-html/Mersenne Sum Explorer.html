@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mersenne Sum Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* === UNCHANGED STYLE (shortened for clarity) === */
+body { background:#0a192f; color:#64ffda; font-family:Courier New, monospace; padding:20px; }
+.container { max-width:1200px; margin:auto; background:#112240; padding:20px; border-radius:10px; border:2px solid #64ffda; }
+h1,h2,h3 { text-align:center; color:#64ffda; }
+.mersenne-btn { padding:6px 10px; margin:3px; cursor:pointer; }
+.filter-pass { color:#2ecc71; }
+.filter-fail { color:#e74c3c; }
+select { padding:6px; background:#112240; color:#64ffda; border:1px solid #64ffda; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>🧮 Mersenne Sum Explorer</h1>
+<p style="text-align:center;color:#8892b0">
+Add known Mersenne exponents · test additive + scaling hypotheses
+</p>
+
+<!-- SCALE SELECTOR -->
+<div style="text-align:center;margin:15px">
+<label>Scaling factor:</label>
+<select id="scaleFactor">
+<option value="1">×1 (sum)</option>
+<option value="2">×2</option>
+<option value="3">×3</option>
+<option value="4">×4</option>
+</select>
+</div>
+
+<!-- NAVIGATION -->
+<div id="mersenneNav" style="text-align:center"></div>
+
+<!-- CURRENT NUMBERS -->
+<div id="currentNumbers" style="margin-top:20px"></div>
+
+<div style="text-align:center;margin:15px">
+<button onclick="clearAll()">Clear</button>
+<button onclick="removeLast()">Remove Last</button>
+<button onclick="calculateSum()">Calculate</button>
+</div>
+
+<!-- RESULTS -->
+<h2>Result</h2>
+<div id="sumDisplay" style="font-size:2em;text-align:center">0</div>
+<div id="filterResults"></div>
+<div id="nearestResult"></div>
+
+</div>
+
+<script>
+/* ================= DATA ================= */
+
+const MERSENNES = [
+ {label:"M52",value:136279841},{label:"M51",value:82589933},{label:"M50",value:77232917},
+ {label:"M49",value:74207281},{label:"M48",value:57885161},{label:"M47",value:43112609},
+ {label:"M46",value:42643801},{label:"M45",value:37156667},{label:"M44",value:32582657},
+ {label:"M43",value:30402457},{label:"M42",value:25964951},{label:"M41",value:24036583},
+ {label:"M40",value:20996011},{label:"M39",value:13466917},{label:"M38",value:6972593},
+ {label:"M37",value:3021377},{label:"M36",value:2976221},{label:"M35",value:1398269},
+ {label:"M34",value:1257787},{label:"M33",value:859433},{label:"M32",value:756839},
+ {label:"M31",value:216091},{label:"M30",value:132049},{label:"M29",value:110503},
+ {label:"M28",value:86243},{label:"M27",value:44497},{label:"M26",value:23209},
+ {label:"M25",value:21701},{label:"M24",value:19937},{label:"M23",value:11213},
+ {label:"M22",value:9941},{label:"M21",value:9689},{label:"M20",value:4423},
+ {label:"M19",value:4253},{label:"M18",value:3217},{label:"M17",value:2281},
+ {label:"M16",value:2203},{label:"M15",value:1279},{label:"M14",value:607},
+ {label:"M13",value:521},{label:"M12",value:127},{label:"M11",value:107},
+ {label:"M10",value:89},{label:"M09",value:61},{label:"M08",value:31},
+ {label:"M07",value:19},{label:"M06",value:17},{label:"M05",value:13},
+ {label:"M04",value:7},{label:"M03",value:5},{label:"M02",value:3},
+ {label:"M01",value:2}
+];
+
+let currentNumbers = [];
+
+/* ================= INIT ================= */
+
+function init() {
+ const nav = document.getElementById("mersenneNav");
+ MERSENNES.forEach(m=>{
+  const b=document.createElement("button");
+  b.textContent=m.label;
+  b.className="mersenne-btn";
+  b.onclick=()=>{currentNumbers.push(m.value); update();};
+  nav.appendChild(b);
+ });
+}
+window.onload=init;
+
+/* ================= LOGIC ================= */
+
+function digitalRoot(n){
+ if(n===3) return 3;
+ return 1+((n-1)%9);
+}
+
+function passesFilters(n){
+ if(n===3) return true;
+ const last=n%10;
+ const root=digitalRoot(n);
+ return [1,3,7,9].includes(last) && ![3,6,9].includes(root);
+}
+
+function nearestMersenne(n){
+ let best=null,dist=Infinity;
+ MERSENNES.forEach(m=>{
+  const d=Math.abs(n-m.value);
+  if(d<dist){dist=d;best=m;}
+ });
+ return {best,dist};
+}
+
+function calculateSum(){
+ const scale=parseInt(document.getElementById("scaleFactor").value);
+ const base=currentNumbers.reduce((a,b)=>a+b,0);
+ const sum=scale*base;
+
+ document.getElementById("sumDisplay").innerText=sum.toLocaleString();
+
+ const ok=passesFilters(sum);
+ document.getElementById("filterResults").innerHTML=
+ ok
+ ? "<p class='filter-pass'>✓ Passes necessary prime sieves (2,3)</p>"
+ : "<p class='filter-fail'>✗ Fails necessary prime sieves</p>";
+
+ const near=nearestMersenne(sum);
+ document.getElementById("nearestResult").innerHTML=
+ `<p>Nearest known Mersenne: <b>${near.best.label}</b><br>
+ Distance: ${near.dist.toLocaleString()}</p>`;
+}
+
+function update(){
+ document.getElementById("currentNumbers").innerHTML=
+ currentNumbers.map(n=>n.toLocaleString()).join(" + ");
+ calculateSum();
+}
+
+function clearAll(){ currentNumbers=[]; update(); }
+function removeLast(){ currentNumbers.pop(); update(); }
+
+</script>
+</body>
+</html>
+

@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Exponent Coefficient Decomposition Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background-color: #0a192f;
+            color: #ccd6f6;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 2000px;
+            margin: 0 auto;
+            background-color: #112240;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            color: #64ffda;
+            text-align: center;
+            margin-top: 0;
+            border-bottom: 2px solid #64ffda;
+            padding-bottom: 15px;
+        }
+        
+        h2, h3 {
+            color: #8892b0;
+            margin-top: 0;
+        }
+        
+        .discovery-banner {
+            background-color: rgba(255, 107, 107, 0.2);
+            border-left: 5px solid #ff6b6b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #64ffda;
+            background-color: #0a192f;
+            color: #ccd6f6;
+            font-size: 14px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .coefficient-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .coefficient-box {
+            background-color: #0a192f;
+            border-radius: 8px;
+            padding: 15px;
+            border: 2px solid #233554;
+        }
+        
+        .coeff-header {
+            color: #ffd166;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .coeff-equation {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: rgba(17, 34, 64, 0.5);
+            border-radius: 4px;
+            border-left: 3px solid #4ecdc4;
+        }
+        
+        .coeff-index {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .coeff-components {
+            color: #64ffda;
+        }
+        
+        .coeff-coefficients {
+            color: #ffd166;
+        }
+        
+        .coeff-sum {
+            color: #4ecdc4;
+            float: right;
+            font-weight: bold;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button {
+            background-color: #233554;
+            color: #64ffda;
+            border: 1px solid #64ffda;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        
+        button:hover {
+            background-color: #64ffda;
+            color: #0a192f;
+            transform: translateY(-2px);
+        }
+        
+        .analysis-sections {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .analysis-box {
+            background-color: #0a192f;
+            border-radius: 8px;
+            padding: 15px;
+            border-top: 4px solid #64ffda;
+        }
+        
+        .analysis-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #64ffda;
+            font-size: 1.1em;
+        }
+        
+        .analysis-list {
+            max-height: 500px;
+            overflow-y: auto;
+            background-color: #112240;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .analysis-item {
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid #233554;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .coefficient-analysis {
+            background-color: rgba(255, 209, 102, 0.1);
+            border-left-color: #ffd166;
+        }
+        
+        .pattern-analysis {
+            background-color: rgba(100, 255, 218, 0.1);
+            border-left-color: #64ffda;
+        }
+        
+        .summary {
+            background-color: #112240;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .summary-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #64ffda;
+        }
+        
+        .summary-label {
+            font-size: 0.85em;
+            color: #8892b0;
+        }
+        
+        .matrix-visualization {
+            background-color: rgba(78, 205, 196, 0.1);
+            border-left: 5px solid #4ecdc4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        
+        .matrix-row {
+            display: flex;
+            gap: 5px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(78, 205, 196, 0.2);
+        }
+        
+        .matrix-cell {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            font-size: 0.8em;
+        }
+        
+        .matrix-cell.coeff {
+            background-color: rgba(255, 209, 102, 0.3);
+            color: #ffd166;
+            font-weight: bold;
+        }
+        
+        .matrix-cell.index {
+            background-color: rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            font-weight: bold;
+            width: 60px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #8892b0;
+            font-size: 0.9em;
+            border-top: 1px solid #112240;
+            padding-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .coefficient-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .analysis-sections {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mersenne Exponent Coefficient Decomposition Analyzer</h1>
+        
+        <div class="discovery-banner">
+            <h3> Coefficient Patterns in Mersenne Exponent Decompositions </h3>
+            <p> Mersenne exponents can be expressed as <strong>linear combinations with integer coefficients</strong> of other Mersenne exponents!</p>
+            <p>This is a <strong>linear algebra</strong> relationship between Mersenne exponents!</p>
+        </div>
+        
+        <div class="section">
+            <h2>Input Coefficient Decompositions</h2>
+            <div class="input-area">
+                <textarea id="coefficientInput" placeholder="Enter coefficient decompositions in format:
+52=51+47+38+37+2x31+30+23+3x17+2x13
+51=50+37+35+33+27+25+19+17+6x14+3x13
+... etc ...">82589933 + 43112609 + 6972593 + 3021377 + 2×216091 + 132049 + 11213 + 4423 + 2203 + 521 + 127 + 4×107 + 3×61 = 136279841
+52=51+47+38+37+2x31+30+23+20+16+13+12+4x11+3x09
+
+77232917 + 3021377 + 1398269 + 859433 + 44497 + 23209 + 9941 + 107 + 3×61 = 82589933
+51=50+37+35+33+27+26+22+11+3x09
+
+74207281 + 3021377 + 3217 + 607 + 107 + 3×89 + 61 = 77232917
+50=49+37+18+14+11+3x10+09
+
+57885161 + 13466917 + 2×1398269 + 44497 + 11213 + 2281 + 127 + 2×107 + 89 + 4×61 = 74207281
+49=48+39+2x35+27+23+17+12+2x11+10+4x09
+
+43112609 + 13466917 + 1257787 + 44497 + 2281 + 607 + 127 + 2×107 + 2×61 = 57885161
+48=47+39+34+27+17+14+12+2x11+2x09
+
+42643801 + 2×216091 + 23209 + 11213 + 1279 + 607 + 107 + 89 + 2×61 = 43112609
+47=46+2x31+26+23+15+14+11+10+2x09
+
+37156667 + 3021377 + 1398269 + 859433 + 132049 + 44497 + 23209 + 4423 + 2281 + 2×607 + 3×107 + 61 = 42643801
+46=45+37+35+33+30+27+26+20+17+2x14+3x11+09
+
+32582657 + 3021377 + 1398269 + 132049 + 19937 + 1279 + 521 + 4×107 + 89 + 61 = 37156667
+45=44+37+35+30+24+15+13+4x11+10+09
+
+30402457 + 1398269 + 756839 + 23209 + 2×607 + 127 + 2×107 + 3×89 + 61 = 32582657
+44=43+35+32+26+2x14+12+2x11+3x10+09
+
+25964951 + 3021377 + 1398269 + 11213 + 4423 + 1279 + 607 + 127 + 89 + 2×61 = 30402457
+43=42+37+35+23+20+15+14+12+10+2x09
+
+24036583 + 1398269 + 2×216091 + 86243 + 9941 + 2×607 + 127 + 2×107 + 2×89 = 25964951
+42=41+35+2x31+28+22+2x14+12+2x11+2x10
+
+20996011 + 3021377 + 11213 + 4423 + 2281 + 607 + 521 + 89 + 61 = 24036583
+41=40+37+23+20+17+14+13+10+09
+
+13466917 + 6972593 + 2×216091 + 110503 + 11213 + 1279 + 607 + 521 + 107 + 89 = 20996011
+40=39+38+2x31+29+23+15+14+13+11+10
+
+6972593 + 2×3021377 + 2×216091 + 11213 + 4423 + 3217 + 5×107 = 13466917
+39=38+2x37+2x31+23+20+18+5x11
+
+2×3021377 + 859433 + 44497 + 23209 + 1279 + 607 + 2×127 + 3×107 + 2×89 + 61 = 6972593
+38=37+33+27+26+15+14+2x12+3x11+2x10+09
+
+2976221 + 44497 + 127 + 3×107 + 89 + 2×61 = 3021377
+37=36+27+12+3x11+10+2x09
+
+2×1398269 + 132049 + 44497 + 2281 + 607 + 127 + 2×61 = 2976221
+36=2x35+30+27+17+14+12+2x09
+
+1257787 + 132049 + 4423 + 3217 + 521 + 89 + 3×61 = 1398269
+35=34+30+20+18+13+10+3x09
+
+859433 + 216091 + 132049 + 44497 + 4423 + 607 + 127 + 3×107 + 2×89 + 61 = 1257787
+34=33+31+30+27+20+14+12+3x11+2x10+09
+
+756839 + 86243 + 11213 + 4423 + 127 + 3×107 + 3×89 = 859433
+33=32+28+23+20+12+3x11+3x10
+
+3×216091 + 86243 + 19937 + 2203 + 3×61 = 756839
+32=3x31+28+24+16+3x09
+
+132049 + 44497 + 23209 + 11213 + 4423 + 4×107 + 89 + 3×61 = 216091
+31=30+27+26+23+20+4x11+10+3x09
+
+110503 + 19937 + 607 + 521 + 2×107 + 3×89 = 132049
+30=29+24+14+13+2x11+3x10
+
+86243 + 23209 + 127 + 5×107 + 3×89 + 2×61 = 110503
+29=28+26+23+12+5x11+3x10+2x09
+
+44497 + 23209 + 11213 + 4423 + 2281 + 3×127 + 2×89 + 61 = 86243
+28=27+26+23+20+17+3x12+2x10+09
+
+23209 + 19937 + 127 + 5×107 + 5×89 + 4×61 = 44497
+27=26+24+12+5x11+5x10+4x09
+
+21701 + 1279 + 107 + 2×61 = 23209
+26=25+15+11+2x09
+
+19937 + 2×607 + 4×107 + 2×61 = 21701
+25=24+2x14+4x11+2x09
+
+11213 + 4423 + 3217 + 127 + 5×107 + 2×89 + 4×61 = 19937
+24=23+20+18+12+5x11+2x10+4x09
+
+9941 + 521 + 127 + 5×107 + 89 = 11213
+23=22+13+12+5x11+10
+
+2×4423 + 607 + 3×127 + 107 = 9941
+22=2x20+14+3x12+11
+
+4423 + 4253 + 5×107 + 4×89 + 2×61 = 9689
+21=20+19+5x11+4x10+2x09
+
+3217 + 521 + 5×107 + 89 + 61 = 4423
+20=18+13+5x11+10+09
+
+2281 + 2×607 + 2×127 + 3×107 + 3×61 = 4253
+19=17+2x14+2x12+3x11+3x09
+
+2281 + 4×127 + 4×107 = 3217
+18=17+4x12+4x11
+
+1279 + 521 + 2×107 + 3×89 = 2281
+17=15+13+2x11+3x10
+
+1279 + 5×107 + 3×89 + 2×61 = 2203
+16=15+5x11+3x10+2x09
+
+607 + 4×107 + 4×61 = 1279
+15=14+4x11+4x09
+
+2×127 + 3×89 = 521
+13=2x12+3x10</textarea>
+                
+                <div class="button-group">
+                    <button id="analyzeBtn">Analyze Coefficient Patterns</button>
+                    <button id="clearBtn">Clear Results</button>
+                    <button id="loadExampleBtn">Load Example Data</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultsSection" style="display: none;">
+            <div class="section">
+                <h2>Coefficient Decomposition Analysis</h2>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <div class="summary-value" id="totalEquations">0</div>
+                        <div class="summary-label">Total Equations</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="uniqueComponents">0</div>
+                        <div class="summary-label">Unique Components</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="maxCoefficient">0</div>
+                        <div class="summary-label">Max Coefficient</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="coefficientSum">0</div>
+                        <div class="summary-label">Coefficient Sum</div>
+                    </div>
+                </div>
+                
+                <h3>Coefficient Decompositions</h3>
+                <div class="coefficient-grid" id="coefficientDisplay">
+                    <!-- Coefficient equations will be displayed here -->
+                </div>
+                
+                <h3>Detailed Analysis</h3>
+                <div class="analysis-sections">
+                    <div class="analysis-box">
+                        <div class="analysis-title">Coefficient Statistics</div>
+                        <div class="analysis-list" id="coefficientStatsList">
+                            <!-- Coefficient statistics will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-box">
+                        <div class="analysis-title">Component Frequency</div>
+                        <div class="analysis-list" id="componentFrequencyList">
+                            <!-- Component frequencies will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-box">
+                        <div class="analysis-title">Pattern Detection</div>
+                        <div class="analysis-list" id="patternDetectionList">
+                            <!-- Patterns will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-box">
+                        <div class="analysis-title">Linear Algebra Analysis</div>
+                        <div class="analysis-list" id="linearAlgebraList">
+                            <!-- Linear algebra analysis will appear here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="matrix-visualization">
+                    <h3>Coefficient Matrix Visualization</h3>
+                    <div id="matrixDisplay">
+                        <!-- Matrix will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Mersenne Exponent Linear Combination Analysis | Discovering linear relationships between Mersenne exponents</p>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const coefficientInput = document.getElementById('coefficientInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loadExampleBtn = document.getElementById('loadExampleBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        
+        // Results elements
+        const coefficientDisplay = document.getElementById('coefficientDisplay');
+        const coefficientStatsList = document.getElementById('coefficientStatsList');
+        const componentFrequencyList = document.getElementById('componentFrequencyList');
+        const patternDetectionList = document.getElementById('patternDetectionList');
+        const linearAlgebraList = document.getElementById('linearAlgebraList');
+        const matrixDisplay = document.getElementById('matrixDisplay');
+        
+        // Summary elements
+        const totalEquationsEl = document.getElementById('totalEquations');
+        const uniqueComponentsEl = document.getElementById('uniqueComponents');
+        const maxCoefficientEl = document.getElementById('maxCoefficient');
+        const coefficientSumEl = document.getElementById('coefficientSum');
+        
+        // Mersenne exponent indices (for reference)
+        const MERSENNE_INDICES = {
+            2: 1, 3: 2, 5: 3, 7: 4, 13: 5, 17: 6, 19: 7, 31: 8, 61: 9, 89: 10,
+            107: 11, 127: 12, 521: 13, 607: 14, 1279: 15, 2203: 16, 2281: 17,
+            3217: 18, 4253: 19, 4423: 20, 9689: 21, 9941: 22, 11213: 23,
+            19937: 24, 21701: 25, 23209: 26, 44497: 27, 86243: 28, 110503: 29,
+            132049: 30, 216091: 31, 756839: 32, 859433: 33, 1257787: 34,
+            1398269: 35, 2976221: 36, 3021377: 37, 6972593: 38, 13466917: 39,
+            20996011: 40, 24036583: 41, 25964951: 42, 30402457: 43,
+            32582657: 44, 37156667: 45, 42643801: 46, 43112609: 47,
+            57885161: 48, 74207281: 49, 77232917: 50, 82589933: 51,
+            136279841: 52
+        };
+        
+        // Parse coefficient data
+        function parseCoefficientData(input) {
+            const lines = input.split('\n').filter(line => line.trim() !== '');
+            const equations = [];
+            const allComponents = new Set();
+            const componentStats = {};
+            let maxCoefficient = 0;
+            let totalCoefficients = 0;
+            
+            // Process each line
+            for (let i = 0; i < lines.length; i += 2) {
+                if (i + 1 < lines.length) {
+                    const numberLine = lines[i];
+                    const indexLine = lines[i + 1];
+                    
+                    // Parse number equation
+                    const numberMatch = numberLine.match(/(.+?)\s*=\s*(\d+)/);
+                    if (numberMatch) {
+                        const [, leftSide, result] = numberMatch;
+                        const resultNum = parseInt(result, 10);
+                        
+                        // Parse components with coefficients
+                        const components = [];
+                        const componentTerms = leftSide.split('+').map(term => term.trim());
+                        
+                        componentTerms.forEach(term => {
+                            const coeffMatch = term.match(/(?:(\d+)\s*×\s*)?(\d+)/);
+                            if (coeffMatch) {
+                                const [, coeffStr, numStr] = coeffMatch;
+                                const coefficient = coeffStr ? parseInt(coeffStr, 10) : 1;
+                                const number = parseInt(numStr, 10);
+                                
+                                components.push({
+                                    number: number,
+                                    coefficient: coefficient,
+                                    index: MERSENNE_INDICES[number] || 0
+                                });
+                                
+                                allComponents.add(number);
+                                maxCoefficient = Math.max(maxCoefficient, coefficient);
+                                totalCoefficients += coefficient;
+                                
+                                // Update component stats
+                                if (!componentStats[number]) {
+                                    componentStats[number] = {
+                                        count: 0,
+                                        totalCoefficient: 0,
+                                        uses: []
+                                    };
+                                }
+                                componentStats[number].count++;
+                                componentStats[number].totalCoefficient += coefficient;
+                                componentStats[number].uses.push({
+                                    target: resultNum,
+                                    coefficient: coefficient
+                                });
+                            }
+                        });
+                        
+                        // Parse index equation
+                        const indexMatch = indexLine.match(/(\d+)=(.+)/);
+                        if (indexMatch) {
+                            const [, index, indexExpression] = indexMatch;
+                            
+                            equations.push({
+                                number: resultNum,
+                                index: parseInt(index, 10),
+                                components: components,
+                                indexExpression: indexExpression.trim(),
+                                totalCoefficient: components.reduce((sum, c) => sum + c.coefficient, 0)
+                            });
+                        }
+                    }
+                }
+            }
+            
+            return {
+                equations: equations.sort((a, b) => b.index - a.index),
+                allComponents: Array.from(allComponents).sort((a, b) => a - b),
+                componentStats: componentStats,
+                maxCoefficient: maxCoefficient,
+                totalCoefficients: totalCoefficients,
+                uniqueCount: allComponents.size
+            };
+        }
+        
+        // Analyze coefficient patterns
+        function analyzeCoefficientPatterns() {
+            const input = coefficientInput.value.trim();
+            if (!input) {
+                alert('Please enter coefficient decomposition data.');
+                return;
+            }
+            
+            // Clear previous results
+            clearResults();
+            
+            // Parse data
+            const data = parseCoefficientData(input);
+            const { equations, allComponents, componentStats, maxCoefficient, totalCoefficients, uniqueCount } = data;
+            
+            // Show results section
+            resultsSection.style.display = 'block';
+            
+            // Update summary counts
+            totalEquationsEl.textContent = equations.length;
+            uniqueComponentsEl.textContent = uniqueCount;
+            maxCoefficientEl.textContent = maxCoefficient;
+            coefficientSumEl.textContent = totalCoefficients;
+            
+            // Display coefficient equations
+            displayCoefficientEquations(equations);
+            
+            // Display coefficient statistics
+            displayCoefficientStats(equations, componentStats);
+            
+            // Display component frequency
+            displayComponentFrequency(componentStats);
+            
+            // Display pattern detection
+            displayPatternDetection(equations);
+            
+            // Display linear algebra analysis
+            displayLinearAlgebraAnalysis(equations, allComponents);
+            
+            // Display matrix visualization
+            displayMatrixVisualization(equations, allComponents);
+        }
+        
+        // Display coefficient equations
+        function displayCoefficientEquations(equations) {
+            coefficientDisplay.innerHTML = '';
+            
+            equations.forEach(eq => {
+                const box = document.createElement('div');
+                box.className = 'coefficient-box';
+                
+                const header = document.createElement('div');
+                header.className = 'coeff-header';
+                header.textContent = `#${eq.index}: ${eq.number.toLocaleString()}`;
+                box.appendChild(header);
+                
+                // Display equation with coefficients
+                const equationDiv = document.createElement('div');
+                equationDiv.className = 'coeff-equation';
+                
+                let equationText = '';
+                eq.components.forEach((comp, i) => {
+                    if (i > 0) equationText += ' + ';
+                    if (comp.coefficient > 1) {
+                        equationText += `${comp.coefficient}×${comp.number.toLocaleString()}`;
+                    } else {
+                        equationText += comp.number.toLocaleString();
+                    }
+                });
+                
+                equationText += ` = ${eq.number.toLocaleString()}`;
+                equationDiv.innerHTML = `
+                    <span class="coeff-index">#${eq.index}:</span> 
+                    <span class="coeff-components">${equationText}</span>
+                    <span class="coeff-sum">Coeff: ${eq.totalCoefficient}</span>
+                `;
+                box.appendChild(equationDiv);
+                
+                // Display index expression
+                const indexDiv = document.createElement('div');
+                indexDiv.className = 'coeff-equation';
+                indexDiv.style.backgroundColor = 'rgba(255, 107, 107, 0.1)';
+                indexDiv.innerHTML = `
+                    <span class="coeff-index">Index Eq:</span> 
+                    ${eq.indexExpression}
+                `;
+                box.appendChild(indexDiv);
+                
+                coefficientDisplay.appendChild(box);
+            });
+        }
+        
+        // Display coefficient statistics
+        function displayCoefficientStats(equations, componentStats) {
+            coefficientStatsList.innerHTML = '';
+            
+            // Calculate statistics
+            const totalComponents = equations.reduce((sum, eq) => sum + eq.components.length, 0);
+            const avgCoefficient = equations.reduce((sum, eq) => sum + eq.totalCoefficient, 0) / equations.length;
+            const avgComponents = totalComponents / equations.length;
+            
+            // Most complex equation
+            const mostComplex = equations.reduce((max, eq) => 
+                eq.components.length > max.components.length ? eq : max, equations[0]);
+            
+            // Highest coefficient equation
+            const highestCoeff = equations.reduce((max, eq) => 
+                eq.totalCoefficient > max.totalCoefficient ? eq : max, equations[0]);
+            
+            const stats = [
+                `Total equations: ${equations.length}`,
+                `Average components per equation: ${avgComponents.toFixed(2)}`,
+                `Average coefficient sum: ${avgCoefficient.toFixed(2)}`,
+                `Most complex: #${mostComplex.index} with ${mostComplex.components.length} components`,
+                `Highest coefficients: #${highestCoeff.index} with coefficient sum ${highestCoeff.totalCoefficient}`,
+                `Total coefficient sum: ${equations.reduce((sum, eq) => sum + eq.totalCoefficient, 0)}`
+            ];
+            
+            stats.forEach(stat => {
+                const item = document.createElement('div');
+                item.className = 'analysis-item coefficient-analysis';
+                item.textContent = stat;
+                coefficientStatsList.appendChild(item);
+            });
+        }
+        
+        // Display component frequency
+        function displayComponentFrequency(componentStats) {
+            componentFrequencyList.innerHTML = '';
+            
+            // Sort by total coefficient usage
+            const sortedComponents = Object.entries(componentStats)
+                .map(([num, stats]) => ({
+                    number: parseInt(num),
+                    index: MERSENNE_INDICES[parseInt(num)] || 0,
+                    ...stats
+                }))
+                .sort((a, b) => b.totalCoefficient - a.totalCoefficient);
+            
+            sortedComponents.slice(0, 15).forEach(comp => {
+                const item = document.createElement('div');
+                item.className = 'analysis-item';
+                
+                item.innerHTML = `
+                    <div><strong>#${comp.index}: ${comp.number.toLocaleString()}</strong></div>
+                    <div>Used in: ${comp.count} equations</div>
+                    <div>Total coefficient: ${comp.totalCoefficient}</div>
+                    <div>Avg coefficient: ${(comp.totalCoefficient / comp.count).toFixed(2)}</div>
+                `;
+                
+                componentFrequencyList.appendChild(item);
+            });
+        }
+        
+        // Display pattern detection
+        function displayPatternDetection(equations) {
+            patternDetectionList.innerHTML = '';
+            
+            // Find patterns in coefficients
+            const patterns = [];
+            
+            equations.forEach(eq => {
+                // Check if coefficients form arithmetic progression
+                const coeffs = eq.components.map(c => c.coefficient);
+                if (coeffs.length >= 3) {
+                    const diffs = [];
+                    for (let i = 1; i < coeffs.length; i++) {
+                        diffs.push(coeffs[i] - coeffs[i-1]);
+                    }
+                    
+                    const allSameDiff = diffs.every(d => d === diffs[0]);
+                    if (allSameDiff && Math.abs(diffs[0]) > 0) {
+                        patterns.push({
+                            type: 'arithmetic progression',
+                            equation: eq.index,
+                            difference: diffs[0],
+                            coefficients: coeffs
+                        });
+                    }
+                }
+                
+                // Check for geometric progression
+                if (coeffs.length >= 3) {
+                    const ratios = [];
+                    for (let i = 1; i < coeffs.length; i++) {
+                        if (coeffs[i-1] !== 0) {
+                            ratios.push(coeffs[i] / coeffs[i-1]);
+                        }
+                    }
+                    
+                    const allSameRatio = ratios.every(r => Math.abs(r - ratios[0]) < 0.001);
+                    if (allSameRatio && ratios.length > 0) {
+                        patterns.push({
+                            type: 'geometric progression',
+                            equation: eq.index,
+                            ratio: ratios[0].toFixed(2),
+                            coefficients: coeffs
+                        });
+                    }
+                }
+            });
+            
+            if (patterns.length === 0) {
+                const item = document.createElement('div');
+                item.className = 'analysis-item';
+                item.textContent = 'No arithmetic/geometric patterns found in coefficients';
+                patternDetectionList.appendChild(item);
+            } else {
+                patterns.slice(0, 10).forEach(pattern => {
+                    const item = document.createElement('div');
+                    item.className = 'analysis-item pattern-analysis';
+                    
+                    item.innerHTML = `
+                        <div><strong>#${pattern.equation}: ${pattern.type}</strong></div>
+                        <div>Coefficients: [${pattern.coefficients.join(', ')}]</div>
+                        <div>${pattern.type === 'arithmetic progression' ? 
+                            `Difference: ${pattern.difference}` : 
+                            `Ratio: ${pattern.ratio}`}</div>
+                    `;
+                    
+                    patternDetectionList.appendChild(item);
+                });
+            }
+        }
+        
+        // Display linear algebra analysis
+        function displayLinearAlgebraAnalysis(equations, allComponents) {
+            linearAlgebraList.innerHTML = '';
+            
+            // Create a simple linear system analysis
+            const analysis = [
+                'Linear System: A·x = b where:',
+                '- A is coefficient matrix',
+                '- x is vector of Mersenne exponents',
+                '- b is target Mersenne exponent',
+                '',
+                'Properties:',
+                `• ${equations.length} equations`,
+                `• ${allComponents.length} variables`,
+                '• Integer coefficients',
+                '• Sparse matrix (each equation uses few components)',
+                '• Upper triangular structure (only smaller exponents used)',
+                '',
+                'This suggests Mersenne exponents form a:',
+                '1. Complete sequence',
+                '2. Linear basis for representation',
+                '3. Recursive definition system'
+            ];
+            
+            analysis.forEach(line => {
+                const item = document.createElement('div');
+                item.className = 'analysis-item';
+                item.textContent = line;
+                linearAlgebraList.appendChild(item);
+            });
+        }
+        
+        // Display matrix visualization
+        function displayMatrixVisualization(equations, allComponents) {
+            matrixDisplay.innerHTML = '';
+            
+            // Create header row
+            const headerRow = document.createElement('div');
+            headerRow.className = 'matrix-row';
+            
+            // Add empty corner cell
+            const cornerCell = document.createElement('div');
+            cornerCell.className = 'matrix-cell index';
+            cornerCell.textContent = 'Eq\\Comp';
+            headerRow.appendChild(cornerCell);
+            
+            // Add component headers
+            allComponents.slice(0, 20).forEach(comp => {
+                const cell = document.createElement('div');
+                cell.className = 'matrix-cell index';
+                cell.textContent = `#${MERSENNE_INDICES[comp]}`;
+                cell.title = comp.toLocaleString();
+                headerRow.appendChild(cell);
+            });
+            
+            matrixDisplay.appendChild(headerRow);
+            
+            // Add equation rows
+            equations.slice(0, 15).forEach(eq => {
+                const row = document.createElement('div');
+                row.className = 'matrix-row';
+                
+                // Equation index cell
+                const indexCell = document.createElement('div');
+                indexCell.className = 'matrix-cell index';
+                indexCell.textContent = `#${eq.index}`;
+                row.appendChild(indexCell);
+                
+                // Coefficient cells
+                allComponents.slice(0, 20).forEach(comp => {
+                    const cell = document.createElement('div');
+                    cell.className = 'matrix-cell';
+                    
+                    // Find coefficient for this component
+                    const component = eq.components.find(c => c.number === comp);
+                    if (component) {
+                        cell.className = 'matrix-cell coeff';
+                        cell.textContent = component.coefficient;
+                        cell.title = `${component.coefficient}×${comp.toLocaleString()}`;
+                    }
+                    
+                    row.appendChild(cell);
+                });
+                
+                matrixDisplay.appendChild(row);
+            });
+            
+            // Add explanation
+            const explanation = document.createElement('div');
+            explanation.style.marginTop = '10px';
+            explanation.style.color = '#8892b0';
+            explanation.style.fontSize = '0.9em';
+            explanation.innerHTML = `
+                <strong>Matrix Interpretation:</strong> Shows coefficients for first 15 equations × 20 components.<br>
+                Each cell shows coefficient (blank = 0). This is a <strong>sparse upper triangular matrix</strong>.
+            `;
+            matrixDisplay.appendChild(explanation);
+        }
+        
+        // Clear results
+        function clearResults() {
+            coefficientDisplay.innerHTML = '';
+            coefficientStatsList.innerHTML = '';
+            componentFrequencyList.innerHTML = '';
+            patternDetectionList.innerHTML = '';
+            linearAlgebraList.innerHTML = '';
+            matrixDisplay.innerHTML = '';
+            resultsSection.style.display = 'none';
+        }
+        
+        // Load example data
+        function loadExampleData() {
+            coefficientInput.value = `82589933 + 43112609 + 6972593 + 3021377 + 2×216091 + 132049 + 11213 + 4423 + 2203 + 521 + 127 + 4×107 + 3×61 = 136279841
+52=51+47+38+37+2x31+30+23+20+16+13+12+4x11+3x09
+
+77232917 + 3021377 + 1398269 + 859433 + 44497 + 23209 + 9941 + 107 + 3×61 = 82589933
+51=50+37+35+33+27+26+22+11+3x09
+
+74207281 + 3021377 + 3217 + 607 + 107 + 3×89 + 61 = 77232917
+50=49+37+18+14+11+3x10+09
+
+57885161 + 13466917 + 2×1398269 + 44497 + 11213 + 2281 + 127 + 2×107 + 89 + 4×61 = 74207281
+49=48+39+2x35+27+23+17+12+2x11+10+4x09
+
+43112609 + 13466917 + 1257787 + 44497 + 2281 + 607 + 127 + 2×107 + 2×61 = 57885161
+48=47+39+34+27+17+14+12+2x11+2x09
+
+42643801 + 2×216091 + 23209 + 11213 + 1279 + 607 + 107 + 89 + 2×61 = 43112609
+47=46+2x31+26+23+15+14+11+10+2x09
+
+37156667 + 3021377 + 1398269 + 859433 + 132049 + 44497 + 23209 + 4423 + 2281 + 2×607 + 3×107 + 61 = 42643801
+46=45+37+35+33+30+27+26+20+17+2x14+3x11+09
+
+32582657 + 3021377 + 1398269 + 132049 + 19937 + 1279 + 521 + 4×107 + 89 + 61 = 37156667
+45=44+37+35+30+24+15+13+4x11+10+09
+
+30402457 + 1398269 + 756839 + 23209 + 2×607 + 127 + 2×107 + 3×89 + 61 = 32582657
+44=43+35+32+26+2x14+12+2x11+3x10+09
+
+25964951 + 3021377 + 1398269 + 11213 + 4423 + 1279 + 607 + 127 + 89 + 2×61 = 30402457
+43=42+37+35+23+20+15+14+12+10+2x09
+
+24036583 + 1398269 + 2×216091 + 86243 + 9941 + 2×607 + 127 + 2×107 + 2×89 = 25964951
+42=41+35+2x31+28+22+2x14+12+2x11+2x10
+
+20996011 + 3021377 + 11213 + 4423 + 2281 + 607 + 521 + 89 + 61 = 24036583
+41=40+37+23+20+17+14+13+10+09
+
+13466917 + 6972593 + 2×216091 + 110503 + 11213 + 1279 + 607 + 521 + 107 + 89 = 20996011
+40=39+38+2x31+29+23+15+14+13+11+10
+
+6972593 + 2×3021377 + 2×216091 + 11213 + 4423 + 3217 + 5×107 = 13466917
+39=38+2x37+2x31+23+20+18+5x11
+
+2×3021377 + 859433 + 44497 + 23209 + 1279 + 607 + 2×127 + 3×107 + 2×89 + 61 = 6972593
+38=37+33+27+26+15+14+2x12+3x11+2x10+09
+
+2976221 + 44497 + 127 + 3×107 + 89 + 2×61 = 3021377
+37=36+27+12+3x11+10+2x09
+
+2×1398269 + 132049 + 44497 + 2281 + 607 + 127 + 2×61 = 2976221
+36=2x35+30+27+17+14+12+2x09
+
+1257787 + 132049 + 4423 + 3217 + 521 + 89 + 3×61 = 1398269
+35=34+30+20+18+13+10+3x09
+
+859433 + 216091 + 132049 + 44497 + 4423 + 607 + 127 + 3×107 + 2×89 + 61 = 1257787
+34=33+31+30+27+20+14+12+3x11+2x10+09
+
+756839 + 86243 + 11213 + 4423 + 127 + 3×107 + 3×89 = 859433
+33=32+28+23+20+12+3x11+3x10
+
+3×216091 + 86243 + 19937 + 2203 + 3×61 = 756839
+32=3x31+28+24+16+3x09
+
+132049 + 44497 + 23209 + 11213 + 4423 + 4×107 + 89 + 3×61 = 216091
+31=30+27+26+23+20+4x11+10+3x09
+
+110503 + 19937 + 607 + 521 + 2×107 + 3×89 = 132049
+30=29+24+14+13+2x11+3x10
+
+86243 + 23209 + 127 + 5×107 + 3×89 + 2×61 = 110503
+29=28+26+23+12+5x11+3x10+2x09
+
+44497 + 23209 + 11213 + 4423 + 2281 + 3×127 + 2×89 + 61 = 86243
+28=27+26+23+20+17+3x12+2x10+09
+
+23209 + 19937 + 127 + 5×107 + 5×89 + 4×61 = 44497
+27=26+24+12+5x11+5x10+4x09
+
+21701 + 1279 + 107 + 2×61 = 23209
+26=25+15+11+2x09
+
+19937 + 2×607 + 4×107 + 2×61 = 21701
+25=24+2x14+4x11+2x09
+
+11213 + 4423 + 3217 + 127 + 5×107 + 2×89 + 4×61 = 19937
+24=23+20+18+12+5x11+2x10+4x09
+
+9941 + 521 + 127 + 5×107 + 89 = 11213
+23=22+13+12+5x11+10
+
+2×4423 + 607 + 3×127 + 107 = 9941
+22=2x20+14+3x12+11
+
+4423 + 4253 + 5×107 + 4×89 + 2×61 = 9689
+21=20+19+5x11+4x10+2x09
+
+3217 + 521 + 5×107 + 89 + 61 = 4423
+20=18+13+5x11+10+09
+
+2281 + 2×607 + 2×127 + 3×107 + 3×61 = 4253
+19=17+2x14+2x12+3x11+3x09
+
+2281 + 4×127 + 4×107 = 3217
+18=17+4x12+4x11
+
+1279 + 521 + 2×107 + 3×89 = 2281
+17=15+13+2x11+3x10
+
+1279 + 5×107 + 3×89 + 2×61 = 2203
+16=15+5x11+3x10+2x09
+
+607 + 4×107 + 4×61 = 1279
+15=14+4x11+4x09
+
+2×127 + 3×89 = 521
+13=2x12+3x10`;
+        }
+        
+        // Event listeners
+        analyzeBtn.addEventListener('click', analyzeCoefficientPatterns);
+        clearBtn.addEventListener('click', clearResults);
+        loadExampleBtn.addEventListener('click', loadExampleData);
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadExampleData();
+            setTimeout(analyzeCoefficientPatterns, 500);
+        });
+    </script>
+</body>
+</html>

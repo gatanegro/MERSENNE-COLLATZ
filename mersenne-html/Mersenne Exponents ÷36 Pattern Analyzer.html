@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Exponents ÷36 Pattern Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        h1 {
+            color: #60a5fa;
+            text-align: center;
+            margin-top: 0;
+            border-bottom: 2px solid #60a5fa;
+            padding-bottom: 15px;
+        }
+        
+        h2, h3 {
+            color: #7dd3fc;
+            margin-top: 0;
+        }
+        
+        .section {
+            background-color: #334155;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 5px solid #60a5fa;
+        }
+        
+        .pattern-insights {
+            background-color: rgba(124, 58, 237, 0.15);
+            border-left: 5px solid #7c3aed;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .insight-box {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+        }
+        
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #60a5fa;
+            background-color: #1e293b;
+            color: #e2e8f0;
+            font-size: 16px;
+            resize: vertical;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        
+        button:hover {
+            background-color: #4338ca;
+            transform: translateY(-2px);
+        }
+        
+        #analyzeBtn {
+            background-color: #7c3aed;
+        }
+        
+        #analyzeBtn:hover {
+            background-color: #6d28d9;
+        }
+        
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .result-box {
+            background-color: #1e293b;
+            border-radius: 8px;
+            padding: 15px;
+            border-top: 4px solid #60a5fa;
+        }
+        
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #7dd3fc;
+            font-size: 1.1em;
+        }
+        
+        .result-list {
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: #0f172a;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        
+        .result-item {
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid #4f46e5;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .pattern-match {
+            background-color: rgba(74, 222, 128, 0.15);
+            border-left-color: #4ade80;
+        }
+        
+        .repeating-pattern {
+            background-color: rgba(249, 115, 22, 0.15);
+            border-left-color: #f97316;
+        }
+        
+        .decimal-analysis {
+            font-size: 0.9em;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+        
+        .summary {
+            background-color: #334155;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .summary-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #60a5fa;
+        }
+        
+        .summary-label {
+            font-size: 0.85em;
+            color: #94a3b8;
+        }
+        
+        .pattern-breakdown {
+            background-color: rgba(6, 182, 212, 0.1);
+            border-left: 5px solid #06b6d4;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .pattern-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #334155;
+        }
+        
+        .pattern-count {
+            color: #f97316;
+            font-weight: bold;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #94a3b8;
+            font-size: 0.9em;
+            border-top: 1px solid #334155;
+            padding-top: 15px;
+        }
+        
+        .decimal-highlight {
+            color: #4ade80;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .insight-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mersenne Exponents ÷36 Pattern Analyzer</h1>
+        
+        <div class="pattern-insights">
+            <h3>Key Insights from ÷36 Patterns:</h3>
+            <div class="insight-grid">
+                <div class="insight-box">
+                    <strong>Recurring Decimals:</strong> Most results end with repeating patterns
+                </div>
+                <div class="insight-box">
+                    <strong>Common Endings:</strong> .138888889, .805555556, .361111111, .027777778
+                </div>
+                <div class="insight-box">
+                    <strong>Fraction Patterns:</strong> These correspond to fractions with denominator 36
+                </div>
+                <div class="insight-box">
+                    <strong>Mathematical Basis:</strong> 1/36 = 0.027777..., patterns are multiples of this
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Input Mersenne Exponents</h2>
+            <div class="input-area">
+                <textarea id="numberInput" placeholder="Enter Mersenne exponents separated by commas or spaces...">136279841, 82589933, 77232917, 74207281, 57885161, 43112609, 42643801, 37156667, 32582657, 30402457, 25964951, 24036583, 20996011, 13466917, 6972593, 3021377, 2976221, 1398269, 1257787, 859433, 756839, 216091, 132049, 110503, 86243, 44497, 23209, 21701, 19937, 11213, 9941, 9689, 4423, 4253, 3217, 2281, 2203, 1279, 607, 521, 127, 107, 89, 61, 31, 19, 17, 13, 7, 5, 3, 2</textarea>
+                
+                <div class="button-group">
+                    <button id="analyzeBtn">Analyze ÷36 Patterns</button>
+                    <button id="clearBtn">Clear Results</button>
+                    <button id="loadExampleBtn">Load Example Data</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resultsSection" style="display: none;">
+            <div class="section">
+                <h2>Pattern Analysis Results</h2>
+                
+                <div class="summary">
+                    <div class="summary-item">
+                        <div class="summary-value" id="totalNumbers">0</div>
+                        <div class="summary-label">Total Exponents</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="patternMatches">0</div>
+                        <div class="summary-label">Pattern Matches</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="repeatingPatterns">0</div>
+                        <div class="summary-label">Repeating Patterns</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value" id="exactFractions">0</div>
+                        <div class="summary-label">Exact Fractions</div>
+                    </div>
+                </div>
+                
+                <div class="pattern-breakdown">
+                    <h3>Common Decimal Patterns Found:</h3>
+                    <div id="patternFrequency">
+                        <!-- Pattern frequencies will appear here -->
+                    </div>
+                </div>
+                
+                <div class="results-container">
+                    <div class="result-box">
+                        <div class="result-title">Repeating Decimal Patterns</div>
+                        <div class="result-list" id="repeatingPatternsList">
+                            <!-- Repeating patterns will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <div class="result-title">Fraction Analysis</div>
+                        <div class="result-list" id="fractionAnalysisList">
+                            <!-- Fraction analysis will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <div class="result-title">Complete ÷36 Results</div>
+                        <div class="result-list" id="fullResultsList">
+                            <!-- Full results will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <div class="result-title">Pattern Groups</div>
+                        <div class="result-list" id="patternGroupsList">
+                            <!-- Pattern groups will appear here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Mersenne Exponents ÷36 Pattern Analysis | Looking for patterns when dividing by 36</p>
+        </div>
+    </div>
+
+    <script>
+        // DOM elements
+        const numberInput = document.getElementById('numberInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const loadExampleBtn = document.getElementById('loadExampleBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        
+        // Results elements
+        const patternFrequency = document.getElementById('patternFrequency');
+        const repeatingPatternsList = document.getElementById('repeatingPatternsList');
+        const fractionAnalysisList = document.getElementById('fractionAnalysisList');
+        const fullResultsList = document.getElementById('fullResultsList');
+        const patternGroupsList = document.getElementById('patternGroupsList');
+        
+        // Summary elements
+        const totalNumbersEl = document.getElementById('totalNumbers');
+        const patternMatchesEl = document.getElementById('patternMatches');
+        const repeatingPatternsEl = document.getElementById('repeatingPatterns');
+        const exactFractionsEl = document.getElementById('exactFractions');
+        
+        // Common patterns from your data
+        const COMMON_PATTERNS = {
+            '138888889': {name: '5/36 pattern', fraction: '5/36', count: 0},
+            '805555556': {name: '29/36 pattern', fraction: '29/36', count: 0},
+            '361111111': {name: '13/36 pattern', fraction: '13/36', count: 0},
+            '027777778': {name: '1/36 pattern', fraction: '1/36', count: 0},
+            '472222222': {name: '17/36 pattern', fraction: '17/36', count: 0},
+            '638888889': {name: '23/36 pattern', fraction: '23/36', count: 0},
+            '194444444': {name: '7/36 pattern', fraction: '7/36', count: 0},
+            '861111111': {name: '31/36 pattern', fraction: '31/36', count: 0},
+            '694444444': {name: '25/36 pattern', fraction: '25/36', count: 0},
+            '527777778': {name: '19/36 pattern', fraction: '19/36', count: 0},
+            '972222222': {name: '35/36 pattern', fraction: '35/36', count: 0},
+            '055555556': {name: '2/36 pattern', fraction: '1/18', count: 0}
+        };
+        
+        // Parse input numbers
+        function parseInputNumbers(input) {
+            return input.split(/[,\s]+/)
+                .map(item => item.trim())
+                .filter(item => item !== '')
+                .map(item => parseInt(item, 10))
+                .filter(num => !isNaN(num));
+        }
+        
+        // Extract decimal part and analyze pattern
+        function analyzeDecimalPattern(result) {
+            const resultStr = result.toFixed(9);
+            const decimalIndex = resultStr.indexOf('.');
+            
+            if (decimalIndex === -1) {
+                return {pattern: 'no decimal', fraction: 'whole number'};
+            }
+            
+            const decimalPart = resultStr.substring(decimalIndex + 1);
+            
+            // Check for common patterns (last 9 digits)
+            const lastNine = decimalPart.length >= 9 ? decimalPart.substring(decimalPart.length - 9) : decimalPart;
+            
+            // Find matching pattern
+            let matchedPattern = null;
+            for (const [pattern, info] of Object.entries(COMMON_PATTERNS)) {
+                if (lastNine.includes(pattern) || pattern.includes(lastNine)) {
+                    matchedPattern = pattern;
+                    COMMON_PATTERNS[pattern].count++;
+                    break;
+                }
+            }
+            
+            // If no exact match, look for repeating patterns
+            if (!matchedPattern && decimalPart.length >= 4) {
+                // Check for repeating last digits
+                for (let len = 2; len <= 4; len++) {
+                    if (decimalPart.length >= len * 2) {
+                        const lastDigits = decimalPart.substring(decimalPart.length - len);
+                        const prevDigits = decimalPart.substring(decimalPart.length - len * 2, decimalPart.length - len);
+                        if (lastDigits === prevDigits) {
+                            matchedPattern = `repeating ${lastDigits}`;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Calculate fraction (remainder/36)
+            const remainder = Math.round((result - Math.floor(result)) * 36);
+            
+            return {
+                decimal: decimalPart,
+                pattern: matchedPattern,
+                fraction: remainder > 0 ? `${remainder}/36` : '0',
+                remainder: remainder,
+                isExactFraction: remainder === Math.floor(remainder)
+            };
+        }
+        
+        // Find fraction in simplest form
+        function simplifyFraction(numerator, denominator) {
+            const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+            const divisor = gcd(numerator, denominator);
+            return {
+                numerator: numerator / divisor,
+                denominator: denominator / divisor,
+                simplified: `${numerator/divisor}/${denominator/divisor}`
+            };
+        }
+        
+        // Analyze numbers
+        function analyzeNumbers() {
+            const input = numberInput.value.trim();
+            if (!input) {
+                alert('Please enter some numbers to analyze.');
+                return;
+            }
+            
+            const numbers = parseInputNumbers(input);
+            if (numbers.length === 0) {
+                alert('No valid numbers found in the input.');
+                return;
+            }
+            
+            // Clear previous results and reset counts
+            clearResults();
+            Object.keys(COMMON_PATTERNS).forEach(pattern => {
+                COMMON_PATTERNS[pattern].count = 0;
+            });
+            
+            // Show results section
+            resultsSection.style.display = 'block';
+            
+            // Update total count
+            totalNumbersEl.textContent = numbers.length;
+            
+            // Statistics
+            let patternMatches = 0;
+            let repeatingPatternCount = 0;
+            let exactFractionCount = 0;
+            
+            const patternGroups = {};
+            const resultsByPattern = {};
+            
+            // Process each number
+            numbers.forEach(num => {
+                const result = num / 36;
+                const integerPart = Math.floor(result);
+                const decimalAnalysis = analyzeDecimalPattern(result);
+                
+                // Update statistics
+                if (decimalAnalysis.pattern && decimalAnalysis.pattern !== 'no decimal') {
+                    patternMatches++;
+                    
+                    if (decimalAnalysis.pattern.startsWith('repeating')) {
+                        repeatingPatternCount++;
+                    }
+                }
+                
+                if (decimalAnalysis.isExactFraction) {
+                    exactFractionCount++;
+                }
+                
+                // Group by pattern
+                const patternKey = decimalAnalysis.pattern || 'no pattern';
+                if (!resultsByPattern[patternKey]) {
+                    resultsByPattern[patternKey] = [];
+                }
+                resultsByPattern[patternKey].push({num, result, analysis: decimalAnalysis});
+                
+                // Group by remainder fraction
+                const fractionKey = decimalAnalysis.fraction;
+                if (!patternGroups[fractionKey]) {
+                    patternGroups[fractionKey] = [];
+                }
+                patternGroups[fractionKey].push(num);
+                
+                // Add to result lists
+                addRepeatingPattern(num, result, decimalAnalysis);
+                addFractionAnalysis(num, decimalAnalysis);
+                addFullResult(num, result, decimalAnalysis);
+            });
+            
+            // Update summary counts
+            patternMatchesEl.textContent = patternMatches;
+            repeatingPatternsEl.textContent = repeatingPatternCount;
+            exactFractionsEl.textContent = exactFractionCount;
+            
+            // Display pattern frequency
+            displayPatternFrequency();
+            
+            // Display pattern groups
+            displayPatternGroups(patternGroups);
+        }
+        
+        // Display pattern frequency
+        function displayPatternFrequency() {
+            patternFrequency.innerHTML = '';
+            
+            // Sort patterns by frequency
+            const sortedPatterns = Object.entries(COMMON_PATTERNS)
+                .filter(([_, info]) => info.count > 0)
+                .sort((a, b) => b[1].count - a[1].count);
+            
+            if (sortedPatterns.length === 0) {
+                patternFrequency.innerHTML = '<div>No common patterns found</div>';
+                return;
+            }
+            
+            sortedPatterns.forEach(([pattern, info]) => {
+                const patternDiv = document.createElement('div');
+                patternDiv.className = 'pattern-item';
+                
+                patternDiv.innerHTML = `
+                    <div>
+                        <strong>${info.name}</strong><br>
+                        <small>${info.fraction} = 0.${pattern}</small>
+                    </div>
+                    <div class="pattern-count">${info.count}</div>
+                `;
+                
+                patternFrequency.appendChild(patternDiv);
+            });
+        }
+        
+        // Display pattern groups
+        function displayPatternGroups(patternGroups) {
+            patternGroupsList.innerHTML = '';
+            
+            // Sort by group size
+            const sortedGroups = Object.entries(patternGroups)
+                .sort((a, b) => b[1].length - a[1].length);
+            
+            sortedGroups.forEach(([fraction, numbers]) => {
+                const groupItem = document.createElement('div');
+                groupItem.className = 'result-item';
+                
+                const simplified = simplifyFraction(parseInt(fraction.split('/')[0]) || 0, 36);
+                
+                groupItem.innerHTML = `
+                    <div><strong>Fraction: ${fraction}</strong></div>
+                    <div>Simplified: ${simplified.numerator > 0 ? simplified.simplified : '0'}</div>
+                    <div>Count: ${numbers.length} exponents</div>
+                    <div class="decimal-analysis">
+                        ${numbers.slice(0, 3).map(n => n.toLocaleString()).join(', ')}
+                        ${numbers.length > 3 ? `... (+${numbers.length - 3} more)` : ''}
+                    </div>
+                `;
+                
+                patternGroupsList.appendChild(groupItem);
+            });
+        }
+        
+        // Add repeating pattern analysis
+        function addRepeatingPattern(num, result, analysis) {
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            
+            if (analysis.pattern) {
+                item.classList.add('repeating-pattern');
+                
+                const resultStr = result.toFixed(9);
+                const decimalIndex = resultStr.indexOf('.');
+                const decimalPart = decimalIndex !== -1 ? resultStr.substring(decimalIndex + 1) : '';
+                
+                // Highlight the pattern in the decimal
+                let displayResult = resultStr;
+                if (analysis.pattern !== 'no decimal' && !analysis.pattern.startsWith('repeating')) {
+                    const patternIndex = decimalPart.lastIndexOf(analysis.pattern);
+                    if (patternIndex !== -1) {
+                        const beforePattern = resultStr.substring(0, decimalIndex + 1 + patternIndex);
+                        const pattern = decimalPart.substring(patternIndex, patternIndex + analysis.pattern.length);
+                        const afterPattern = resultStr.substring(decimalIndex + 1 + patternIndex + analysis.pattern.length);
+                        displayResult = `${beforePattern}<span class="decimal-highlight">${pattern}</span>${afterPattern}`;
+                    }
+                }
+                
+                item.innerHTML = `
+                    <div>${num} ÷ 36 = ${displayResult}</div>
+                    <div class="decimal-analysis">
+                        Pattern: ${analysis.pattern}<br>
+                        Fraction: ${analysis.fraction}
+                    </div>
+                `;
+            } else {
+                item.innerHTML = `
+                    <div>${num} ÷ 36 = ${result.toFixed(9)}</div>
+                    <div class="decimal-analysis">No specific pattern detected</div>
+                `;
+            }
+            
+            repeatingPatternsList.appendChild(item);
+        }
+        
+        // Add fraction analysis
+        function addFractionAnalysis(num, analysis) {
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            
+            if (analysis.remainder > 0) {
+                const simplified = simplifyFraction(analysis.remainder, 36);
+                
+                item.innerHTML = `
+                    <div><strong>${num}</strong> ÷ 36</div>
+                    <div>Remainder: ${analysis.remainder}/36</div>
+                    <div>Simplified: ${simplified.simplified}</div>
+                    <div>Decimal: 0.${analysis.decimal.substring(0, 12)}...</div>
+                `;
+            } else {
+                item.innerHTML = `
+                    <div><strong>${num}</strong> ÷ 36</div>
+                    <div>Exactly divisible by 36</div>
+                    <div>Remainder: 0</div>
+                `;
+            }
+            
+            fractionAnalysisList.appendChild(item);
+        }
+        
+        // Add full result
+        function addFullResult(num, result, analysis) {
+            const item = document.createElement('div');
+            item.className = 'result-item';
+            
+            if (analysis.pattern && analysis.pattern !== 'no decimal') {
+                item.classList.add('pattern-match');
+            }
+            
+            const resultStr = result.toFixed(9);
+            const integerPart = Math.floor(result);
+            const decimalValue = result - integerPart;
+            
+            item.innerHTML = `
+                <div>${num} ÷ 36 = ${resultStr}</div>
+                <div class="decimal-analysis">
+                    Integer: ${integerPart}<br>
+                    Decimal: ${decimalValue.toFixed(9)}<br>
+                    ${analysis.pattern ? `Pattern: ${analysis.pattern}` : ''}
+                </div>
+            `;
+            
+            fullResultsList.appendChild(item);
+        }
+        
+        // Clear results
+        function clearResults() {
+            patternFrequency.innerHTML = '';
+            repeatingPatternsList.innerHTML = '';
+            fractionAnalysisList.innerHTML = '';
+            fullResultsList.innerHTML = '';
+            patternGroupsList.innerHTML = '';
+            resultsSection.style.display = 'none';
+        }
+        
+        // Load example data
+        function loadExampleData() {
+            numberInput.value = `136279841, 82589933, 77232917, 74207281, 57885161, 43112609, 42643801, 37156667, 32582657, 30402457, 25964951, 24036583, 20996011, 13466917, 6972593, 3021377, 2976221, 1398269, 1257787, 859433, 756839, 216091, 132049, 110503, 86243, 44497, 23209, 21701, 19937, 11213, 9941, 9689, 4423, 4253, 3217, 2281, 2203, 1279, 607, 521, 127, 107, 89, 61, 31, 19, 17, 13, 7, 5, 3, 2`;
+        }
+        
+        // Event listeners
+        analyzeBtn.addEventListener('click', analyzeNumbers);
+        clearBtn.addEventListener('click', clearResults);
+        loadExampleBtn.addEventListener('click', loadExampleData);
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadExampleData();
+            setTimeout(analyzeNumbers, 500);
+        });
+    </script>
+</body>
+</html>

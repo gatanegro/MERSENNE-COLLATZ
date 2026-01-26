@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Exponent Decomposition Algorithm with Fibonacci NUmbers</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a237e 0%, #311b92 100%);
+            color: #e3f2fd;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: rgba(26, 35, 126, 0.85);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 5px;
+            color: #c5cae9;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #9fa8da;
+            font-style: italic;
+        }
+        
+        .algorithm-explanation {
+            background: rgba(49, 27, 146, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #7e57c2;
+        }
+        
+        .algorithm-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .step {
+            background: rgba(81, 45, 168, 0.5);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(179, 157, 219, 0.3);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .input-section {
+            background: rgba(49, 27, 146, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .input-section h2 {
+            margin-bottom: 15px;
+            color: #c5cae9;
+            font-size: 1.2em;
+            border-bottom: 2px solid #7e57c2;
+            padding-bottom: 8px;
+        }
+        
+        textarea, input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background-color: rgba(197, 202, 233, 0.1);
+            border: 1px solid #7e57c2;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+        }
+        
+        textarea {
+            height: 200px;
+            resize: vertical;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #7e57c2 0%, #5e35b1 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #9575cd 0%, #7e57c2 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .primary-btn {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+        
+        .primary-btn:hover {
+            background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
+        }
+        
+        .results-section {
+            background: rgba(49, 27, 146, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 20px;
+        }
+        
+        .decomposition-path {
+            background: rgba(81, 45, 168, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ff9800;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        
+        .decomposition-step {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .decomposition-step:before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #ff9800;
+        }
+        
+        .tree-container {
+            background: rgba(26, 35, 126, 0.7);
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tree {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: fit-content;
+        }
+        
+        .tree-node {
+            background: rgba(81, 45, 168, 0.8);
+            border: 2px solid #7e57c2;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 10px;
+            text-align: center;
+            font-weight: bold;
+            color: white;
+            position: relative;
+            min-width: 120px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tree-node.current {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            border-color: #ffb74d;
+            transform: scale(1.05);
+            z-index: 2;
+        }
+        
+        .tree-node.used {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4caf50;
+        }
+        
+        .tree-node.available {
+            background: rgba(33, 150, 243, 0.8);
+            border-color: #2196f3;
+        }
+        
+        .tree-branch {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .branch-line {
+            position: absolute;
+            height: 30px;
+            width: 2px;
+            background: #7e57c2;
+            top: -30px;
+        }
+        
+        .tree-level {
+            display: flex;
+            gap: 40px;
+            position: relative;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: rgba(81, 45, 168, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(179, 157, 219, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffcc80;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #c5cae9;
+        }
+        
+        .pattern-analysis {
+            background: rgba(49, 27, 146, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .pattern-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(81, 45, 168, 0.3);
+            border-radius: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .algorithm-steps {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌳 Mersenne Exponent Decomposition Algorithm with Fibonacci Numbers</h1>
+        <p class="subtitle"></p>
+        
+        <div class="algorithm-explanation">
+            <h3>🔍 :</h3>
+            <div class="algorithm-steps">
+                <div class="step">
+                    <strong>Step 1:</strong> Take target Mersenne exponent (e.g., 61)
+                </div>
+                <div class="step">
+                    <strong>Step 2:</strong> Start with largest previous exponent (31 for target 61)
+                </div>
+                <div class="step">
+                    <strong>Step 3:</strong> Add next largest that doesn't exceed remainder
+                </div>
+                <div class="step">
+                    <strong>Step 4:</strong> Use repetitions if needed (like 2×2 for 4)
+                </div>
+                <div class="step">
+                    <strong>Step 5:</strong> Continue until exact match
+                </div>
+                <div class="step">
+                    <strong>Step 6:</strong> Creates hierarchical branching structure
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="input-section">
+                <h2>🎯 Target Mersenne Exponent</h2>
+                <input type="text" id="target" placeholder="Enter Mersenne exponent (e.g., 61, 89, 127...)">
+                
+                <h2>📚 Fibonacci Numbers</h2>
+                <textarea id="numbersList" placeholder="Mersenne exponents in descending order"></textarea>
+                
+                <div class="button-group">
+                    <button class="primary-btn" onclick="executeDecomposition()">Execute Decomposition Algorithm</button>
+                    <button onclick="loadAllMersenneDescending()">Load All Known (Descending)</button>
+                    <button onclick="loadExample61()">Load Example: 61</button>
+                    <button onclick="loadExample89()">Load Example: 89</button>
+                    <button onclick="loadExample127()">Load Example: 127</button>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <h2>⚙️ Algorithm Parameters</h2>
+                
+                <label for="algorithmMode">Decomposition Strategy:</label>
+                <select id="algorithmMode">
+                    <option value="greedy">Greedy (LOGOS method - largest first)</option>
+                    <option value="optimal">Optimal (Fewest terms)</option>
+                    <option value="minCoefficient">Minimal Coefficients</option>
+                </select>
+                
+                <label for="maxRepetitions">Maximum repetitions per exponent:</label>
+                <input type="number" id="maxRepetitions" value="4" min="1" max="20">
+                
+                <label for="showTree">Visualization:</label>
+                <select id="showTree">
+                    <option value="detailed">Detailed Tree</option>
+                    <option value="compact">Compact View</option>
+                    <option value="path">Just Decomposition Path</option>
+                </select>
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(81, 45, 168, 0.4); border-radius: 5px;">
+                    <h3>Quick Tests</h3>
+                    <div class="button-group">
+                        <button onclick="testSequence()">Test Sequence: 13 to 127</button>
+                        <button onclick="testLarge()">Test Large: 44497</button>
+                        <button onclick="testRecent()">Test Recent: 82589933</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results-section">
+            <h2>📊 Decomposition Results</h2>
+            
+            <div id="errorMessage" style="display: none; background: rgba(244, 67, 54, 0.2); padding: 15px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #f44336;"></div>
+            
+            <div id="statsContainer" class="stats-grid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalSteps">0</div>
+                    <div class="stat-label">Decomposition Steps</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="termsUsed">0</div>
+                    <div class="stat-label">Total Terms Used</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="maxCoefficientUsed">1</div>
+                    <div class="stat-label">Max Coefficient</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="largestUsed">-</div>
+                    <div class="stat-label">Largest Exponent Used</div>
+                </div>
+            </div>
+            
+            <div id="decompositionPath" class="decomposition-path" style="display: none;">
+                <!-- Decomposition steps will appear here -->
+            </div>
+            
+            <div id="treeContainer" class="tree-container" style="display: none;">
+                <h3>🌳 Decomposition Tree</h3>
+                <div id="treeVisualization" class="tree">
+                    <!-- Tree visualization will appear here -->
+                </div>
+            </div>
+            
+            <div id="patternAnalysis" class="pattern-analysis" style="display: none;">
+                <h3>🔬 Pattern Analysis</h3>
+                <div id="patternsList">
+                    <!-- Pattern observations will appear here -->
+                </div>
+            </div>
+            
+            <button onclick="exportDecomposition()" style="display: none; margin-top: 20px;" id="exportBtn" class="primary-btn">Export Full Analysis</button>
+        </div>
+    </div>
+
+    <script>
+        // All known Mersenne exponents in DESCENDING order
+        const allMersenneExponentsDesc = [
+            0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,4181,6765,10946,17711,28657,46368,75025,121393,196418,317811,514229,832040,1346269,2178309,3524578,5702887,9227465,14930352,24157817,39088169,63245986,102334155,165580141,267914296,433494437,701408733,1134903170,1836311903,2971215073,4807526976,7778742049,12586269025,20365011074,32951280099,53316291173,86267571272,139583862445,225851433717,365435296162,591286729879,956722026041,1548008755920,2504730781961,4052739537881,6557470319842,10610209857723,17167680177565,27777890035288,44945570212853,72723460248141,117669030460994,190392490709135,308061521170129,498454011879264,806515533049393,1304969544928657,2111485077978050,3416454622906707,5527939700884757,8944394323791464,14472334024676221,23416728348467685,37889062373143906,61305790721611591,99194853094755497,160500643816367088,259695496911122585,420196140727489673,679891637638612258,1100087778366101931,1779979416004714189,2880067194370816120,4660046610375530309,7540113804746346429,12200160415121876738,19740274219868223167,31940434634990099905,51680708854858323072,83621143489848422977,135301852344706746049,218922995834555169026
+        ];
+        
+        function loadAllMersenneDescending() {
+            document.getElementById('numbersList').value = allMersenneExponentsDesc.join(', ');
+        }
+        
+        function loadExample61() {
+            document.getElementById('target').value = '61';
+            document.getElementById('numbersList').value = allMersenneExponentsDesc.filter(n => n < 61).join(', ');
+            setTimeout(() => executeDecomposition(), 100);
+        }
+        
+        function loadExample89() {
+            document.getElementById('target').value = '89';
+            document.getElementById('numbersList').value = allMersenneExponentsDesc.filter(n => n < 89).join(', ');
+            setTimeout(() => executeDecomposition(), 100);
+        }
+        
+        function loadExample127() {
+            document.getElementById('target').value = '127';
+            document.getElementById('numbersList').value = allMersenneExponentsDesc.filter(n => n < 127).join(', ');
+            setTimeout(() => executeDecomposition(), 100);
+        }
+        
+        function testSequence() {
+            document.getElementById('numbersList').value = allMersenneExponentsDesc.filter(n => n <= 127).join(', ');
+            document.getElementById('target').value = '127';
+            setTimeout(() => executeDecomposition(), 100);
+        }
+        
+        function testLarge() {
+            document.getElementById('numbersList').value = allMersenneExponentsDesc.filter(n => n < 44497).join(', ');
+            document.getElementById('target').value = '44497';
+            setTimeout(() => executeDecomposition(), 100);
+        }
+        
+        function testRecent() {
+            document.getElementById('numbersList').value = allMersenneExponentsDesc.filter(n => n < 82589933).join(', ');
+            document.getElementById('target').value = '82589933';
+            setTimeout(() => executeDecomposition(), 100);
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+        
+        function executeDecomposition() {
+            hideError();
+            
+            // Get inputs
+            const targetStr = document.getElementById('target').value.trim();
+            const numbersStr = document.getElementById('numbersList').value.trim();
+            const maxRepetitions = parseInt(document.getElementById('maxRepetitions').value);
+            const algorithmMode = document.getElementById('algorithmMode').value;
+            
+            if (!targetStr || !numbersStr) {
+                showError("Please enter both a target number and available exponents.");
+                return;
+            }
+            
+            const target = parseInt(targetStr);
+            if (isNaN(target) || target <= 0) {
+                showError("Please enter a valid positive integer as target.");
+                return;
+            }
+            
+            // Parse and sort numbers in descending order
+            let numbers = numbersStr.split(/[,\s]+/)
+                .map(num => parseInt(num.trim()))
+                .filter(num => !isNaN(num) && num > 0);
+            
+            if (numbers.length === 0) {
+                showError("No valid numbers found.");
+                return;
+            }
+            
+            // Ensure descending order
+            numbers.sort((a, b) => b - a);
+            
+            // Filter out numbers >= target (only smaller ones can be used)
+            numbers = numbers.filter(n => n < target);
+            
+            if (numbers.length === 0) {
+                showError("No available numbers smaller than target.");
+                return;
+            }
+            
+            // Execute the decomposition algorithm
+            const result = performLOGOSAlgorithm(target, numbers, maxRepetitions, algorithmMode);
+            
+            // Display results
+            displayResults(result, target, numbers);
+        }
+        
+        function performLOGOSAlgorithm(target, numbers, maxRepetitions, mode) {
+            const steps = [];
+            const decomposition = [];
+            let remaining = target;
+            let stepCount = 0;
+            let usedIndices = new Set();
+            
+            // Clone numbers array for modification
+            let availableNumbers = [...numbers];
+            
+            while (remaining > 0 && stepCount < 100) { // Safety limit
+                stepCount++;
+                
+                // Find the largest number that can be used
+                let bestNumber = -1;
+                let bestCoefficient = 0;
+                let bestIndex = -1;
+                
+                for (let i = 0; i < availableNumbers.length; i++) {
+                    const num = availableNumbers[i];
+                    
+                    if (num <= remaining) {
+                        // Calculate max repetitions we can use
+                        const maxPossible = Math.min(
+                            Math.floor(remaining / num),
+                            maxRepetitions
+                        );
+                        
+                        if (maxPossible > 0) {
+                            // Choose coefficient based on algorithm mode
+                            let coefficient = 1;
+                            
+                            if (mode === 'greedy') {
+                                // LOGOS method: use as many as possible
+                                coefficient = maxPossible;
+                            } else if (mode === 'optimal') {
+                                // Try to minimize total terms
+                                coefficient = maxPossible;
+                            } else {
+                                // Minimal coefficients: use 1
+                                coefficient = 1;
+                            }
+                            
+                            bestNumber = num;
+                            bestCoefficient = coefficient;
+                            bestIndex = i;
+                            break; // Take the first (largest) that fits
+                        }
+                    }
+                }
+                
+                if (bestNumber === -1) {
+                    // No number fits, try with smaller coefficients or backtrack
+                    break;
+                }
+                
+                // Record this step
+                const step = {
+                    number: bestNumber,
+                    coefficient: bestCoefficient,
+                    total: bestNumber * bestCoefficient,
+                    remainingBefore: remaining,
+                    remainingAfter: remaining - (bestNumber * bestCoefficient)
+                };
+                
+                steps.push(step);
+                
+                // Add to decomposition
+                decomposition.push({
+                    number: bestNumber,
+                    coefficient: bestCoefficient
+                });
+                
+                // Update remaining
+                remaining -= bestNumber * bestCoefficient;
+                
+                // Mark as used
+                usedIndices.add(bestIndex);
+                
+                // Optional: remove used number to prevent reuse in greedy mode
+                if (mode === 'greedy') {
+                    availableNumbers = availableNumbers.filter((_, idx) => idx !== bestIndex);
+                }
+                
+                if (remaining === 0) {
+                    break;
+                }
+            }
+            
+            // If we didn't reach zero, try to find alternative paths
+            if (remaining > 0) {
+                // Try a more flexible approach
+                return findOptimalDecomposition(target, numbers, maxRepetitions);
+            }
+            
+            return {
+                success: remaining === 0,
+                steps: steps,
+                decomposition: decomposition,
+                remaining: remaining,
+                totalTerms: decomposition.reduce((sum, item) => sum + item.coefficient, 0),
+                maxCoefficient: Math.max(...decomposition.map(item => item.coefficient)),
+                largestUsed: decomposition.length > 0 ? Math.max(...decomposition.map(item => item.number)) : 0
+            };
+        }
+        
+        function findOptimalDecomposition(target, numbers, maxRepetitions) {
+            // More flexible search for when greedy fails
+            const decomposition = [];
+            const steps = [];
+            let remaining = target;
+            
+            // Try a backtracking approach
+            function backtrack(startIdx, currentDecomp, currentRemaining, depth) {
+                if (depth > 20) return null; // Depth limit
+                if (currentRemaining === 0) return currentDecomp;
+                if (currentRemaining < 0) return null;
+                
+                for (let i = startIdx; i < numbers.length; i++) {
+                    const num = numbers[i];
+                    
+                    // Try different coefficients
+                    const maxCoeff = Math.min(
+                        Math.floor(currentRemaining / num),
+                        maxRepetitions
+                    );
+                    
+                    for (let coeff = maxCoeff; coeff >= 1; coeff--) {
+                        const newRemaining = currentRemaining - (num * coeff);
+                        const newDecomp = [...currentDecomp, { number: num, coefficient: coeff }];
+                        
+                        // Record step
+                        steps.push({
+                            number: num,
+                            coefficient: coeff,
+                            total: num * coeff,
+                            remainingBefore: currentRemaining,
+                            remainingAfter: newRemaining
+                        });
+                        
+                        const result = backtrack(i + 1, newDecomp, newRemaining, depth + 1);
+                        if (result) return result;
+                        
+                        // Backtrack
+                        steps.pop();
+                    }
+                }
+                
+                return null;
+            }
+            
+            const finalDecomp = backtrack(0, [], target, 0);
+            
+            if (finalDecomp) {
+                return {
+                    success: true,
+                    steps: steps,
+                    decomposition: finalDecomp,
+                    remaining: 0,
+                    totalTerms: finalDecomp.reduce((sum, item) => sum + item.coefficient, 0),
+                    maxCoefficient: Math.max(...finalDecomp.map(item => item.coefficient)),
+                    largestUsed: finalDecomp.length > 0 ? Math.max(...finalDecomp.map(item => item.number)) : 0
+                };
+            }
+            
+            return {
+                success: false,
+                steps: [],
+                decomposition: [],
+                remaining: target,
+                totalTerms: 0,
+                maxCoefficient: 0,
+                largestUsed: 0
+            };
+        }
+        
+        function displayResults(result, target, allNumbers) {
+            // Show stats
+            document.getElementById('statsContainer').style.display = 'grid';
+            document.getElementById('totalSteps').textContent = result.steps.length;
+            document.getElementById('termsUsed').textContent = result.totalTerms;
+            document.getElementById('maxCoefficientUsed').textContent = result.maxCoefficient;
+            document.getElementById('largestUsed').textContent = result.largestUsed;
+            
+            // Show decomposition path
+            const pathDiv = document.getElementById('decompositionPath');
+            pathDiv.style.display = 'block';
+            
+            if (!result.success) {
+                pathDiv.innerHTML = `
+                    <strong style="color: #ef9a9a;">❌ Decomposition Failed</strong><br>
+                    Remaining: ${result.remaining}<br>
+                    Try increasing max repetitions or adding more numbers.
+                `;
+                document.getElementById('treeContainer').style.display = 'none';
+                document.getElementById('patternAnalysis').style.display = 'none';
+                document.getElementById('exportBtn').style.display = 'none';
+                return;
+            }
+            
+            // Build decomposition explanation
+            let pathHTML = `<strong>🎯 Target: ${target}</strong><br><br>`;
+            
+            // Show each step
+            let runningTotal = 0;
+            result.steps.forEach((step, index) => {
+                runningTotal += step.total;
+                const stepDesc = step.coefficient > 1 ? 
+                    `${step.coefficient}×${step.number} = ${step.total}` : 
+                    `${step.number}`;
+                
+                pathHTML += `
+                    <div class="decomposition-step">
+                        Step ${index + 1}: Add ${stepDesc}
+                        (Remaining: ${step.remainingBefore} → ${step.remainingAfter})
+                    </div>
+                `;
+            });
+            
+            // Show final decomposition
+            pathHTML += `<br><strong>✅ Final Decomposition:</strong><br>`;
+            const decompStr = result.decomposition.map(item => 
+                item.coefficient > 1 ? `${item.coefficient}×${item.number}` : `${item.number}`
+            ).join(' + ');
+            
+            pathHTML += `${decompStr} = ${target}`;
+            
+            // Verify
+            const calculated = result.decomposition.reduce((sum, item) => 
+                sum + (item.number * item.coefficient), 0
+            );
+            
+            pathHTML += `<br><em>Verification: ${calculated} = ${target} ${calculated === target ? '✓' : '✗'}</em>`;
+            
+            pathDiv.innerHTML = pathHTML;
+            
+            // Show tree visualization if detailed mode
+            const showTree = document.getElementById('showTree').value;
+            if (showTree === 'detailed' || showTree === 'compact') {
+                displayTree(result, target, allNumbers, showTree);
+            } else {
+                document.getElementById('treeContainer').style.display = 'none';
+            }
+            
+            // Show pattern analysis
+            displayPatternAnalysis(result, target, allNumbers);
+            
+            // Show export button
+            document.getElementById('exportBtn').style.display = 'block';
+        }
+        
+        function displayTree(result, target, allNumbers, mode) {
+            const treeContainer = document.getElementById('treeContainer');
+            const treeDiv = document.getElementById('treeVisualization');
+            
+            treeContainer.style.display = 'block';
+            treeDiv.innerHTML = '';
+            
+            // Create tree levels
+            const tree = document.createElement('div');
+            tree.className = 'tree';
+            
+            // Target node
+            const targetNode = document.createElement('div');
+            targetNode.className = 'tree-node current';
+            targetNode.textContent = `Target: ${target}`;
+            tree.appendChild(targetNode);
+            
+            // Create levels for used numbers
+            if (result.decomposition.length > 0) {
+                // Group by coefficient
+                const groups = {};
+                result.decomposition.forEach(item => {
+                    const key = `${item.number}`;
+                    if (!groups[key]) groups[key] = 0;
+                    groups[key] += item.coefficient;
+                });
+                
+                // Create level for used numbers
+                const levelDiv = document.createElement('div');
+                levelDiv.className = 'tree-level';
+                
+                Object.entries(groups).forEach(([num, coeff]) => {
+                    const node = document.createElement('div');
+                    node.className = 'tree-node used';
+                    node.textContent = coeff > 1 ? 
+                        `${coeff}×${num}` : 
+                        `${num}`;
+                    levelDiv.appendChild(node);
+                });
+                
+                tree.appendChild(levelDiv);
+            }
+            
+            // Show some available numbers
+            if (mode === 'detailed') {
+                const availableLevel = document.createElement('div');
+                availableLevel.className = 'tree-level';
+                
+                // Show top 10 available numbers
+                allNumbers.slice(0, 10).forEach(num => {
+                    if (!result.decomposition.some(item => item.number === num)) {
+                        const node = document.createElement('div');
+                        node.className = 'tree-node available';
+                        node.textContent = num;
+                        availableLevel.appendChild(node);
+                    }
+                });
+                
+                tree.appendChild(availableLevel);
+            }
+            
+            treeDiv.appendChild(tree);
+        }
+        
+        function displayPatternAnalysis(result, target, allNumbers) {
+            const analysisDiv = document.getElementById('patternAnalysis');
+            const patternsList = document.getElementById('patternsList');
+            
+            analysisDiv.style.display = 'block';
+            patternsList.innerHTML = '';
+            
+            const patterns = [];
+            
+            // Pattern 1: Largest number used
+            if (result.largestUsed > 0) {
+                const percentage = (result.largestUsed / target * 100).toFixed(1);
+                patterns.push(`
+                    <div class="pattern-item">
+                        <strong>Largest component:</strong> ${result.largestUsed} 
+                        (${percentage}% of target)
+                    </div>
+                `);
+            }
+            
+            // Pattern 2: Coefficient usage
+            if (result.maxCoefficient > 1) {
+                const multiTerm = result.decomposition.filter(item => item.coefficient > 1);
+                patterns.push(`
+                    <div class="pattern-item">
+                        <strong>Multiple uses:</strong> ${multiTerm.length} numbers used multiple times
+                        (max ${result.maxCoefficient}×)
+                    </div>
+                `);
+            }
+            
+            // Pattern 3: Efficiency
+            const efficiency = (result.totalTerms / result.decomposition.length).toFixed(2);
+            patterns.push(`
+                <div class="pattern-item">
+                    <strong>Efficiency:</strong> ${result.totalTerms} total terms from 
+                    ${result.decomposition.length} unique numbers (${efficiency} terms/number)
+                </div>
+            `);
+            
+            // Pattern 4: Relation to known decompositions
+            const knownPatterns = {
+                13: "7 + 3 + 3",
+                17: "13 + 2×2",
+                31: "19 + 7 + 3 + 2",
+                61: "31 + 17 + 13",
+                89: "61 + 19 + 7 + 2",
+                127: "107 + 13 + 7"
+            };
+            
+            if (knownPatterns[target]) {
+                patterns.push(`
+                    <div class="pattern-item">
+                        <strong>Known pattern:</strong> ${knownPatterns[target]}
+                    </div>
+                `);
+            }
+            
+            // Pattern 5: Suggestions for exploration
+            patterns.push(`
+                <div class="pattern-item">
+                    <strong>Next exploration:</strong> Try target ${target * 2} or 
+                    ${target + allNumbers[0]} to see if pattern continues
+                </div>
+            `);
+            
+            patternsList.innerHTML = patterns.join('');
+        }
+        
+        function exportDecomposition() {
+            const target = document.getElementById('target').value;
+            const numbers = document.getElementById('numbersList').value;
+            const mode = document.getElementById('algorithmMode').value;
+            
+            const pathDiv = document.getElementById('decompositionPath');
+            const patternsDiv = document.getElementById('patternsList');
+            
+            let exportText = `MERSENNE EXPONENT DECOMPOSITION ANALYSIS\n`;
+            exportText += `============================================\n\n`;
+            exportText += `Target Exponent: ${target}\n`;
+            exportText += `Available Exponents: ${numbers}\n`;
+            exportText += `Algorithm Mode: ${mode}\n\n`;
+            
+            exportText += `DECOMPOSITION PATH:\n`;
+            exportText += `-------------------\n`;
+            exportText += pathDiv.textContent + '\n\n';
+            
+            exportText += `PATTERN ANALYSIS:\n`;
+            exportText += `-----------------\n`;
+            exportText += patternsDiv.textContent + '\n\n';
+            
+            exportText += `Generated: ${new Date().toLocaleString()}\n`;
+            
+            // Create download
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mersenne_decomposition_${target}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Initialize on load
+        window.onload = function() {
+            loadAllMersenneDescending();
+            document.getElementById('target').value = '61';
+        };
+    </script>
+</body>
+</html>
