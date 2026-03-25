@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lattice Builder - Prime Checker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0f0f1a;
+            color: #ddd;
+            margin: 0;
+            padding: 15px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #6c5ce7;
+            text-align: center;
+            font-size: 20px;
+            margin: 0 0 5px 0;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 11px;
+            margin-bottom: 15px;
+        }
+        
+        .controls {
+            background: #1a1a2a;
+            padding: 12px;
+            border-radius: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .base-group {
+            display: flex;
+            gap: 5px;
+            background: #0f0f1a;
+            padding: 3px;
+            border-radius: 30px;
+        }
+        
+        .base-btn {
+            padding: 5px 15px;
+            background: #2a2a3a;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .base-btn.active {
+            background: #6c5ce7;
+            color: white;
+        }
+        
+        button {
+            background: #6c5ce7;
+            color: white;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        button:hover {
+            background: #5a4ad7;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            background: #1a1a2a;
+            padding: 6px 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #6c5ce7;
+        }
+        
+        .stat-label {
+            font-size: 9px;
+            color: #888;
+        }
+        
+        .results {
+            background: #1a1a2a;
+            border-radius: 10px;
+            padding: 12px;
+            max-height: 550px;
+            overflow-y: auto;
+        }
+        
+        .path-card {
+            background: #0f0f1a;
+            margin: 6px 0;
+            padding: 8px;
+            border-radius: 6px;
+            border-left: 2px solid #6c5ce7;
+            font-family: monospace;
+            font-size: 10px;
+        }
+        
+        .path-header {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .prime {
+            color: #44ffaa;
+        }
+        
+        .composite {
+            color: #ffaa44;
+        }
+        
+        .pattern {
+            background: #2a2a3a;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 10px;
+        }
+        
+        .factor {
+            color: #ff8888;
+            font-size: 9px;
+        }
+        
+        .small-text {
+            font-size: 9px;
+            color: #888;
+            word-break: break-all;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 6px;
+            font-size: 11px;
+            color: #ffaa44;
+        }
+        
+        .length-selector {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            background: #0f0f1a;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+        
+        .length-btn {
+            background: #2a2a3a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .length-btn.active {
+            background: #6c5ce7;
+        }
+        
+        .check-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #0f0f1a;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+        
+        .check-box input {
+            margin: 0;
+        }
+        
+        hr {
+            margin: 8px 0;
+            border-color: #2a2a3a;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌿 SHELL-LEG LATTICE · WITH PRIME CHECKER</h1>
+    <div class="subtitle">n→2n (0) | n→2n+1 (1) | Quick composite check (tests primes up to 100)</div>
+    
+    <div class="controls">
+        <div class="base-group">
+            <div class="base-btn active" data-base="2">BASE 2</div>
+            <div class="base-btn" data-base="3">BASE 3</div>
+        </div>
+        <div class="length-selector">
+            <span style="font-size:11px">Length:</span>
+            <div class="length-btn" data-length="23">23</div>
+            <div class="length-btn" data-length="24">24</div>
+            <div class="length-btn" data-length="25">25</div>
+            <div class="length-btn active" data-length="26">26</div>
+            <div class="length-btn" data-length="27">27</div>
+        </div>
+        <div class="check-box">
+            <input type="checkbox" id="checkComposite" checked>
+            <label style="font-size:11px">Quick composite check</label>
+        </div>
+        <button id="btnShow">🔍 SHOW PATTERNS</button>
+        <button id="btnCheckNumber">🔢 Check Number</button>
+    </div>
+    
+    <div class="stats" id="stats">
+        <div class="stat-card"><div class="stat-number">-</div><div class="stat-label">Patterns</div></div>
+        <div class="stat-card"><div class="stat-number">-</div><div class="stat-label">Prime Candidates</div></div>
+        <div class="stat-card"><div class="stat-number">-</div><div class="stat-label">Composite</div></div>
+        <div class="stat-card"><div class="stat-number">-</div><div class="stat-label">Digital Root OK</div></div>
+    </div>
+    
+    <div id="status" class="status"></div>
+    
+    <div class="results" id="results">
+        <div style="text-align:center; color:#888;">Select base and length, then click SHOW</div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // COMPLETE PATTERNS FROM YOUR DATA
+    // ============================================================
+    
+    const PATTERNS = {
+        2: {
+            5: "1", 17: "001", 19: "011", 89: "11001", 521: "00001001",
+            607: "01011111", 1279: "011111111", 2203: "0010011011", 2281: "0011101001",
+            4253: "00010011101", 4423: "00101000111", 9689: "010111011001", 9941: "011011010101",
+            11213: "101111001101", 19937: "0110111100001", 21701: "1010011000101",
+            23209: "1101010101001", 44497: "10110111010001", 86243: "101000011100011",
+            132049: "0000001111010001", 756839: "111000110001100111", 3021377: "11100001101001000001",
+            1257787: "0110011000100111011", 1398269: "1010101010111111101", 2976221: "11010110100111011101",
+            20996011: "10000000101111110101011", 24036583: "11011101100010011100111",
+            37156667: "001101101111011100111011", 42643801: "100010101011000101011001",
+            43112609: "100100011101100010100001", 74207281: "0011011000101000000110001",
+            77232917: "0100110100111101100010101", 82589933: "0111011000011100011101101",
+            136279841: "00000111110111011100100001"
+        },
+        3: {
+            7: "1", 13: "01", 31: "111", 61: "1101", 107: "01011", 127: "11111",
+            3217: "0010010001", 110503: "010111110100111", 216091: "0100110000011011",
+            859433: "010001110100101001", 6972593: "010100110010010110001",
+            13466917: "0011010111110100100101", 25964951: "00011000011000110010111",
+            30402457: "10011111110011110011001", 32582657: "11100010010110000000001",
+            57885161: "011100110100000111101001"
+        }
+    };
+    
+    // Known Mersenne exponents set
+    const MERSENNE = new Set([
+        2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+        2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497,
+        86243, 110503, 132049, 216091, 756839, 859433, 1257787, 1398269, 2976221,
+        3021377, 6972593, 13466917, 20996011, 24036583, 25964951, 30402457,
+        32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917,
+        82589933, 136279841
+    ]);
+    
+    // ============================================================
+    // PRIME CHECKER (quick composite detection)
+    // ============================================================
+    
+    function digitalRoot(n) {
+        if (n === 0) return 0;
+        return 1 + (n - 1) % 9;
+    }
+    
+    function quickCompositeCheck(n) {
+        // Digital root check first
+        const dr = digitalRoot(n);
+        if (dr === 3 || dr === 6 || dr === 9) {
+            return { isPrime: false, reason: `digital root ${dr} (divisible by 3)`, factor: 3 };
+        }
+        
+        // Small primes up to 100
+        const smallPrimes = [2, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
+        
+        for (let p of smallPrimes) {
+            if (n % p === 0) {
+                if (n === p) continue;
+                return { isPrime: false, reason: `divisible by ${p}`, factor: p };
+            }
+        }
+        
+        // Check divisibility by numbers up to 1000 (quick additional check)
+        for (let i = 101; i <= 1000; i += 2) {
+            if (n % i === 0) {
+                if (n === i) continue;
+                return { isPrime: false, reason: `divisible by ${i}`, factor: i };
+            }
+        }
+        
+        return { isPrime: true, reason: "no small factors found (candidate)", factor: null };
+    }
+    
+    // ============================================================
+    // PATH CALCULATION
+    // ============================================================
+    
+    function applyPattern(seed, pattern) {
+        let vertices = [seed];
+        let current = seed;
+        for (let bit of pattern) {
+            if (bit === '0') current = current * 2;
+            else current = current * 2 + 1;
+            vertices.push(current);
+        }
+        return vertices;
+    }
+    
+    function getPatternsByLength(base, length, doCheck = true) {
+        const patterns = PATTERNS[base];
+        const result = [];
+        
+        for (let [terminal, pattern] of Object.entries(patterns)) {
+            if (pattern.length === length) {
+                const vertices = applyPattern(base, pattern);
+                const legs = (pattern.match(/1/g) || []).length;
+                const shells = pattern.length - legs;
+                const isMersenne = MERSENNE.has(parseInt(terminal));
+                const dr = digitalRoot(parseInt(terminal));
+                const drOk = (dr !== 3 && dr !== 6 && dr !== 9);
+                
+                let primeCheck = null;
+                if (doCheck && !isMersenne) {
+                    primeCheck = quickCompositeCheck(parseInt(terminal));
+                }
+                
+                result.push({
+                    terminal: parseInt(terminal),
+                    pattern: pattern,
+                    vertices: vertices,
+                    legs: legs,
+                    shells: shells,
+                    length: pattern.length,
+                    isMersenne: isMersenne,
+                    digitalRoot: dr,
+                    drOk: drOk,
+                    primeCheck: primeCheck
+                });
+            }
+        }
+        
+        return result;
+    }
+    
+    function getAllPatternsByLength(length, doCheck = true) {
+        const base2 = getPatternsByLength(2, length, doCheck);
+        const base3 = getPatternsByLength(3, length, doCheck);
+        return { base2, base3 };
+    }
+    
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+    
+    let currentBase = 2;
+    let currentLength = 26;
+    let doCompositeCheck = true;
+    
+    function render() {
+        const patterns = PATTERNS[currentBase];
+        const filtered = [];
+        
+        for (let [terminal, pattern] of Object.entries(patterns)) {
+            if (pattern.length === currentLength) {
+                const vertices = applyPattern(currentBase, pattern);
+                const legs = (pattern.match(/1/g) || []).length;
+                const shells = pattern.length - legs;
+                const isMersenne = MERSENNE.has(parseInt(terminal));
+                const dr = digitalRoot(parseInt(terminal));
+                const drOk = (dr !== 3 && dr !== 6 && dr !== 9);
+                
+                let primeCheck = null;
+                if (doCompositeCheck && !isMersenne) {
+                    primeCheck = quickCompositeCheck(parseInt(terminal));
+                }
+                
+                filtered.push({
+                    terminal: parseInt(terminal),
+                    pattern: pattern,
+                    vertices: vertices,
+                    legs: legs,
+                    shells: shells,
+                    isMersenne: isMersenne,
+                    digitalRoot: dr,
+                    drOk: drOk,
+                    primeCheck: primeCheck
+                });
+            }
+        }
+        
+        // Update stats
+        const primeCandidates = filtered.filter(p => {
+            if (p.isMersenne) return true;
+            if (!p.drOk) return false;
+            if (p.primeCheck && p.primeCheck.isPrime) return true;
+            return false;
+        });
+        const composite = filtered.filter(p => {
+            if (p.isMersenne) return false;
+            if (!p.drOk) return true;
+            if (p.primeCheck && !p.primeCheck.isPrime) return true;
+            return false;
+        });
+        const drOkCount = filtered.filter(p => p.drOk).length;
+        
+        document.getElementById('stats').innerHTML = `
+            <div class="stat-card"><div class="stat-number">${filtered.length}</div><div class="stat-label">Patterns</div></div>
+            <div class="stat-card"><div class="stat-number">${primeCandidates.length}</div><div class="stat-label">Prime Candidates</div></div>
+            <div class="stat-card"><div class="stat-number">${composite.length}</div><div class="stat-label">Composite</div></div>
+            <div class="stat-card"><div class="stat-number">${drOkCount}</div><div class="stat-label">Digital Root OK</div></div>
+        `;
+        
+        // Render results
+        const resultsDiv = document.getElementById('results');
+        
+        if (filtered.length === 0) {
+            resultsDiv.innerHTML = `<div style="text-align:center; color:#888;">No patterns of length ${currentLength} from base ${currentBase}</div>`;
+            document.getElementById('status').innerHTML = `No patterns at length ${currentLength}`;
+            return;
+        }
+        
+        let html = `<div style="margin-bottom:8px; font-size:11px;">📏 LENGTH ${currentLength} · BASE ${currentBase} · ${filtered.length} patterns</div>`;
+        
+        for (let p of filtered.sort((a,b) => a.terminal - b.terminal)) {
+            let statusIcon = '';
+            let statusClass = '';
+            let factorInfo = '';
+            
+            if (p.isMersenne) {
+                statusIcon = '★';
+                statusClass = 'prime';
+            } else if (!p.drOk) {
+                statusIcon = '❌';
+                statusClass = 'composite';
+                factorInfo = `digital root ${p.digitalRoot} (divisible by 3)`;
+            } else if (p.primeCheck && !p.primeCheck.isPrime) {
+                statusIcon = '❌';
+                statusClass = 'composite';
+                factorInfo = `${p.primeCheck.reason} → factor ${p.primeCheck.factor}`;
+            } else {
+                statusIcon = '?';
+                statusClass = 'prime';
+                factorInfo = p.primeCheck ? p.primeCheck.reason : 'no small factors';
+            }
+            
+            html += `
+                <div class="path-card">
+                    <div class="path-header ${statusClass}">
+                        ${statusIcon} ${p.terminal.toLocaleString()}
+                        <span style="float:right">legs:${p.legs} shells:${p.shells}</span>
+                    </div>
+                    <div><span class="pattern">${p.pattern}</span></div>
+                    ${factorInfo ? `<div class="factor">${factorInfo}</div>` : ''}
+                    <div class="small-text">Path: ${p.vertices.join(' → ')}</div>
+                </div>
+            `;
+        }
+        
+        resultsDiv.innerHTML = html;
+        
+        const primeCount = filtered.filter(p => p.isMersenne || (p.drOk && p.primeCheck?.isPrime)).length;
+        document.getElementById('status').innerHTML = `✓ Found ${filtered.length} patterns | ${primeCount} prime candidates (needs Lucas-Lehmer verification)`;
+    }
+    
+    function checkNumber() {
+        const num = prompt("Enter a number to check:");
+        if (!num) return;
+        const n = parseInt(num);
+        if (isNaN(n)) {
+            alert("Invalid number");
+            return;
+        }
+        
+        const dr = digitalRoot(n);
+        const drOk = (dr !== 3 && dr !== 6 && dr !== 9);
+        const check = quickCompositeCheck(n);
+        
+        let result = `\n📊 NUMBER: ${n.toLocaleString()}\n`;
+        result += `Digital Root: ${dr} → ${drOk ? '✓ OK' : '❌ divisible by 3'}\n`;
+        
+        if (check.isPrime) {
+            result += `\n✅ NO SMALL FACTORS FOUND (up to 1000)\n`;
+            result += `→ This is a PRIME CANDIDATE! Needs Lucas-Lehmer test for 2^${n} - 1`;
+        } else {
+            result += `\n❌ COMPOSITE: ${check.reason}\n`;
+            result += `→ ${n} = ${check.factor} × ${n / check.factor}`;
+        }
+        
+        alert(result);
+    }
+    
+    // ============================================================
+    // EVENT HANDLERS
+    // ============================================================
+    
+    document.getElementById('btnShow').addEventListener('click', () => {
+        doCompositeCheck = document.getElementById('checkComposite').checked;
+        render();
+    });
+    
+    document.getElementById('btnCheckNumber').addEventListener('click', () => {
+        checkNumber();
+    });
+    
+    document.querySelectorAll('.base-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentBase = parseInt(btn.dataset.base);
+            render();
+        });
+    });
+    
+    document.querySelectorAll('.length-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.length-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentLength = parseInt(btn.dataset.length);
+            render();
+        });
+    });
+    
+    document.getElementById('checkComposite').addEventListener('change', () => {
+        doCompositeCheck = document.getElementById('checkComposite').checked;
+        render();
+    });
+    
+    // Initial render
+    render();
+</script>
+</body>
+</html>

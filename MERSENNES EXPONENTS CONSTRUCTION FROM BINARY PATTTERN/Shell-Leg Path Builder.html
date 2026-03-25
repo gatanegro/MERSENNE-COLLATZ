@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell-Leg Path Builder</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0f0f1a;
+            color: #ddd;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #6c5ce7;
+            text-align: center;
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: #1a1a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .base-selector {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        
+        .base-btn {
+            padding: 10px 30px;
+            background: #2a2a3a;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .base-btn.active {
+            background: #6c5ce7;
+            color: white;
+        }
+        
+        .current-value {
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: #6c5ce7;
+            background: #0f0f1a;
+            padding: 20px;
+            border-radius: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .action-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: monospace;
+        }
+        
+        .shell-btn {
+            background: #2a5f5f;
+            color: white;
+        }
+        
+        .shell-btn:hover {
+            background: #3a7f7f;
+        }
+        
+        .leg-btn {
+            background: #5f2a5f;
+            color: white;
+        }
+        
+        .leg-btn:hover {
+            background: #7f3a7f;
+        }
+        
+        .reset-btn {
+            background: #5f2a2a;
+            color: white;
+            padding: 10px 20px;
+        }
+        
+        .pattern-display {
+            background: #0f0f1a;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 20px;
+            letter-spacing: 4px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .path-display {
+            background: #0f0f1a;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            background: #0f0f1a;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #6c5ce7;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+        }
+        
+        .warning {
+            color: #ffaa44;
+            text-align: center;
+            padding: 10px;
+            background: #2a2a1a;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            color: #44ffaa;
+        }
+        
+        .info {
+            color: #6c5ce7;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .duplicate-list {
+            font-size: 10px;
+            color: #888;
+            max-height: 100px;
+            overflow-y: auto;
+            background: #0f0f1a;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌿 SHELL-LEG PATH BUILDER</h1>
+    <div class="subtitle">Choose ×2 (SHELL=0) or ×2+1 (LEG=1) | Avoid large duplicates | Allow small duplicates</div>
+    
+    <div class="card">
+        <div class="base-selector">
+            <div class="base-btn active" data-base="2">START FROM 2</div>
+            <div class="base-btn" data-base="3">START FROM 3</div>
+        </div>
+        
+        <div class="current-value" id="currentValue">2</div>
+        
+        <div class="action-buttons">
+            <button class="action-btn shell-btn" id="btnShell">×2 (SHELL = 0)</button>
+            <button class="action-btn leg-btn" id="btnLeg">×2+1 (LEG = 1)</button>
+            <button class="reset-btn" id="btnReset">RESET</button>
+        </div>
+        
+        <div class="pattern-display" id="patternDisplay"></div>
+        
+        <div class="stats">
+            <div class="stat"><div class="stat-value" id="stepsCount">0</div><div class="stat-label">Steps</div></div>
+            <div class="stat"><div class="stat-value" id="legsCount">0</div><div class="stat-label">Legs (1's)</div></div>
+            <div class="stat"><div class="stat-value" id="shellsCount">0</div><div class="stat-label">Shells (0's)</div></div>
+        </div>
+        
+        <div id="warningMsg" class="warning" style="display:none"></div>
+        <div id="successMsg" class="success" style="display:none; text-align:center;"></div>
+        
+        <div class="path-display" id="pathDisplay">
+            <strong>PATH:</strong><br>
+            2
+        </div>
+        
+        <div class="info">
+            <hr>
+            <strong>Rules:</strong><br>
+            • Large numbers (unique) cannot repeat → will be blocked<br>
+            • Small numbers (duplicate allowed) can repeat<br>
+            • Path must end with LEG (1) to be valid<br>
+            • Target length: 26 or 27 for next Mersenne exponent
+        </div>
+        
+        <div class="duplicate-list">
+            <strong>📋 DUPLICATE NUMBERS ALLOWED (small):</strong><br>
+            4,5,6,7,8,9,10,11,12,13,15,16,17,18,19,20,21,22,23,25,26,31,32,34,35,37,38,39,40,42,43,45,46,52,53,64,70,75,77,84,90,92,107,141,151,155,181,184,283,566
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // YOUR LISTS
+    // ============================================================
+    
+    // UNIQUE NUMBERS - CANNOT repeat (large numbers)
+    const UNIQUE_NUMBERS = new Set([
+        10323741, 10498005, 10660950, 10778152, 12018291, 12982475, 13466917,
+        14471290, 15201228, 16291328, 17034980, 18551820, 18578333, 19308229,
+        20647483, 20996011, 21321900, 21556304, 24036583, 25964951, 28942580,
+        30402457, 32582657, 34069960, 37103640, 37156667, 38616458, 41294966,
+        42643801, 43112609, 57885161, 68139920, 74207281, 77232917, 82589933,
+        136279841
+    ]);
+    
+    // DUPLICATE NUMBERS ALLOWED - can repeat (small numbers)
+    const DUPLICATE_ALLOWED = new Set([
+        4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+        25, 26, 31, 32, 34, 35, 37, 38, 39, 40, 42, 43, 45, 46, 52, 53, 64,
+        70, 75, 77, 84, 90, 92, 107, 141, 151, 155, 181, 184, 283, 566
+    ]);
+    
+    // Known Mersenne exponents
+    const MERSENNE = new Set([
+        2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203,
+        2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497,
+        86243, 110503, 132049, 216091, 756839, 859433, 1257787, 1398269, 2976221,
+        3021377, 6972593, 13466917, 20996011, 24036583, 25964951, 30402457,
+        32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917,
+        82589933, 136279841
+    ]);
+    
+    // ============================================================
+    // STATE
+    // ============================================================
+    
+    let currentBase = 2;
+    let currentValue = 2;
+    let pattern = [];
+    let vertices = [2];
+    let visitedNumbers = new Set([2]);
+    
+    function updateUI() {
+        document.getElementById('currentValue').innerHTML = currentValue.toLocaleString();
+        document.getElementById('patternDisplay').innerHTML = pattern.join('') || '(no steps yet)';
+        document.getElementById('stepsCount').innerHTML = pattern.length;
+        
+        const legs = pattern.filter(b => b === 1).length;
+        const shells = pattern.filter(b => b === 0).length;
+        document.getElementById('legsCount').innerHTML = legs;
+        document.getElementById('shellsCount').innerHTML = shells;
+        
+        // Path display
+        let pathHtml = '<strong>PATH:</strong><br>';
+        pathHtml += vertices.join(' → ');
+        document.getElementById('pathDisplay').innerHTML = pathHtml;
+        
+        // Check if path ends with leg and is Mersenne
+        if (pattern.length > 0 && pattern[pattern.length - 1] === 1) {
+            if (MERSENNE.has(currentValue)) {
+                document.getElementById('successMsg').innerHTML = `✓ MERSENNE EXPONENT! ${currentValue} is a Mersenne exponent!`;
+                document.getElementById('successMsg').style.display = 'block';
+            } else {
+                document.getElementById('successMsg').style.display = 'none';
+            }
+        } else {
+            document.getElementById('successMsg').style.display = 'none';
+        }
+    }
+    
+    function checkDuplicate(nextValue) {
+        // If already in current path
+        if (vertices.includes(nextValue)) {
+            // Check if it's in DUPLICATE_ALLOWED (small numbers)
+            if (DUPLICATE_ALLOWED.has(nextValue)) {
+                return { allowed: true, reason: 'duplicate_allowed' };
+            }
+            // Check if it's a UNIQUE number (large numbers)
+            if (UNIQUE_NUMBERS.has(nextValue)) {
+                return { allowed: false, reason: 'unique_forbidden' };
+            }
+            // Other numbers: not allowed to repeat
+            return { allowed: false, reason: 'repeat_not_allowed' };
+        }
+        
+        // Check if next value is a UNIQUE number that already exists elsewhere
+        // (This would be a duplicate from different path - not allowed)
+        if (UNIQUE_NUMBERS.has(nextValue)) {
+            // Check if it's in the allowed duplicate list (small numbers)
+            if (!DUPLICATE_ALLOWED.has(nextValue)) {
+                return { allowed: false, reason: 'unique_forbidden' };
+            }
+        }
+        
+        return { allowed: true, reason: 'ok' };
+    }
+    
+    function addStep(operation) {
+        let nextValue;
+        if (operation === 0) {
+            nextValue = currentValue * 2;
+        } else {
+            nextValue = currentValue * 2 + 1;
+        }
+        
+        const check = checkDuplicate(nextValue);
+        
+        if (!check.allowed) {
+            let msg = '';
+            if (check.reason === 'unique_forbidden') {
+                msg = `❌ ${nextValue} is a UNIQUE number (large) - cannot repeat!`;
+            } else if (check.reason === 'repeat_not_allowed') {
+                msg = `❌ ${nextValue} already in path and not in allowed duplicates!`;
+            }
+            document.getElementById('warningMsg').innerHTML = msg;
+            document.getElementById('warningMsg').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('warningMsg').style.display = 'none';
+            }, 2000);
+            return false;
+        }
+        
+        // Add step
+        pattern.push(operation);
+        vertices.push(nextValue);
+        currentValue = nextValue;
+        visitedNumbers.add(nextValue);
+        
+        updateUI();
+        return true;
+    }
+    
+    function reset() {
+        currentValue = currentBase;
+        pattern = [];
+        vertices = [currentBase];
+        visitedNumbers = new Set([currentBase]);
+        updateUI();
+        document.getElementById('warningMsg').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'none';
+    }
+    
+    function setBase(base) {
+        currentBase = base;
+        reset();
+        
+        document.querySelectorAll('.base-btn').forEach(btn => {
+            if (parseInt(btn.dataset.base) === base) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+    
+    // ============================================================
+    // EVENT HANDLERS
+    // ============================================================
+    
+    document.getElementById('btnShell').addEventListener('click', () => {
+        addStep(0);
+    });
+    
+    document.getElementById('btnLeg').addEventListener('click', () => {
+        addStep(1);
+    });
+    
+    document.getElementById('btnReset').addEventListener('click', () => {
+        reset();
+    });
+    
+    document.querySelectorAll('.base-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            setBase(parseInt(btn.dataset.base));
+        });
+    });
+    
+    // Initial update
+    updateUI();
+</script>
+</body>
+</html>

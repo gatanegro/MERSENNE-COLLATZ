@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logos App: Division & Remainder Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 30px;
+        }
+        
+        .input-section {
+            flex: 1;
+            min-width: 300px;
+            padding-right: 20px;
+        }
+        
+        .results-section {
+            flex: 1;
+            min-width: 300px;
+            padding-left: 20px;
+            border-left: 1px solid #eaeaea;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            color: #182848;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4b6cb7;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        textarea, input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        textarea:focus, input:focus {
+            border-color: #4b6cb7;
+            outline: none;
+        }
+        
+        textarea {
+            min-height: 180px;
+            resize: vertical;
+        }
+        
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .calculate-btn {
+            background-color: #4b6cb7;
+            color: white;
+        }
+        
+        .calculate-btn:hover {
+            background-color: #3a559f;
+            transform: translateY(-2px);
+        }
+        
+        .clear-btn {
+            background-color: #f8f9fa;
+            color: #495057;
+            border: 2px solid #ddd;
+        }
+        
+        .clear-btn:hover {
+            background-color: #e9ecef;
+            transform: translateY(-2px);
+        }
+        
+        .export-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .export-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .results-container {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid #eaeaea;
+        }
+        
+        .result-item {
+            padding: 15px;
+            margin-bottom: 12px;
+            background-color: white;
+            border-radius: 6px;
+            border-left: 4px solid #4b6cb7;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.05);
+        }
+        
+        .result-header {
+            font-weight: 700;
+            color: #182848;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .result-equation {
+            font-family: 'Courier New', monospace;
+            background-color: #f0f7ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border-left: 3px solid #4b6cb7;
+        }
+        
+        .result-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        
+        .detail-box {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            margin: 0 5px;
+        }
+        
+        .detail-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .quotient {
+            color: #4b6cb7;
+        }
+        
+        .remainder {
+            color: #28a745;
+        }
+        
+        .mod-display {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e7f3ff;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #182848;
+            font-size: 1.1rem;
+        }
+        
+        .empty-results {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+            border-top: 1px solid #eaeaea;
+            background-color: #f8f9fa;
+        }
+        
+        .instructions {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        
+        .instruction-title {
+            font-weight: 600;
+            color: #182848;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .example {
+            background-color: #fff8e1;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                padding: 20px;
+            }
+            
+            .input-section, .results-section {
+                padding: 0;
+                border-left: none;
+            }
+            
+            .results-section {
+                margin-top: 30px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .result-details {
+                flex-direction: column;
+            }
+            
+            .detail-box {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-divide"></i> Logos App</h1>
+            <p class="subtitle">Division & Remainder Calculator</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">Input Numbers</h2>
+                
+                <div class="instructions">
+                    <div class="instruction-title">
+                        <i class="fas fa-info-circle"></i> How to use:
+                    </div>
+                    <p>Enter numbers separated by commas, spaces, or line breaks. Specify the divisor (mod) in the "Divisor" field, then click "Calculate" to see how many times the divisor fits into each number and the remainder.</p>
+                    <div class="example">
+                        Example: For 17 ÷ 5 = 3 remainder 2<br>
+                        Divisor fits 3 times, residue (remainder) is 2
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="numbersInput"><i class="fas fa-list-ol"></i> Numbers (one per line or comma separated)</label>
+                    <textarea id="numbersInput" placeholder="Enter numbers like: 
+17, 23, 38, 42, 55
+7 8 9 10
+100, 250, 375">17, 23, 38, 42, 55, 100</textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label for="modInput"><i class="fas fa-divide"></i> Divisor (Mod)</label>
+                    <input type="number" id="modInput" placeholder="Enter divisor (e.g., 5)" value="5" min="1">
+                </div>
+                
+                <div class="button-group">
+                    <button class="calculate-btn" id="calculateBtn">
+                        <i class="fas fa-calculator"></i> Calculate
+                    </button>
+                    <button class="clear-btn" id="clearBtn">
+                        <i class="fas fa-broom"></i> Clear All
+                    </button>
+                    <button class="export-btn" id="exportBtn">
+                        <i class="fas fa-file-export"></i> Export Results
+                    </button>
+                </div>
+            </div>
+            
+            <div class="results-section">
+                <h2 class="section-title">Results</h2>
+                
+                <div class="mod-display" id="modDisplay">
+                    Divisor: 5
+                </div>
+                
+                <div class="results-container" id="resultsContainer">
+                    <div class="empty-results">
+                        <i class="fas fa-clock fa-2x" style="margin-bottom: 15px;"></i>
+                        <p>Your results will appear here after calculation.</p>
+                        <p style="margin-top: 10px;">Try entering numbers and a divisor, then click "Calculate".</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Logos App &copy; 2025 | Division & Remainder Calculator | Shows how many times divisor fits and the remainder</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM elements
+        const numbersInput = document.getElementById('numbersInput');
+        const modInput = document.getElementById('modInput');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const modDisplay = document.getElementById('modDisplay');
+        
+        // Calculate division and remainder
+        function calculateDivision() {
+            // Get numbers from input
+            const numbersText = numbersInput.value.trim();
+            const divisor = parseInt(modInput.value.trim());
+            
+            // Validation
+            if (!numbersText) {
+                alert('Please enter some numbers.');
+                return;
+            }
+            
+            if (isNaN(divisor) || divisor <= 0) {
+                alert('Please enter a valid positive divisor.');
+                return;
+            }
+            
+            // Parse numbers (allow commas, spaces, line breaks)
+            const numbersArray = numbersText
+                .split(/[\n,\s]+/) // Split by newline, comma, or space
+                .map(item => item.trim())
+                .filter(item => item !== '')
+                .map(item => parseFloat(item))
+                .filter(num => !isNaN(num));
+            
+            if (numbersArray.length === 0) {
+                alert('No valid numbers found. Please enter numeric values.');
+                return;
+            }
+            
+            // Update divisor display
+            modDisplay.textContent = `Divisor: ${divisor}`;
+            
+            // Clear previous results
+            resultsContainer.innerHTML = '';
+            
+            // Calculate and display results
+            numbersArray.forEach(num => {
+                // Calculate quotient (how many times divisor fits) and remainder
+                const quotient = Math.floor(num / divisor);
+                const remainder = num % divisor;
+                
+                // Create result element
+                const resultElement = document.createElement('div');
+                resultElement.className = 'result-item';
+                
+                // Build the equation string
+                let equation = `${num} ÷ ${divisor} = `;
+                if (quotient > 0) {
+                    equation += `${quotient} × ${divisor}`;
+                    if (remainder > 0) {
+                        equation += ` + ${remainder}`;
+                    }
+                } else {
+                    equation += `0 × ${divisor} + ${remainder}`;
+                }
+                
+                resultElement.innerHTML = `
+                    <div class="result-header">
+                        <span>${num} ÷ ${divisor}</span>
+                        <span>${num} = ${divisor} × ${quotient} + ${remainder}</span>
+                    </div>
+                    <div class="result-equation">${equation}</div>
+                    <div class="result-details">
+                        <div class="detail-box">
+                            <div class="detail-label">Divisor fits</div>
+                            <div class="detail-value quotient">${quotient} time${quotient !== 1 ? 's' : ''}</div>
+                        </div>
+                        <div class="detail-box">
+                            <div class="detail-label">Remainder (Residue)</div>
+                            <div class="detail-value remainder">${remainder}</div>
+                        </div>
+                    </div>
+                `;
+                
+                resultsContainer.appendChild(resultElement);
+            });
+            
+            // Add result count
+            const countElement = document.createElement('div');
+            countElement.className = 'mod-display';
+            countElement.style.marginTop = '15px';
+            countElement.textContent = `Calculated ${numbersArray.length} number(s)`;
+            resultsContainer.appendChild(countElement);
+        }
+        
+        // Clear all inputs and results
+        function clearAll() {
+            numbersInput.value = '';
+            modInput.value = '5';
+            resultsContainer.innerHTML = `
+                <div class="empty-results">
+                    <i class="fas fa-clock fa-2x" style="margin-bottom: 15px;"></i>
+                    <p>Your results will appear here after calculation.</p>
+                    <p style="margin-top: 10px;">Try entering numbers and a divisor, then click "Calculate".</p>
+                </div>
+            `;
+            modDisplay.textContent = 'Divisor: 5';
+        }
+        
+        // Export results as a text file
+        function exportResults() {
+            const resultItems = document.querySelectorAll('.result-item');
+            
+            if (resultItems.length === 0) {
+                alert('No results to export. Please calculate some divisions first.');
+                return;
+            }
+            
+            const divisor = modInput.value || '5';
+            let exportText = `Logos App - Division & Remainder Results\n`;
+            exportText += `Divisor: ${divisor}\n`;
+            exportText += `Generated: ${new Date().toLocaleString()}\n`;
+            exportText += `=================================\n\n`;
+            
+            resultItems.forEach(item => {
+                const header = item.querySelector('.result-header').textContent;
+                const equation = item.querySelector('.result-equation').textContent;
+                const quotient = item.querySelector('.quotient').textContent;
+                const remainder = item.querySelector('.remainder').textContent;
+                
+                exportText += `${header}\n`;
+                exportText += `${equation}\n`;
+                exportText += `Divisor fits: ${quotient}, Remainder: ${remainder}\n`;
+                exportText += `-------------------\n`;
+            });
+            
+            // Create download link
+            const blob = new Blob([exportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `division-results-divisor${divisor}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Event listeners
+        calculateBtn.addEventListener('click', calculateDivision);
+        clearBtn.addEventListener('click', clearAll);
+        exportBtn.addEventListener('click', exportResults);
+        
+        // Allow Enter key in mod input to trigger calculation
+        modInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                calculateDivision();
+            }
+        });
+        
+        // Initialize with example calculation
+        window.addEventListener('DOMContentLoaded', function() {
+            calculateDivision();
+        });
+    </script>
+</body>
+</html>

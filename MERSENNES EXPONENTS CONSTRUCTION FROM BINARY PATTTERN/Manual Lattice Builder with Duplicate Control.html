@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Lattice Builder with Duplicate Control</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+        }
+        .container {
+            border: 2px solid #333;
+            padding: 20px;
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .input-area {
+            background: #f0f0f0;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #999;
+        }
+        .input-row {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .input-row label {
+            width: 120px;
+            font-weight: bold;
+        }
+        .input-row input {
+            padding: 8px;
+            font-size: 16px;
+            width: 300px;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.allow {
+            background: #ff9800;
+        }
+        button.allow:hover {
+            background: #f57c00;
+        }
+        button.deny {
+            background: #f44336;
+        }
+        /* NEW: Export button style */
+        button.export {
+            background: #2196F3;
+        }
+        button.export:hover {
+            background: #0b7dda;
+        }
+        .lattice {
+            border: 1px solid #333;
+            margin: 15px 0;
+            padding: 15px;
+            background: #fafafa;
+        }
+        .lattice-header {
+            font-weight: bold;
+            background: #ddd;
+            padding: 8px;
+            margin: -15px -15px 15px -15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .numbers {
+            font-size: 20px;
+            line-height: 2;
+            word-break: break-all;
+        }
+        .step {
+            color: #666;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .duplicate-panel {
+            background: #fff3cd;
+            border: 2px solid #ff9800;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .duplicate-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f44336;
+            background: #fff;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ff9800;
+        }
+        .decision-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .used-numbers {
+            background: #f0f0f0;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid #999;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .number-tag {
+            display: inline-block;
+            background: #fff;
+            padding: 3px 10px;
+            margin: 3px;
+            border: 1px solid #999;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .number-tag.duplicate {
+            background: #ffeb3b;
+            border-color: #f44336;
+        }
+        .stats {
+            display: flex;
+            gap: 30px;
+            margin: 15px 0;
+            padding: 10px;
+            background: #e0e0e0;
+            align-items: center; /* NEW: Align items vertically */
+            flex-wrap: wrap; /* NEW: Allow wrapping on small screens */
+        }
+        /* NEW: Export button container */
+        .export-buttons {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+        .pending-lattice {
+            background: #fff3cd;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 5px solid #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Manual Lattice Builder with Duplicate Control</h1>
+        <p>You decide when to allow duplicates as you build</p>
+
+        <div class="stats">
+            <div>Total numbers used: <span id="totalUsed">0</span></div>
+            <div>Lattices created: <span id="totalLattices">0</span></div>
+            <div>Duplicates allowed: <span id="duplicateCount">0</span></div>
+            
+            <!-- NEW: Export buttons -->
+            <div class="export-buttons">
+                <button class="export" onclick="exportAsText()"> Save as Text</button>
+                <button class="export" onclick="exportAsJSON()"> Save as JSON</button>
+                <button class="export" onclick="exportAsCSV()"> Save as CSV</button>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-row">
+                <label>Start Number:</label>
+                <input type="number" id="startNum" value="2" min="1">
+            </div>
+            <div class="input-row">
+                <label>Pattern (0s and 1s):</label>
+                <input type="text" id="pattern" placeholder="e.g., 01001">
+            </div>
+            <div>
+                <button onclick="checkPattern()"> CHECK PATTERN</button>
+                <button onclick="resetAll()"> RESET ALL</button>
+            </div>
+        </div>
+
+        <div id="duplicateDecision" style="display: none;"></div>
+        <div id="pendingDisplay" style="display: none;"></div>
+
+        <div id="lattices"></div>
+
+        <div class="used-numbers">
+            <strong> All numbers used (🟡 = duplicate allowed):</strong>
+            <div id="usedList"></div>
+        </div>
+    </div>
+
+    <script>
+        let usedNumbers = new Set();
+        let duplicateNumbers = new Set(); // Track which numbers are duplicates
+        let lattices = [];
+        let pendingLattice = null;
+
+        function calculateLattice(start, pattern) {
+            let numbers = [start];
+            let current = start;
+            let duplicates = [];
+            
+            for (let i = 0; i < pattern.length; i++) {
+                const bit = pattern[i];
+                if (bit === '0') {
+                    current = current * 2;
+                } else if (bit === '1') {
+                    current = current * 2 + 1;
+                } else {
+                    return {error: 'Invalid pattern. Use only 0 and 1'};
+                }
+                
+                numbers.push({
+                    value: current,
+                    operation: bit === '0' ? '×2' : '×2+1',
+                    isDuplicate: usedNumbers.has(current)
+                });
+                
+                if (usedNumbers.has(current)) {
+                    duplicates.push({
+                        position: i + 1,
+                        value: current
+                    });
+                }
+            }
+            
+            return {
+                numbers: numbers,
+                duplicates: duplicates,
+                hasDuplicates: duplicates.length > 0
+            };
+        }
+
+        function checkPattern() {
+            const start = parseInt(document.getElementById('startNum').value) || 2;
+            const pattern = document.getElementById('pattern').value.trim();
+            
+            if (!pattern) {
+                alert('Please enter a pattern');
+                return;
+            }
+            
+            if (!pattern.match(/^[01]+$/)) {
+                alert('Pattern must contain only 0s and 1s');
+                return;
+            }
+            
+            const result = calculateLattice(start, pattern);
+            
+            if (result.error) {
+                alert(result.error);
+                return;
+            }
+            
+            if (result.hasDuplicates) {
+                // Show duplicate decision panel
+                showDuplicateDecision(start, pattern, result);
+            } else {
+                // No duplicates - add immediately
+                addLattice(start, pattern, result.numbers);
+            }
+        }
+
+        function showDuplicateDecision(start, pattern, result) {
+            pendingLattice = {
+                start: start,
+                pattern: pattern,
+                numbers: result.numbers,
+                duplicates: result.duplicates
+            };
+            
+            const decisionDiv = document.getElementById('duplicateDecision');
+            decisionDiv.style.display = 'block';
+            
+            let html = '<div class="duplicate-panel">';
+            html += '<h3> DUPLICATES DETECTED</h3>';
+            
+            result.duplicates.forEach(dup => {
+                html += `<div class="duplicate-number">Position ${dup.position}: ${dup.value} is already used</div>`;
+            });
+            
+            html += '<div class="decision-buttons">';
+            html += '<button class="allow" onclick="allowDuplicates()">✓ ALLOW duplicates (add anyway)</button>';
+            html += '<button class="deny" onclick="denyDuplicates()">✗ DENY (cancel lattice)</button>';
+            html += '</div></div>';
+            
+            decisionDiv.innerHTML = html;
+            
+            // Show preview
+            showPendingPreview(pendingLattice);
+        }
+
+        function showPendingPreview(lattice) {
+            const previewDiv = document.getElementById('pendingDisplay');
+            previewDiv.style.display = 'block';
+            
+            let html = '<div class="pending-lattice">';
+            html += '<strong>📋 Preview (not added yet):</strong><br>';
+            html += `<div class="numbers">`;
+            
+            // Show numbers with duplicate highlights
+            html += `<span style="font-weight:bold">${lattice.numbers[0]}</span>`;
+            
+            for (let i = 1; i < lattice.numbers.length; i++) {
+                html += ' → ';
+                const num = lattice.numbers[i];
+                
+                if (num.isDuplicate) {
+                    html += `<span style="color:#f44336; font-weight:bold; background:#ffeb3b">${num.value}</span>`;
+                } else {
+                    html += `<span>${num.value}</span>`;
+                }
+                html += `<span class="step">${num.operation}</span>`;
+            }
+            
+            html += '</div></div>';
+            previewDiv.innerHTML = html;
+        }
+
+        function allowDuplicates() {
+            if (!pendingLattice) return;
+            
+            // Add the lattice with duplicates allowed
+            addLattice(pendingLattice.start, pendingLattice.pattern, pendingLattice.numbers, true);
+            
+            // Clear pending
+            clearPending();
+        }
+
+        function denyDuplicates() {
+            clearPending();
+            alert('Lattice cancelled');
+        }
+
+        function clearPending() {
+            pendingLattice = null;
+            document.getElementById('duplicateDecision').style.display = 'none';
+            document.getElementById('pendingDisplay').style.display = 'none';
+            document.getElementById('pattern').value = '';
+        }
+
+        function addLattice(start, pattern, numbers, duplicatesAllowed = false) {
+            // Add start number if not already used
+            if (!usedNumbers.has(start)) {
+                usedNumbers.add(start);
+            }
+            
+            // Add all numbers
+            for (let i = 1; i < numbers.length; i++) {
+                const num = numbers[i];
+                if (usedNumbers.has(num.value)) {
+                    if (duplicatesAllowed) {
+                        duplicateNumbers.add(num.value);
+                    }
+                } else {
+                    usedNumbers.add(num.value);
+                }
+            }
+            
+            // Store lattice
+            lattices.push({
+                start: start,
+                pattern: pattern,
+                numbers: numbers,
+                hasDuplicates: duplicatesAllowed,
+                timestamp: new Date().toISOString() // NEW: Add timestamp
+            });
+            
+            // Clear input
+            document.getElementById('pattern').value = '';
+            
+            // Update display
+            displayLattices();
+            updateStats();
+            clearPending();
+        }
+
+        function displayLattices() {
+            const div = document.getElementById('lattices');
+            div.innerHTML = '';
+            
+            lattices.forEach((lattice, index) => {
+                const latticeDiv = document.createElement('div');
+                latticeDiv.className = 'lattice';
+                
+                if (lattice.hasDuplicates) {
+                    latticeDiv.style.borderLeft = '5px solid #ff9800';
+                }
+                
+                const header = document.createElement('div');
+                header.className = 'lattice-header';
+                header.innerHTML = `
+                    <span>Lattice ${index + 1} ${lattice.hasDuplicates ? ' (has duplicates)' : ''}</span>
+                    <span>pattern: ${lattice.pattern}</span>
+                `;
+                
+                const numbersDiv = document.createElement('div');
+                numbersDiv.className = 'numbers';
+                
+                // Show numbers
+                numbersDiv.innerHTML += `<span style="font-weight:bold">${lattice.numbers[0]}</span>`;
+                
+                for (let i = 1; i < lattice.numbers.length; i++) {
+                    numbersDiv.innerHTML += ' → ';
+                    const num = lattice.numbers[i];
+                    
+                    if (num.isDuplicate && lattice.hasDuplicates) {
+                        numbersDiv.innerHTML += `<span style="color:#f44336; font-weight:bold">${num.value}</span>`;
+                    } else {
+                        numbersDiv.innerHTML += `<span>${num.value}</span>`;
+                    }
+                    numbersDiv.innerHTML += `<span class="step">${num.operation}</span>`;
+                }
+                
+                latticeDiv.appendChild(header);
+                latticeDiv.appendChild(numbersDiv);
+                div.appendChild(latticeDiv);
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalUsed').textContent = usedNumbers.size;
+            document.getElementById('totalLattices').textContent = lattices.length;
+            document.getElementById('duplicateCount').textContent = duplicateNumbers.size;
+            
+            // Update used numbers list
+            const usedList = document.getElementById('usedList');
+            usedList.innerHTML = '';
+            
+            Array.from(usedNumbers).sort((a, b) => a - b).forEach(num => {
+                const tag = document.createElement('span');
+                tag.className = 'number-tag';
+                tag.textContent = num;
+                
+                if (duplicateNumbers.has(num)) {
+                    tag.classList.add('duplicate');
+                }
+                
+                usedList.appendChild(tag);
+            });
+        }
+
+        // NEW: Export as formatted text file
+        function exportAsText() {
+            let content = "LATTICE BUILDER EXPORT\n";
+            content += "=" .repeat(50) + "\n\n";
+            content += `Export Date: ${new Date().toLocaleString()}\n`;
+            content += `Total numbers used: ${usedNumbers.size}\n`;
+            content += `Lattices created: ${lattices.length}\n`;
+            content += `Duplicates allowed: ${duplicateNumbers.size}\n\n`;
+            
+            content += "ALL NUMBERS USED:\n";
+            content += Array.from(usedNumbers).sort((a,b) => a-b).join(", ");
+            content += "\n\n";
+            
+            content += "NUMBERS WITH DUPLICATES ALLOWED:\n";
+            content += Array.from(duplicateNumbers).sort((a,b) => a-b).join(", ");
+            content += "\n\n";
+            
+            content += "LATTICES:\n";
+            content += "-".repeat(40) + "\n\n";
+            
+            lattices.forEach((lattice, index) => {
+                content += `Lattice ${index + 1} (Pattern: ${lattice.pattern})\n`;
+                if (lattice.hasDuplicates) content += " Contains duplicates\n";
+                
+                // Format the number sequence
+                let sequence = lattice.numbers.map((num, i) => {
+                    if (i === 0) return num.toString();
+                    return `${num.value} (${num.operation})`;
+                }).join(" → ");
+                
+                content += sequence + "\n\n";
+            });
+            
+            downloadFile(content, "lattice_export.txt", "text/plain");
+        }
+
+        // NEW: Export as JSON (good for data processing)
+        function exportAsJSON() {
+            const exportData = {
+                exportDate: new Date().toISOString(),
+                statistics: {
+                    totalNumbers: usedNumbers.size,
+                    totalLattices: lattices.length,
+                    duplicateCount: duplicateNumbers.size
+                },
+                numbers: {
+                    all: Array.from(usedNumbers).sort((a,b) => a-b),
+                    duplicates: Array.from(duplicateNumbers).sort((a,b) => a-b)
+                },
+                lattices: lattices.map((lattice, index) => ({
+                    id: index + 1,
+                    pattern: lattice.pattern,
+                    startNumber: lattice.start,
+                    hasDuplicates: lattice.hasDuplicates,
+                    timestamp: lattice.timestamp,
+                    sequence: lattice.numbers.map(num => 
+                        typeof num === 'object' ? num.value : num
+                    ),
+                    operations: lattice.numbers.slice(1).map(num => num.operation)
+                }))
+            };
+            
+            const jsonString = JSON.stringify(exportData, null, 2);
+            downloadFile(jsonString, "lattice_export.json", "application/json");
+        }
+
+        // NEW: Export as CSV (good for spreadsheets)
+        function exportAsCSV() {
+            let csv = "Lattice ID,Pattern,Start Number,Has Duplicates,Sequence,Timestamp\n";
+            
+            lattices.forEach((lattice, index) => {
+                const sequence = lattice.numbers.map(num => 
+                    typeof num === 'object' ? num.value : num
+                ).join(";");
+                
+                const row = [
+                    index + 1,
+                    lattice.pattern,
+                    lattice.start,
+                    lattice.hasDuplicates ? "Yes" : "No",
+                    sequence,
+                    lattice.timestamp || new Date().toISOString()
+                ].map(cell => `"${cell}"`).join(",");
+                
+                csv += row + "\n";
+            });
+            
+            downloadFile(csv, "lattice_export.csv", "text/csv");
+        }
+
+        // NEW: Helper function to download files
+        function downloadFile(content, fileName, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function resetAll() {
+            usedNumbers.clear();
+            duplicateNumbers.clear();
+            lattices = [];
+            clearPending();
+            document.getElementById('lattices').innerHTML = '';
+            updateStats();
+        }
+
+        // Initialize
+        updateStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shell-Leg Pattern Tester</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0f0f1a;
+            color: #ddd;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #6c5ce7;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .card {
+            background: #1a1a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .base-selector {
+            display: flex;
+            gap: 10px;
+            background: #0f0f1a;
+            padding: 5px 15px;
+            border-radius: 40px;
+        }
+        
+        .base-btn {
+            padding: 8px 25px;
+            background: #2a2a3a;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .base-btn.active {
+            background: #6c5ce7;
+            color: white;
+        }
+        
+        .pattern-input {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .pattern-input input {
+            width: 100%;
+            padding: 10px 15px;
+            background: #0f0f1a;
+            border: 1px solid #2a2a3a;
+            color: white;
+            border-radius: 30px;
+            font-family: monospace;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+        
+        button {
+            background: #6c5ce7;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #5a4ad7;
+        }
+        
+        .result {
+            background: #0f0f1a;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .path {
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            line-height: 1.6;
+            background: #0a0a14;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .pattern-display {
+            background: #2a2a3a;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 3px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            background: #0f0f1a;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #6c5ce7;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+        }
+        
+        .prime {
+            color: #44ffaa;
+            font-weight: bold;
+        }
+        
+        .composite {
+            color: #ffaa44;
+            font-weight: bold;
+        }
+        
+        .factor {
+            color: #ff8888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .saved-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .saved-item {
+            background: #0f0f1a;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            border-left: 3px solid #6c5ce7;
+        }
+        
+        .saved-item:hover {
+            background: #2a2a3a;
+        }
+        
+        .delete-btn {
+            float: right;
+            background: #5f2a2a;
+            padding: 2px 8px;
+            border-radius: 15px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        
+        .delete-btn:hover {
+            background: #8a3a3a;
+        }
+        
+        hr {
+            border-color: #2a2a3a;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌿 SHELL-LEG PATTERN TESTER</h1>
+    <div class="subtitle">Enter binary pattern (0=×2, 1=×2+1) | Pattern must end with 1</div>
+    
+    <div class="card">
+        <div class="input-group">
+            <div class="base-selector">
+                <div class="base-btn active" data-base="2">START 2</div>
+                <div class="base-btn" data-base="3">START 3</div>
+            </div>
+            <div class="pattern-input">
+                <input type="text" id="patternInput" placeholder="e.g., 10001001100011001001010101">
+            </div>
+            <button id="btnTest">🔍 TEST PATTERN</button>
+        </div>
+        
+        <div id="resultArea"></div>
+    </div>
+    
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <strong>📚 SAVED PATTERNS</strong>
+            <button id="btnClearAll" style="padding: 4px 12px; font-size: 11px;">Clear All</button>
+        </div>
+        <hr>
+        <div id="savedList" class="saved-list">
+            <div style="color:#888; text-align:center;">No saved patterns yet. Test a pattern and click SAVE</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // PRIME CHECKER
+    // ============================================================
+    
+    function digitalRoot(n) {
+        if (n === 0) return 0;
+        return 1 + (n - 1) % 9;
+    }
+    
+    function quickCompositeCheck(n) {
+        // Digital root first
+        const dr = digitalRoot(n);
+        if (dr === 3 || dr === 6 || dr === 9) {
+            return { isPrime: false, reason: `digital root ${dr} (divisible by 3)`, factor: 3 };
+        }
+        
+        // Small primes up to 100
+        const smallPrimes = [2, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
+        
+        for (let p of smallPrimes) {
+            if (n % p === 0) {
+                if (n === p) continue;
+                return { isPrime: false, reason: `divisible by ${p}`, factor: p };
+            }
+        }
+        
+        // Quick check up to 500
+        for (let i = 101; i <= 500; i += 2) {
+            if (n % i === 0) {
+                return { isPrime: false, reason: `divisible by ${i}`, factor: i };
+            }
+        }
+        
+        return { isPrime: true, reason: "no small factors (candidate for Lucas-Lehmer)", factor: null };
+    }
+    
+    // ============================================================
+    // PATH CALCULATION
+    // ============================================================
+    
+    function applyPattern(seed, pattern) {
+        let vertices = [seed];
+        let current = seed;
+        let steps = [];
+        
+        for (let i = 0; i < pattern.length; i++) {
+            const bit = pattern[i];
+            if (bit === '0') {
+                current = current * 2;
+                steps.push({ op: '×2', bit: 0 });
+            } else if (bit === '1') {
+                current = current * 2 + 1;
+                steps.push({ op: '×2+1', bit: 1 });
+            } else {
+                return { error: 'Invalid pattern. Use only 0 and 1' };
+            }
+            vertices.push(current);
+        }
+        
+        return {
+            seed: seed,
+            pattern: pattern,
+            vertices: vertices,
+            terminal: current,
+            steps: steps,
+            length: pattern.length,
+            legs: (pattern.match(/1/g) || []).length,
+            shells: pattern.length - (pattern.match(/1/g) || []).length
+        };
+    }
+    
+    // ============================================================
+    // STORAGE
+    // ============================================================
+    
+    let savedPatterns = [];
+    
+    function loadSaved() {
+        const saved = localStorage.getItem('savedPatterns');
+        if (saved) {
+            try {
+                savedPatterns = JSON.parse(saved);
+            } catch(e) { savedPatterns = []; }
+        }
+        renderSaved();
+    }
+    
+    function savePattern(seed, pattern, terminal, legs, shells, primeStatus) {
+        const existing = savedPatterns.find(p => p.seed === seed && p.pattern === pattern);
+        if (existing) {
+            alert('Pattern already saved!');
+            return;
+        }
+        
+        savedPatterns.unshift({
+            seed: seed,
+            pattern: pattern,
+            terminal: terminal,
+            legs: legs,
+            shells: shells,
+            length: pattern.length,
+            primeStatus: primeStatus,
+            date: new Date().toISOString()
+        });
+        
+        // Keep only last 100
+        if (savedPatterns.length > 100) savedPatterns.pop();
+        
+        localStorage.setItem('savedPatterns', JSON.stringify(savedPatterns));
+        renderSaved();
+    }
+    
+    function deletePattern(index) {
+        savedPatterns.splice(index, 1);
+        localStorage.setItem('savedPatterns', JSON.stringify(savedPatterns));
+        renderSaved();
+    }
+    
+    function clearAll() {
+        if (confirm('Delete all saved patterns?')) {
+            savedPatterns = [];
+            localStorage.setItem('savedPatterns', JSON.stringify(savedPatterns));
+            renderSaved();
+        }
+    }
+    
+    function renderSaved() {
+        const container = document.getElementById('savedList');
+        
+        if (savedPatterns.length === 0) {
+            container.innerHTML = '<div style="color:#888; text-align:center;">No saved patterns. Test a pattern and click SAVE</div>';
+            return;
+        }
+        
+        container.innerHTML = savedPatterns.map((p, idx) => {
+            const primeClass = p.primeStatus === 'prime' ? 'prime' : (p.primeStatus === 'composite' ? 'composite' : '');
+            return `
+                <div class="saved-item" onclick="loadPattern(${idx})">
+                    <span class="${primeClass}">${p.terminal.toLocaleString()}</span>
+                    <span style="color:#6c5ce7"> | ${p.pattern}</span>
+                    <span style="color:#888; font-size:10px;"> (seed ${p.seed} | legs:${p.legs} shells:${p.shells})</span>
+                    <span class="delete-btn" onclick="event.stopPropagation(); deletePattern(${idx})">✗</span>
+                </div>
+            `;
+        }).join('');
+    }
+    
+    function loadPattern(index) {
+        const p = savedPatterns[index];
+        document.querySelector(`.base-btn[data-base="${p.seed}"]`).click();
+        document.getElementById('patternInput').value = p.pattern;
+        testPattern();
+    }
+    
+    // ============================================================
+    // TEST PATTERN
+    // ============================================================
+    
+    let currentResult = null;
+    
+    function testPattern() {
+        const seed = parseInt(document.querySelector('.base-btn.active').dataset.base);
+        const pattern = document.getElementById('patternInput').value.trim();
+        
+        if (!pattern) {
+            alert('Enter a pattern');
+            return;
+        }
+        
+        if (!pattern.match(/^[01]+$/)) {
+            alert('Pattern must contain only 0 and 1');
+            return;
+        }
+        
+        if (pattern[pattern.length - 1] !== '1') {
+            alert('Pattern must end with 1 (leg operation)');
+            return;
+        }
+        
+        const result = applyPattern(seed, pattern);
+        
+        if (result.error) {
+            alert(result.error);
+            return;
+        }
+        
+        currentResult = result;
+        
+        // Check primality
+        const primeCheck = quickCompositeCheck(result.terminal);
+        const dr = digitalRoot(result.terminal);
+        
+        let primeHtml = '';
+        if (primeCheck.isPrime) {
+            primeHtml = `<div class="prime">✨ PRIME CANDIDATE! ${primeCheck.reason}</div>`;
+        } else {
+            primeHtml = `<div class="composite">❌ COMPOSITE: ${primeCheck.reason}</div>`;
+            primeHtml += `<div class="factor">→ ${result.terminal} = ${primeCheck.factor} × ${result.terminal / primeCheck.factor}</div>`;
+        }
+        
+        // Build path display
+        let pathHtml = `<div class="path"><strong>${result.vertices[0]}</strong>`;
+        for (let i = 1; i < result.vertices.length; i++) {
+            pathHtml += ` → <span style="color:#6c5ce7">${result.vertices[i]}</span> <span style="color:#888">(${result.steps[i-1].op})</span>`;
+        }
+        pathHtml += `</div>`;
+        
+        const resultHtml = `
+            <div class="result">
+                <div class="pattern-display">${result.pattern}</div>
+                <div class="stats">
+                    <div class="stat"><div class="stat-value">${result.length}</div><div class="stat-label">Length</div></div>
+                    <div class="stat"><div class="stat-value">${result.legs}</div><div class="stat-label">Legs (1's)</div></div>
+                    <div class="stat"><div class="stat-value">${result.shells}</div><div class="stat-label">Shells (0's)</div></div>
+                    <div class="stat"><div class="stat-value">${dr}</div><div class="stat-label">Digital Root</div></div>
+                </div>
+                <div class="stat" style="margin:10px 0">
+                    <div class="stat-value" style="font-size:24px">${result.terminal.toLocaleString()}</div>
+                    <div class="stat-label">TERMINAL</div>
+                </div>
+                ${primeHtml}
+                ${pathHtml}
+                <div style="margin-top:15px; text-align:center">
+                    <button onclick="saveCurrentPattern()" style="background:#ff9800">💾 SAVE PATTERN</button>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('resultArea').innerHTML = resultHtml;
+    }
+    
+    function saveCurrentPattern() {
+        if (!currentResult) return;
+        
+        const primeCheck = quickCompositeCheck(currentResult.terminal);
+        const primeStatus = primeCheck.isPrime ? 'prime' : 'composite';
+        
+        savePattern(
+            currentResult.seed,
+            currentResult.pattern,
+            currentResult.terminal,
+            currentResult.legs,
+            currentResult.shells,
+            primeStatus
+        );
+    }
+    
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+    
+    document.getElementById('btnTest').addEventListener('click', testPattern);
+    document.getElementById('btnClearAll').addEventListener('click', clearAll);
+    
+    document.querySelectorAll('.base-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.base-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // Retest if there's a pattern
+            if (document.getElementById('patternInput').value.trim()) {
+                testPattern();
+            }
+        });
+    });
+    
+    document.getElementById('patternInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') testPattern();
+    });
+    
+    loadSaved();
+    
+    // Example pattern from your research
+    document.getElementById('patternInput').value = '10001001100011001001010101';
+</script>
+</body>
+</html>
