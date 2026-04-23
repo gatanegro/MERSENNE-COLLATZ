@@ -1,121 +1,69 @@
-**NEW**
+We present a deterministic generative grammar for the exponents of Mersenne primes. The grammar expresses every Mersenne exponent \(p_n\) (for \(n \geq 5\)) as the product of two earlier exponents plus or minus the difference of two additional earlier exponents: \(p_n = p_a \times p_b \pm (p_c - p_d)\).
+
+We demonstrate that this formula, using only the largest product of earlier exponents less than the target, successfully generates 48 of the 48 analyzable exponents.
+
+This IS PUBLISHED IN **DOI 10.5281/zenodo.1971398999** by the time that M50 was not found to hold this formula.
+
+##UPDATE : M50 ALSO HOLD THE FORMULA.##
+
+For Mersenne exponents pe with index e > 5 , the generative formula is:
+
+<img width="178" height="27" alt="image" src="https://github.com/user-attachments/assets/e992eb45-84f2-47c2-9af2-454ab35484f3" />
 
 
-**Mersenne Exponents Emerge from a Deterministic Binary Lattice: Two New Prime Candidates**
- Markdown
+ 
+ Manual Method — Largest Product + m² Scaling
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19206108.svg)](https://doi.org/10.5281/zenodo.19206108)
+p_a × p_b = largest product < target. If k too big, scale by m².
+Done: 48 found
+M#	p_e	m	p_a	p_b	m²×p_a×p_b	k
+M5	13 	1	2	5 	10	3
+M6	17 	1	3	5 	15	2
+M7	19 	1	3	5 	15	4
+M8	31 	1	2	13 	26	5
+M9	61 	1	3	19 	57	4
+M10	89 	1	5	17 	85	4
+M11	107 	1	5	19 	95	12
+M12	127 	1	2	61 	122	5
+M13	521 	1	5	89 	445	76
+M14	607 	1	19	31 	589	18
+M15	1,279 	1	2	607 	1,214	65
+M16	2,203 	1	17	127 	2,159	44
+M17	2,281 	1	17	127 	2,159	122
+M18	3,217 	1	5	607 	3,035	182
+M19	4,253 	1	7	607 	4,249	4
+M20	4,423 	1	2	2,203 	4,406	17
+M21	9,689 	1	3	3,217 	9,651	38
+M22	9,941 	1	19	521 	9,899	42
+M23	11,213 	1	5	2,203 	11,015	198
+M24	19,937 	1	2	9,941 	19,882	55
+M25	21,701 	1	5	4,253 	21,265	436
+M26	23,209 	1	7	3,217 	22,519	690
+M27	44,497 	1	2	21,701 	43,402	1,095
+M28	86,243 	1	19	4,423 	84,037	2,206
+M29	110,503 	1	5	21,701 	108,505	1,998
+M30	132,049 	1	31	4,253 	131,843	206
+M31	216,091 	1	19	11,213 	213,047	3,044
+M32	756,839 	1	17	44,497 	756,449	390
+M33	859,433 	1	89	9,689 	862,321	-2,888
+M34	1,257,787 	1	127	9,941 	1,262,507	-4,720
+M35	1,398,269 	590	2	2 	1,392,400	5,869
+M36	2,976,221 	862	2	2 	2,972,176	4,045
+M37	3,021,377 	868	2	2 	3,013,696	7,681
+M38	6,972,593 	1320	2	2 	6,969,600	2,993
+M39	13,466,917 	1835	2	2 	13,468,900	-1,983
+M40	20,996,011 	2291	2	2 	20,994,724	1,287
+M41	24,036,583 	2451	2	2 	24,029,604	6,979
+M42	25,964,951 	2548	2	2 	25,969,216	-4,265
+M43	30,402,457 	2757	2	2 	30,404,196	-1,739
+M44	32,582,657 	2854	2	2 	32,581,264	1,393
+M45	37,156,667 	3048	2	2 	37,161,216	-4,549
+M46	42,643,801 	3265	2	2 	42,640,900	2,901
+M47	43,112,609 	3283	2	2 	43,112,356	253
+M48	57,885,161 	3804	2	2 	57,881,664	3,497
+M49	74,207,281 	4307	2	2 	74,200,996	6,285
+M50	77,232,917 	4394	2	2 	77,228,944	3,973
+M51	82,589,933 	4544	2	2 	82,591,744	-1,811
+M52	136,279,841 	5837	2	2 	136,282,276	-2,435
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19143819.svg)](https://doi.org/10.5281/zenodo.19143819)
-
-We present a deterministic construction of all 52 known Mersenne exponents (OEIS A000043) using a binary growth process from seeds 2 and 3. The construction employs two operations—shell () and leg ()—with a flip rule that prevents vertex duplication. The resulting lattice contains 621 vertices and 43 branch points, with each Mersenne exponent corresponding to a unique binary pattern. The construction yields two new prime candidates not previously identified as Mersenne exponents: (from seed 2, depth 26) and  (from seed 3, depth 25). Both satisfy the 
- condition, pass Miller–Rabin tests, and occupy branch points shared with known Mersenne exponents, suggesting they are strong candidates for the 53rd and 54th Mersenne primes. The lattice provides a structural characterization of Mersenne exponents independent of the Lucas–Lehmer test.
-
-**Keywords:** Mersenne primes, Mersenne exponents, deterministic construction, binary lattice, shell–leg operators
-
-MSC 2020: 11A41 (Primary), 11N05, 11Y11, 11B83
-
-
- 1. Introduction
-
-Mersenne primes are primes of the form , where  itself must be prime. The sequence of Mersenne exponents  (OEIS A000043) has been studied for centuries, with 52 known as of 2026. Traditional discovery requires the Lucas–Lehmer primality test on numbers of enormous size, making the search computationally intensive and reliant on distributed computing (GIMPS).
-
-This paper presents a fundamentally different approach: a deterministic construction that generates Mersenne exponents directly using two elementary operations on the integers 2 and 3. The construction reveals that Mersenne exponents are not merely primes satisfying a special condition but rather the terminal nodes of a structured binary tree with specific branching rules.
-
-
- 2.4 Lattice Properties
-
-From seeds 2 and 3, with the flip rule enforced, we constructed the complete lattice up to depth 26. Table 1 summarizes the lattice properties.
-
-Table 1: Lattice Summary
-
-| Property                                      | Value    |
-|---------------------------------------------- |----------|
-| Seeds                                         | 2, 3     |
-| Total vertices                                | 621      |
-| Total paths to Mersenne exponents             | 52       |
-| Branch points                                 | 43       |
-| Maximum depth                                 | 26       |
-| Intersection nodes                            | 43       |
-
-All 52 known Mersenne exponents are terminal nodes of unique shell–leg paths in this lattice.
-
-
- 3. Complete Catalog of Mersenne Paths
-
-Table 2 presents the full catalog of all 52 Mersenne exponents with their generating patterns, seeds, and path statistics.
-
-Table 2: Complete Mersenne Paths
-
-| Index  | Exponent    | Seed    | Pattern                             | Legs  | Shells    | Length   |
-|--------|-------------|---------|-------------------------------------|-------|-----------|----------|
-| M1     | 2           | base    | —                                   | 0     | 0         | 0        |
-| M2     | 3           | base    | —                                   | 0     | 0         | 0        |
-| M3     | 5           | 2       | 1                                   | 1     | 0         | 1        |
-| M4     | 7           | 3       | 1                                   | 1     | 0         | 1        |
-| M5     | 13          | 3       | 01                                  | 1     | 1         | 2        |
-| M6     | 17          | 2       | 001                                 | 1     | 2         | 3        |
-| M7     | 19          | 2       | 011                                 | 2     | 1         | 3        |
-| M8     | 31          | 3       | 111                                 | 3     | 0         | 3        |
-| M9     | 61          | 3       | 1101                                | 3     | 1         | 4        |
-| M10    | 89          | 2       | 11001                               | 3     | 2         | 5        |
-| M11    | 107         | 3       | 01011                               | 3     | 2         | 5        |
-| M12    | 127         | 3       | 11111                               | 5     | 0         | 5        |
-| M13    | 521         | 2       | 00001001                            | 2     | 6         | 8        |
-| M14    | 607         | 2       | 01011111                            | 6     | 2         | 8        |
-| M15    | 1279        | 2       | 011111111                           | 8     | 1         | 9        |
-| M16    | 2203        | 2       | 0010011011                          | 5     | 5         | 10       |
-| M17    | 2281        | 2       | 0011101001                          | 5     | 5         | 10       |
-| M18    | 3217        | 3       | 0010010001                          | 3     | 7         | 10       |
-| M19    | 4253        | 2       | 00010011101                         | 5     | 6         | 11       |
-| M20    | 4423        | 2       | 00101000111                         | 5     | 6         | 11       |
-| M21    | 9689        | 2       | 010111011001                        | 7     | 5         | 12       |
-| M22    | 9941        | 2       | 011011010101                        | 7     | 5         | 12       |
-| M23    | 11213       | 2       | 101111001101                        | 8     | 4         | 12       |
-| M24    | 19937       | 2       | 0110111100001                       | 7     | 6         | 13       |
-| M25    | 21701       | 2       | 1010011000101                       | 6     | 7         | 13       |
-| M26    | 23209       | 2       | 1101010101001                       | 7     | 6         | 13       |
-| M27    | 44497       | 2       | 10110111010001                      | 8     | 6         | 14       |
-| M28    | 86243       | 2       | 101000011100011                     | 7     | 8         | 15       |
-| M29    | 110503      | 3       | 010111110100111                     | 10    | 5         | 15       |
-| M30    | 132049      | 2       | 0000001111010001                    | 6     | 10        | 16       |
-| M31    | 216091      | 3       | 0100110000011011                    | 7     | 9         | 16       |
-| M32    | 756839      | 2       | 111000110001100111                  | 10    | 8         | 18       |
-| M33    | 859433      | 3       | 010001110100101001                  | 8     | 10        | 18       |
-| M34   | 1257787      | 2       | 0110011000100111011                 | 10    | 9         | 19       |
-| M35   | 1398269      | 2       | 1010101010111111101                 | 13    | 6         | 19       |
-| M36   | 2976221      | 2       | 11010110100111011101                | 13    | 7         | 20       |
-| M37   | 3021377      | 2       | 11100001101001000001                | 8     | 12        | 20       |
-| M38   | 6972593      | 3       | 010100110010010110001               | 9     | 12        | 21       |
-| M39   | 13466917     | 3       | 0011010111110100100101              | 12    | 10        | 22       |
-| M40   | 20996011     | 2       | 10000000101111110101011             | 12    | 11        | 23       |
-| M41   | 24036583     | 2       | 11011101100010011100111             | 14    | 9         | 23       |
-| M42   | 25964951     | 3       | 00011000011000110010111             | 10    | 13        | 23       |
-| M43   | 30402457     | 3       | 10011111110011110011001             | 15    | 8         | 23       |
-| M44   | 32582657     | 3       | 11100010010110000000001             | 8     | 15        | 23       |
-| M45   | 37156667     | 2       | 001101101111011100111011            | 16    | 8         | 24       |
-| M46   | 42643801     | 2       | 100010101011000101011001            | 11    | 13        | 24       |
-| M47   | 43112609     | 2       | 100100011101100010100001            | 10    | 14        | 24       |
-| M48   | 57885161     | 3       | 011100110100000111101001            | 12    | 12        | 24       |
-| M49   | 74207281     | 2       | 0011011000101000000110001           | 9     | 16        | 25       |
-| M50   | 77232917     | 2       | 0100110100111101100010101           | 13    | 12        | 25       |
-| M51   | 82589933     | 2       | 0111011000011100011101101           | 14    | 11        | 25       |
-| M52   | 136279841    | 2       | 00000111110111011100100001          | 13    | 13        | 26       |
-
-
-**BASE 3 example:**
-BASE 3 BRANCHES  
-
-**M2 3** (base)
-
-**M4** (3) = 7 (pattern: 1), (1 term), (1 leg)
-
-**M8** (3, 7, 15) = 31 (pattern: 111), (3 terms), (3 legs)
-**M12** (3, 7, 15, 31, 63) = 127 (pattern: 11111), (5 terms), (5 legs)
-**M44** (3, 7, 15, 31, 62, 124, 248, 497, 994, 1988, 3977, 7954, 15909, 31819, 63638, 127276, 254552, 509104, 1018208, 2036416, 4072832, 8145664, 16291328) = 32582657 (pattern: 11100010010110000000001), (23 terms), (8 legs), (15 shells)
-
-**M43** (3, 7, 14, 28, 57, 115, 231, 463, 927, 1855, 3711, 7422, 14844, 29689, 59379, 118759, 237519, 475038, 950076, 1900153, 3800307, 7600614, 15201228) = 30402457 (pattern: 10011111110011110011001), (23 terms), (15 legs), (8 shells)
-
-**M9** (3, 7, 15, 30) = 61 (pattern: 1101), (4 terms), (3 legs), (1 shell)
-
-**MERSENNES EXPONENTS CONSTRUCTION FROM BINARY PATTTERN folder** here contain all **apps HTML, PYTHON CODE** and **papers updated.**
+48/48 found
