@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Index Pattern Finder</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1e1e2f;
+            color: #eee;
+            margin: 20px;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: #2d2d44;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        h1, h2 { color: #ffd966; }
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: #0a0a14;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border: 1px solid #ffd966;
+            border-radius: 4px;
+            padding: 10px;
+            resize: vertical;
+        }
+        .controls {
+            background: #3a3a55;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button.export { background: #2196F3; }
+        button:hover { opacity: 0.9; }
+        .stats {
+            margin-left: auto;
+            color: #b0cce6;
+        }
+        .results-container {
+            max-height: 600px;
+            overflow-y: auto;
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th {
+            background: #2a2a50;
+            color: #ffd966;
+            padding: 10px;
+            position: sticky;
+            top: 0;
+            text-align: center;
+        }
+        td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #3a3a5a;
+            text-align: center;
+        }
+        .match-found { background: #1a3a2a; }
+        .index-badge {
+            display: inline-block;
+            background: #2a2a50;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin: 0 2px;
+        }
+        .formula-display {
+            font-family: monospace;
+            text-align: left;
+        }
+        .seed-2 { color: #f44336; }
+        .seed-3 { color: #2196F3; }
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .filter-bar input {
+            background: #1a1a2e;
+            border: 1px solid #ffd966;
+            color: #eee;
+            padding: 5px 10px;
+            border-radius: 4px;
+            width: 150px;
+        }
+        .note {
+            margin-top: 10px;
+            color: #aaa;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1> Mersenne Index Pattern Finder</h1>
+    <p>Paste the 52 Mersenne exponents (comma/space separated). The app will test all index combinations.</p>
+
+    <textarea id="exponentsInput" placeholder="Paste the 52 Mersenne exponents here...&#10;e.g.: 2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, ..."></textarea>
+    <div style="margin-top:5px; color:#aaa;">Numbers parsed: <span id="exponentCount">0</span></div>
+
+    <div class="controls">
+        <button id="searchBtn"> Find Index Patterns</button>
+        <button id="exportBtn" class="export">📄 Export Matches (TXT)</button>
+        <button id="clearBtn">Clear</button>
+        <span class="stats" id="progressText">Ready. Paste the 52 exponents and click search.</span>
+    </div>
+
+    <div class="filter-bar">
+        <label>Filter by result index (e): </label>
+        <input type="text" id="filterE" placeholder="e.g., 15, 20, 52">
+        <button id="applyFilterBtn">Apply</button>
+        <button id="clearFilterBtn">Show All</button>
+        <span style="color:#aaa; margin-left:20px;" id="matchCount"></span>
+    </div>
+
+    <div id="resultsContainer" class="results-container">
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>a</th><th>b</th><th>c</th><th>d</th><th>e</th>
+                    <th>M_a</th><th>M_b</th><th>M_c</th><th>M_d</th><th>M_e</th>
+                    <th>Sign</th><th>Formula</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <tr><td colspan="12" style="text-align:center; color:#aaa;">Paste exponents and click "Find Index Patterns".</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="note">
+        * The default list (if empty) is the first 52 Mersenne exponents. You can paste your own list.
+    </div>
+</div>
+
+<script>
+    (function(){
+        // Default: first 52 Mersenne exponents
+        const defaultList = [
+            2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203, 2281, 3217, 4253, 4423, 
+            9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049, 216091, 756839, 859433, 
+            1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583, 25964951, 30402457, 
+            32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933, 136279841
+        ];
+
+        function getSeed(p) {
+            const seed2 = [2, 5, 17, 19, 89, 521, 607, 1279,
+            2203, 2281, 4253, 4423, 9689, 9941, 11213, 19937, 21701,
+            23209, 44497, 86243, 132049, 756839, 1257787, 1398269, 2976221, 3021377, 20996011,
+            24036583, 37156667, 42643801, 43112609, 74207281, 77232917, 82589933, 136279841];
+            return seed2.includes(p) ? 2 : 3;
+        }
+
+        let exponents = [...defaultList];
+        let matches = [];
+        let filteredMatches = [];
+        
+        const exponentsInput = document.getElementById('exponentsInput');
+        const exponentCount = document.getElementById('exponentCount');
+        const resultsBody = document.getElementById('resultsBody');
+        const progressText = document.getElementById('progressText');
+        const searchBtn = document.getElementById('searchBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const filterE = document.getElementById('filterE');
+        const applyFilterBtn = document.getElementById('applyFilterBtn');
+        const clearFilterBtn = document.getElementById('clearFilterBtn');
+        const matchCount = document.getElementById('matchCount');
+
+        // Set default textarea value
+        exponentsInput.value = defaultList.join(', ');
+        exponentCount.textContent = defaultList.length;
+
+        function parseExponents(text) {
+            const parts = text.split(/[,\s]+/);
+            const nums = [];
+            for (let p of parts) {
+                if (p.trim()) {
+                    const n = parseInt(p);
+                    if (!isNaN(n)) nums.push(n);
+                }
+            }
+            return nums;
+        }
+
+        exponentsInput.addEventListener('input', () => {
+            const parsed = parseExponents(exponentsInput.value);
+            exponentCount.textContent = parsed.length;
+        });
+
+        function findPatterns() {
+            exponents = parseExponents(exponentsInput.value);
+            if (exponents.length === 0) {
+                exponents = [...defaultList];
+                exponentsInput.value = defaultList.join(', ');
+                exponentCount.textContent = defaultList.length;
+            }
+            
+            const n = exponents.length;
+            const knownSet = new Set(exponents);
+            
+            matches = [];
+            resultsBody.innerHTML = '<tr><td colspan="12" style="text-align:center;">Searching...</td></tr>';
+            progressText.textContent = `Testing combinations of ${n} exponents...`;
+            
+            setTimeout(() => {
+                const seenKeys = new Set();
+                
+                for (let a = 0; a < n; a++) {
+                    for (let b = 0; b < n; b++) {
+                        const product = exponents[a] * exponents[b];
+                        
+                        for (let c = 0; c < n; c++) {
+                            for (let d = 0; d < n; d++) {
+                                if (c === d) continue;
+                                const k = exponents[c] - exponents[d];
+                                
+                                // Addition
+                                let candidate = product + k;
+                                if (knownSet.has(candidate) && candidate > 0) {
+                                    const e = exponents.indexOf(candidate);
+                                    const key = `${a},${b},${c},${d},+`;
+                                    if (!seenKeys.has(key)) {
+                                        seenKeys.add(key);
+                                        matches.push({
+                                            a: a+1, b: b+1, c: c+1, d: d+1, e: e+1,
+                                            Ma: exponents[a], Mb: exponents[b], Mc: exponents[c], Md: exponents[d], Me: candidate,
+                                            sign: '+', product, k
+                                        });
+                                    }
+                                }
+                                
+                                // Subtraction
+                                candidate = product - k;
+                                if (knownSet.has(candidate) && candidate > 0) {
+                                    const e = exponents.indexOf(candidate);
+                                    const key = `${a},${b},${c},${d},-`;
+                                    if (!seenKeys.has(key)) {
+                                        seenKeys.add(key);
+                                        matches.push({
+                                            a: a+1, b: b+1, c: c+1, d: d+1, e: e+1,
+                                            Ma: exponents[a], Mb: exponents[b], Mc: exponents[c], Md: exponents[d], Me: candidate,
+                                            sign: '−', product, k
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                filteredMatches = matches;
+                displayMatches(filteredMatches);
+                progressText.textContent = `Done! ${matches.length} unique matches found.`;
+            }, 10);
+        }
+
+        function displayMatches(matchesToShow) {
+            if (matchesToShow.length === 0) {
+                resultsBody.innerHTML = '<tr><td colspan="12" style="text-align:center; color:#aaa;">No matches found.</td></tr>';
+                matchCount.textContent = '';
+                return;
+            }
+            let html = '';
+            matchesToShow.forEach(m => {
+                const seedA = getSeed(m.Ma);
+                const seedB = getSeed(m.Mb);
+                const seedC = getSeed(m.Mc);
+                const seedD = getSeed(m.Md);
+                const seedE = getSeed(m.Me);
+                const formula = `M${m.a} × M${m.b} ${m.sign} (M${m.c} − M${m.d}) = M${m.e}`;
+                html += `<tr class="match-found">
+                    <td><span class="index-badge">${m.a}</span></td>
+                    <td><span class="index-badge">${m.b}</span></td>
+                    <td><span class="index-badge">${m.c}</span></td>
+                    <td><span class="index-badge">${m.d}</span></td>
+                    <td><span class="index-badge">${m.e}</span></td>
+                    <td class="seed-${seedA}">${m.Ma}</td>
+                    <td class="seed-${seedB}">${m.Mb}</td>
+                    <td class="seed-${seedC}">${m.Mc}</td>
+                    <td class="seed-${seedD}">${m.Md}</td>
+                    <td class="seed-${seedE}">${m.Me}</td>
+                    <td>${m.sign}</td>
+                    <td class="formula-display">${formula}</td>
+                </tr>`;
+            });
+            resultsBody.innerHTML = html;
+            matchCount.textContent = `Showing ${matchesToShow.length} of ${matches.length} matches`;
+        }
+
+        function filterByE(eValue) {
+            if (!eValue) {
+                filteredMatches = matches;
+            } else {
+                const eNum = parseInt(eValue);
+                filteredMatches = matches.filter(m => m.e === eNum);
+            }
+            displayMatches(filteredMatches);
+        }
+
+        function exportMatches() {
+            const dataToExport = filteredMatches.length > 0 ? filteredMatches : matches;
+            if (dataToExport.length === 0) {
+                alert('No matches to export.');
+                return;
+            }
+            let content = "MERSENNE INDEX PATTERN MATCHES\n";
+            content += "===============================\n";
+            content += `Generated: ${new Date().toLocaleString()}\n`;
+            content += `Total matches: ${dataToExport.length}\n\n`;
+            content += "Format: M_a × M_b ± (M_c − M_d) = M_e\n";
+            content += "-".repeat(50) + "\n\n";
+            
+            dataToExport.forEach(m => {
+                content += `M${m.a} × M${m.b} ${m.sign} (M${m.c} − M${m.d}) = M${m.e}\n`;
+                content += `  (${m.Ma} × ${m.Mb} ${m.sign} (${m.Mc} − ${m.Md}) = ${m.Me})\n\n`;
+            });
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mersenne_index_patterns.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        searchBtn.addEventListener('click', findPatterns);
+        exportBtn.addEventListener('click', exportMatches);
+        clearBtn.addEventListener('click', () => {
+            exponentsInput.value = '';
+            exponents = [];
+            matches = [];
+            filteredMatches = [];
+            exponentCount.textContent = '0';
+            resultsBody.innerHTML = '<tr><td colspan="12" style="text-align:center; color:#aaa;">Paste exponents and click "Find Index Patterns".</td></tr>';
+            progressText.textContent = 'Ready. Paste the 52 exponents and click search.';
+            matchCount.textContent = '';
+        });
+        applyFilterBtn.addEventListener('click', () => filterByE(filterE.value));
+        clearFilterBtn.addEventListener('click', () => {
+            filterE.value = '';
+            filteredMatches = matches;
+            displayMatches(filteredMatches);
+        });
+
+        // Initial parse
+        exponentCount.textContent = defaultList.length;
+    })();
+</script>
+</body>
+</html>
