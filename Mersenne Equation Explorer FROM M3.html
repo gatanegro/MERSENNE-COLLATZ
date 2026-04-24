@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Equation Explorer – Author Martin Doina</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a237e 0%, #311b92 100%);
+            color: #e3f2fd;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: rgba(26, 35, 126, 0.85);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #c5cae9;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffb74d;
+            font-style: italic;
+        }
+        
+        .mersenne-count {
+            text-align: center;
+            background: rgba(255, 152, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 30px;
+            margin-bottom: 20px;
+            border: 1px solid #ff9800;
+            display: inline-block;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            background: rgba(49, 27, 146, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .panel h2 {
+            color: #ffb74d;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #7e57c2;
+            padding-bottom: 8px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #c5cae9;
+            font-size: 0.9em;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(197, 202, 233, 0.1);
+            border: 1px solid #7e57c2;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #7e57c2 0%, #5e35b1 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #9575cd 0%, #7e57c2 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .primary-btn {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+        }
+        
+        .primary-btn:hover {
+            background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
+        }
+        
+        .results-section {
+            background: rgba(49, 27, 146, 0.6);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: 20px;
+        }
+        
+        .copy-section {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            border: 1px solid #7e57c2;
+        }
+        
+        .copy-text {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffcc80;
+            word-break: break-all;
+            padding: 10px;
+            background: rgba(81, 45, 168, 0.3);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .copy-button {
+            background: #ff9800;
+            color: #1a237e;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .equation-item {
+            background: rgba(81, 45, 168, 0.5);
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 4px solid #ff9800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .equation-math {
+            font-weight: bold;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .equation-value {
+            background: rgba(255, 152, 0, 0.2);
+            padding: 4px 10px;
+            border-radius: 15px;
+            color: #ffb74d;
+            font-size: 13px;
+            border: 1px solid #ff9800;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: rgba(81, 45, 168, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(179, 157, 219, 0.3);
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffcc80;
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        .filter-btn {
+            background: rgba(81, 45, 168, 0.5);
+            border: 1px solid #7e57c2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+        }
+        
+        .filter-btn.active {
+            background: #ff9800;
+            border-color: #ff9800;
+            color: #1a237e;
+            font-weight: bold;
+        }
+        
+        .warning {
+            background: rgba(244, 67, 54, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 152, 0, 0.2);
+            border-radius: 2px;
+            margin: 10px 0;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #ff9800;
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .tab-container {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #7e57c2;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: rgba(81, 45, 168, 0.3);
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+        }
+        
+        .tab.active {
+            background: #ff9800;
+            color: #1a237e;
+        }
+        
+        .note {
+            font-size: 0.85em;
+            color: #ffb74d;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Mersenne Equation Explorer</h1>
+        <h5>Author Martin Doina</h5>
+        <p class="subtitle">Unique equations: Mₐ + Mᵇ + ... = Mₓ + Mᵧ + ...  (no overlapping indices, full range M05..M52)</p>
+        
+        <div style="text-align: center;">
+            <div class="mersenne-count">
+                 Using M05 to M52 – you choose the max index below
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <button class="tab active" onclick="switchTab('simple')">Simple Search</button>
+            <button class="tab" onclick="switchTab('advanced')">Advanced Search</button>
+        </div>
+        
+        <div id="simpleControls" class="controls">
+            <div class="panel">
+                <h2> Basic Equation Search</h2>
+                
+                <div class="input-group">
+                    <label>Number of terms on left side:</label>
+                    <select id="simpleLeftTerms">
+                        <option value="1">1 term</option>
+                        <option value="2" selected>2 terms</option>
+                        <option value="3">3 terms</option>
+                        <option value="4">4 terms</option>
+                        <option value="5">5 terms</option>
+                        <option value="6">6 terms</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Number of terms on right side:</label>
+                    <select id="simpleRightTerms">
+                        <option value="1">1 term</option>
+                        <option value="2" selected>2 terms</option>
+                        <option value="3">3 terms</option>
+                        <option value="4">4 terms</option>
+                        <option value="5">5 terms</option>
+                        <option value="6">6 terms</option>
+                        <option value="7">7 terms</option>
+                        <option value="8">8 terms</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Max M index (5–52):</label>
+                    <input type="number" id="maxMIndex" min="5" max="52" value="52" step="1">
+                    <div class="note">Larger values give bigger sums. 4+4 terms may take a few seconds.</div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Maximum equations to show:</label>
+                    <select id="simpleMaxResults">
+                        <option value="50">50 equations</option>
+                        <option value="100">100 equations</option>
+                        <option value="200" selected>200 equations</option>
+                        <option value="500">500 equations</option>
+                        <option value="1000">1000 equations</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2> Options</h2>
+                
+                <div class="input-group">
+                    <label>Sort by:</label>
+                    <select id="simpleSortBy">
+                        <option value="sum" selected>Sum value</option>
+                        <option value="left">Left terms count</option>
+                        <option value="right">Right terms count</option>
+                    </select>
+                </div>
+                
+                <div class="button-group">
+                    <button class="primary-btn" onclick="findEquationsSimple()"> Find Equations</button>
+                    <button onclick="findLargeEquations()"> Focus on M20–M52</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="advancedControls" class="controls" style="display: none;">
+            <div class="panel">
+                <h2> Advanced Search</h2>
+                
+                <div class="input-group">
+                    <label>Left side terms (comma-separated M indices):</label>
+                    <input type="text" id="advancedLeft" placeholder="e.g., 5,8,12">
+                </div>
+                
+                <div class="input-group">
+                    <label>Right side terms (comma-separated M indices):</label>
+                    <input type="text" id="advancedRight" placeholder="e.g., 9,10,15">
+                </div>
+                
+                <div class="input-group">
+                    <label>Target sum (optional):</label>
+                    <input type="number" id="advancedSum" placeholder="Enter sum value">
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2> Options</h2>
+                
+                <div class="input-group">
+                    <label>Search mode:</label>
+                    <select id="advancedMode">
+                        <option value="exact">Exact match</option>
+                        <option value="find">Find equations with these terms</option>
+                    </select>
+                </div>
+                
+                <div class="button-group">
+                    <button class="primary-btn" onclick="advancedSearch()"> Advanced Search</button>
+                    <button onclick="clearAdvanced()">Clear</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="results-section">
+            <h2> Found Equations</h2>
+            
+            <div id="statsContainer" class="stats-grid" style="display: none;">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalEquations">0</div>
+                    <div class="stat-label">Total Equations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="uniqueSums">0</div>
+                    <div class="stat-label">Unique Sums</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="minSum">0</div>
+                    <div class="stat-label">Smallest Sum</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="maxSum">0</div>
+                    <div class="stat-label">Largest Sum</div>
+                </div>
+            </div>
+            
+            <div id="progressBar" class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div id="copySection" class="copy-section" style="display: none;">
+                <h3 style="color: #ff9800; margin-bottom: 10px;"> Copy All Equations (M Format)</h3>
+                <div id="copyableText" class="copy-text"></div>
+                <button class="copy-button" onclick="copyAllToClipboard()"> Copy to Clipboard</button>
+            </div>
+            
+            <div id="filterSection" class="filter-section" style="display: none;">
+                <!-- Dynamic filter buttons -->
+            </div>
+            
+            <div id="equationsList" style="margin-top: 20px; max-height: 500px; overflow-y: auto;">
+                <!-- Equations appear here -->
+            </div>
+            
+            <div id="warning" class="warning" style="display: none;">
+                <!-- Warning messages -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mersenne exponents starting from M05 (index 5)
+        const MERSENNES = [
+            {label:"M05",value:13},{label:"M06",value:17},
+            {label:"M07",value:19},{label:"M08",value:31},{label:"M09",value:61},
+            {label:"M10",value:89},{label:"M11",value:107},{label:"M12",value:127},
+            {label:"M13",value:521},{label:"M14",value:607},{label:"M15",value:1279},
+            {label:"M16",value:2203},{label:"M17",value:2281},{label:"M18",value:3217},
+            {label:"M19",value:4253},{label:"M20",value:4423},{label:"M21",value:9689},
+            {label:"M22",value:9941},{label:"M23",value:11213},{label:"M24",value:19937},
+            {label:"M25",value:21701},{label:"M26",value:23209},{label:"M27",value:44497},
+            {label:"M28",value:86243},{label:"M29",value:110503},{label:"M30",value:132049},
+            {label:"M31",value:216091},{label:"M32",value:756839},{label:"M33",value:859433},
+            {label:"M34",value:1257787},{label:"M35",value:1398269},{label:"M36",value:2976221},
+            {label:"M37",value:3021377},{label:"M38",value:6972593},{label:"M39",value:13466917},
+            {label:"M40",value:20996011},{label:"M41",value:24036583},{label:"M42",value:25964951},
+            {label:"M43",value:30402457},{label:"M44",value:32582657},{label:"M45",value:37156667},
+            {label:"M46",value:42643801},{label:"M47",value:43112609},{label:"M48",value:57885161},
+            {label:"M49",value:74207281},{label:"M50",value:77232917},{label:"M51",value:82589933},
+            {label:"M52",value:136279841}
+        ];
+
+        const mersenneMap = new Map(MERSENNES.map(m => [parseInt(m.label.substring(1)), m.value]));
+        
+        let currentEquations = [];
+        let currentTab = 'simple';
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (tab === 'simple') {
+                document.querySelector('.tab:first-child').classList.add('active');
+                document.getElementById('simpleControls').style.display = 'grid';
+                document.getElementById('advancedControls').style.display = 'none';
+            } else {
+                document.querySelector('.tab:last-child').classList.add('active');
+                document.getElementById('simpleControls').style.display = 'none';
+                document.getElementById('advancedControls').style.display = 'grid';
+            }
+        }
+        
+        function getMValue(index) {
+            return mersenneMap.get(index) || 0;
+        }
+        
+        // Generate all combinations of size k from array arr
+        function getCombinations(arr, k) {
+            if (k === 1) return arr.map(item => [item]);
+            if (arr.length < k) return [];
+            const combinations = [];
+            function combine(start, current) {
+                if (current.length === k) {
+                    combinations.push([...current]);
+                    return;
+                }
+                for (let i = start; i < arr.length; i++) {
+                    current.push(arr[i]);
+                    combine(i + 1, current);
+                    current.pop();
+                }
+            }
+            combine(0, []);
+            return combinations;
+        }
+        
+        // Optimized search using a sum map
+        function findEquationsWithIndices(indices, leftTerms, rightTerms, maxResults) {
+            const leftCombos = getCombinations(indices, leftTerms);
+            const rightCombos = getCombinations(indices, rightTerms);
+            
+            const progressFill = document.getElementById('progressFill');
+            let processed = 0;
+            
+            // Build map: sum -> array of left combos
+            const sumMap = new Map();
+            for (const left of leftCombos) {
+                const sum = left.reduce((acc, idx) => acc + getMValue(idx), 0);
+                if (!sumMap.has(sum)) sumMap.set(sum, []);
+                sumMap.get(sum).push(left);
+                
+                processed++;
+                if (processed % 100 === 0) {
+                    progressFill.style.width = `${(processed / leftCombos.length) * 50}%`;
+                }
+            }
+            
+            const equations = new Map(); // key -> {left, right, sum}
+            let found = 0;
+            
+            for (let i = 0; i < rightCombos.length; i++) {
+                const right = rightCombos[i];
+                const sum = right.reduce((acc, idx) => acc + getMValue(idx), 0);
+                const leftList = sumMap.get(sum);
+                if (leftList) {
+                    for (const left of leftList) {
+                        // No overlapping indices
+                        if (left.some(x => right.includes(x))) continue;
+                        
+                        // Canonical ordering to avoid swapped duplicates
+                        const leftSorted = [...left].sort((a,b) => a-b);
+                        const rightSorted = [...right].sort((a,b) => a-b);
+                        const leftStr = leftSorted.join(',');
+                        const rightStr = rightSorted.join(',');
+                        const key = leftStr < rightStr ? leftStr + '|' + rightStr : rightStr + '|' + leftStr;
+                        
+                        if (!equations.has(key)) {
+                            equations.set(key, { left: leftSorted, right: rightSorted, sum });
+                            found++;
+                            if (found >= maxResults) break;
+                        }
+                    }
+                }
+                
+                if (i % 100 === 0) {
+                    progressFill.style.width = `${50 + (i / rightCombos.length) * 50}%`;
+                }
+                
+                if (found >= maxResults) break;
+            }
+            
+            progressFill.style.width = '100%';
+            return Array.from(equations.values()).slice(0, maxResults);
+        }
+        
+        function findEquationsSimple() {
+            const leftTerms = parseInt(document.getElementById('simpleLeftTerms').value);
+            const rightTerms = parseInt(document.getElementById('simpleRightTerms').value);
+            const maxM = parseInt(document.getElementById('maxMIndex').value);
+            const sortBy = document.getElementById('simpleSortBy').value;
+            const maxResults = parseInt(document.getElementById('simpleMaxResults').value);
+            
+            // FIXED: Start from index 5 (M05) up to maxM
+            const MIN_INDEX = 5;
+            if (maxM < MIN_INDEX) {
+                showWarning(`Maximum M index must be at least ${MIN_INDEX}`);
+                return;
+            }
+            
+            const indices = Array.from({length: maxM - MIN_INDEX + 1}, (_, i) => i + MIN_INDEX);
+            
+            // Show progress bar
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('equationsList').innerHTML = '';
+            
+            // Use setTimeout to keep UI responsive
+            setTimeout(() => {
+                const equations = findEquationsWithIndices(indices, leftTerms, rightTerms, maxResults);
+                
+                // Sort
+                equations.sort((a, b) => {
+                    if (sortBy === 'sum') return a.sum - b.sum;
+                    if (sortBy === 'left') return a.left.length - b.left.length;
+                    if (sortBy === 'right') return a.right.length - b.right.length;
+                    return a.sum - b.sum;
+                });
+                
+                currentEquations = equations;
+                
+                document.getElementById('progressBar').style.display = 'none';
+                displayEquations(currentEquations);
+            }, 50);
+        }
+        
+        function findLargeEquations() {
+            const maxM = parseInt(document.getElementById('maxMIndex').value);
+            const MIN_INDEX = 5;
+            const start = Math.max(20, MIN_INDEX);
+            
+            if (maxM < start) {
+                showWarning(`Maximum M index must be at least ${start} for this search`);
+                return;
+            }
+            
+            const indices = Array.from({length: maxM - start + 1}, (_, i) => i + start);
+            
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('equationsList').innerHTML = '';
+            
+            setTimeout(() => {
+                const equations = findEquationsWithIndices(indices, 2, 2, 200);
+                currentEquations = equations;
+                
+                document.getElementById('progressBar').style.display = 'none';
+                displayEquations(currentEquations);
+            }, 50);
+        }
+        
+        function advancedSearch() {
+            const leftInput = document.getElementById('advancedLeft').value;
+            const rightInput = document.getElementById('advancedRight').value;
+            const mode = document.getElementById('advancedMode').value;
+            
+            let leftIndices = leftInput.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 5);
+            let rightIndices = rightInput.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 5);
+            
+            // Filter out indices below 5
+            leftIndices = leftIndices.filter(idx => idx >= 5);
+            rightIndices = rightIndices.filter(idx => idx >= 5);
+            
+            if (leftIndices.length === 0 || rightIndices.length === 0) {
+                showWarning('Please enter valid M indices (5 or greater)');
+                return;
+            }
+            
+            if (mode === 'exact') {
+                const leftSum = leftIndices.reduce((sum, idx) => sum + getMValue(idx), 0);
+                const rightSum = rightIndices.reduce((sum, idx) => sum + getMValue(idx), 0);
+                
+                if (Math.abs(leftSum - rightSum) < 0.1) {
+                    const sortedLeft = [...leftIndices].sort((a,b)=>a-b);
+                    const sortedRight = [...rightIndices].sort((a,b)=>a-b);
+                    
+                    if (sortedLeft.toString() === sortedRight.toString()) {
+                        showWarning(`Left and right sets are identical.`);
+                        return;
+                    }
+                    if (sortedLeft.some(x => sortedRight.includes(x))) {
+                        showWarning(`Overlapping numbers are not allowed.`);
+                        return;
+                    }
+                    displayEquations([{ left: sortedLeft, right: sortedRight, sum: leftSum }]);
+                } else {
+                    showWarning(`Sums don't match: ${leftSum.toLocaleString()} vs ${rightSum.toLocaleString()}`);
+                }
+            } else if (mode === 'find') {
+                // Search for equations containing these terms
+                const targetSum = leftIndices.reduce((sum, idx) => sum + getMValue(idx), 0);
+                const maxM = parseInt(document.getElementById('maxMIndex').value);
+                const MIN_INDEX = 5;
+                const indices = Array.from({length: maxM - MIN_INDEX + 1}, (_, i) => i + MIN_INDEX);
+                
+                document.getElementById('progressBar').style.display = 'block';
+                document.getElementById('progressFill').style.width = '0%';
+                
+                setTimeout(() => {
+                    // Search for equations with same number of terms
+                    const equations = findEquationsWithIndices(indices, leftIndices.length, rightIndices.length, 100);
+                    
+                    // Filter to include the specified left terms
+                    const matchingEquations = equations.filter(eq => {
+                        const leftSet = new Set(eq.left);
+                        return leftIndices.every(idx => leftSet.has(idx));
+                    });
+                    
+                    currentEquations = matchingEquations;
+                    document.getElementById('progressBar').style.display = 'none';
+                    
+                    if (matchingEquations.length === 0) {
+                        showWarning('No equations found containing these left terms');
+                    } else {
+                        displayEquations(matchingEquations);
+                    }
+                }, 50);
+            }
+        }
+        
+        function displayEquations(equations) {
+            const statsDiv = document.getElementById('statsContainer');
+            const copySection = document.getElementById('copySection');
+            const equationsList = document.getElementById('equationsList');
+            const filterSection = document.getElementById('filterSection');
+            const warningDiv = document.getElementById('warning');
+            
+            if (equations.length === 0) {
+                showWarning('No equations found with current parameters');
+                statsDiv.style.display = 'none';
+                copySection.style.display = 'none';
+                filterSection.style.display = 'none';
+                return;
+            }
+            
+            statsDiv.style.display = 'grid';
+            document.getElementById('totalEquations').textContent = equations.length.toLocaleString();
+            
+            const uniqueSums = new Set(equations.map(e => Math.round(e.sum))).size;
+            document.getElementById('uniqueSums').textContent = uniqueSums.toLocaleString();
+            
+            const sums = equations.map(e => e.sum);
+            document.getElementById('minSum').textContent = Math.min(...sums).toLocaleString();
+            document.getElementById('maxSum').textContent = Math.max(...sums).toLocaleString();
+            
+            // Copyable text
+            const cleanText = equations.map(e => {
+                const left = e.left.map(i => `M${i.toString().padStart(2, '0')}`).join(' + ');
+                const right = e.right.map(i => `M${i.toString().padStart(2, '0')}`).join(' + ');
+                return `${left} = ${right}`;
+            }).join('\n');
+            
+            copySection.style.display = 'block';
+            document.getElementById('copyableText').textContent = cleanText;
+            
+            // Filter buttons (top 15 unique sums)
+            filterSection.style.display = 'flex';
+            const uniqueSumValues = [...new Set(equations.map(e => Math.round(e.sum)))]
+                .sort((a,b) => a - b)
+                .slice(0, 15);
+            
+            let filterHTML = '<button class="filter-btn active" onclick="filterBySum(\'all\')">All</button>';
+            uniqueSumValues.forEach(sum => {
+                filterHTML += `<button class="filter-btn" onclick="filterBySum(${sum})">${sum.toLocaleString()}</button>`;
+            });
+            filterSection.innerHTML = filterHTML;
+            
+            // Display equations
+            let html = '<h3> Equations Found:</h3>';
+            equations.slice(0, 200).forEach(eq => {
+                const left = eq.left.map(i => `M${i.toString().padStart(2, '0')}`).join(' + ');
+                const right = eq.right.map(i => `M${i.toString().padStart(2, '0')}`).join(' + ');
+                html += `
+                    <div class="equation-item">
+                        <span class="equation-math">${left} = ${right}</span>
+                        <span class="equation-value">${eq.sum.toLocaleString()}</span>
+                    </div>
+                `;
+            });
+            
+            if (equations.length > 200) {
+                html += `<div style="text-align: center; margin: 10px; color: #ffb74d;">
+                    ... and ${(equations.length - 200).toLocaleString()} more equations
+                </div>`;
+            }
+            
+            equationsList.innerHTML = html;
+            warningDiv.style.display = 'none';
+        }
+        
+        function filterBySum(sum) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(sum) || (sum === 'all' && btn.textContent === 'All')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            if (sum === 'all') {
+                displayEquations(currentEquations);
+            } else {
+                const filtered = currentEquations.filter(e => Math.round(e.sum) === sum);
+                displayEquations(filtered);
+            }
+        }
+        
+        function copyAllToClipboard() {
+            const copyText = document.getElementById('copyableText').textContent;
+            navigator.clipboard.writeText(copyText).then(() => {
+                alert(` ${currentEquations.length} equations copied to clipboard!`);
+            }).catch(() => {
+                alert(' Failed to copy text');
+            });
+        }
+        
+        function showWarning(message) {
+            document.getElementById('warning').style.display = 'block';
+            document.getElementById('warning').innerHTML = ` ${message}`;
+            document.getElementById('statsContainer').style.display = 'none';
+            document.getElementById('copySection').style.display = 'none';
+            document.getElementById('filterSection').style.display = 'none';
+            document.getElementById('equationsList').innerHTML = '';
+        }
+        
+        function clearAdvanced() {
+            document.getElementById('advancedLeft').value = '';
+            document.getElementById('advancedRight').value = '';
+            document.getElementById('advancedSum').value = '';
+        }
+        
+        // Initial search on load
+        window.onload = function() {
+            setTimeout(() => findEquationsSimple(), 500);
+        };
+    </script>
+</body>
+</html>
