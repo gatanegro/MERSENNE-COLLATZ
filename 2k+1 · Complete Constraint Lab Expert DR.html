@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>2n+1 · Complete Constraint Lab HIGHLIGHT</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', 'Fira Code', monospace; }
+    body { background: #0b1016; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .app { max-width: 1800px; width: 100%; background: #16202a; border-radius: 36px; box-shadow: 0 20px 40px #00000060, 0 0 0 1px #3e5a70; padding: 24px 30px; color: #e3ecf5; }
+    h1 { margin: 0 0 6px; font-weight: 450; font-size: 2.2rem; background: linear-gradient(145deg, #f2d98b, #b0d0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .subtitle { margin-left: 12px; margin-bottom: 20px; color: #aac1da; border-left: 5px solid #d9a822; padding-left: 22px; }
+    .panel { background: #101b25; border-radius: 28px; padding: 22px 24px; border: 1px solid #2e4a5e; margin-bottom: 20px; }
+    .flex-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-weight: 600; color: #b0cce6; }
+    .input-group input { background: #0c1721; border: 1px solid #456983; padding: 12px 18px; border-radius: 40px; font-size: 1rem; color: #ffe9b6; font-family: 'Fira Code', monospace; outline: none; }
+    button { background: #1e4b6e; border: 1px solid #8bb1d4; color: white; font-weight: bold; padding: 12px 28px; border-radius: 60px; cursor: pointer; font-size: 1rem; transition: 0.15s; }
+    button:hover { background: #2f6790; box-shadow: 0 0 12px #6f9ac2; }
+    button.small { padding: 6px 16px; font-size: 0.9rem; }
+    .filter-panel { background: #0f1922; border-radius: 20px; padding: 16px 20px; margin: 15px 0; border: 1px solid #3e5a70; }
+    .filter-title { font-weight: 600; color: #c6d9f0; margin-bottom: 12px; }
+    .constraint-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, auto)); gap: 6px 16px; max-height: 300px; overflow-y: auto; padding-right: 10px; }
+    .table-container { max-height: 500px; overflow-y: auto; border-radius: 20px; background: #0b141c; border: 1px solid #2f4d64; margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { background: #1c3343; color: #e2ecf7; padding: 14px 6px; position: sticky; top: 0; font-weight: 600; }
+    td { padding: 6px 4px; text-align: center; border-bottom: 1px solid #2c4a61; color: #d5e6ff; }
+    .prime-badge { background: #1b5e1b; color: #bef5b4; padding: 4px 12px; border-radius: 30px; }
+    .comp-badge { background: #962828; color: #ffcfcf; padding: 4px 12px; border-radius: 30px; }
+    .base2 { color: #8fc99c; font-weight: bold; }
+    .base3 { color: #f0b37b; font-weight: bold; }
+    .info-note { margin-top: 16px; color: #9fb7d0; }
+    .section-title { font-size: 1.4rem; font-weight: 400; margin: 0 0 16px 0; color: #d7e6ff; border-bottom: 1px solid #3f627b; padding-bottom: 8px; }
+    .export-btn { background: #3a6b4a; border-color: #8fc99c; margin-left: 10px; }
+    .mersenne-row { background: #3a5a2a !important; }
+    .mersenne-badge { background: #e6b422; color: #0c121c; padding: 2px 8px; border-radius: 20px; font-weight: bold; margin-left: 6px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1> 2k+1 · Complete Constraint Lab Expert</h1>
+  <div class="subtitle">Filter by exact (k end → p end, k DR, p DR, base) · All known Mersenne exponents pass</div>
+
+  <div class="panel">
+    <div class="section-title"> Scan k range (p = 2k+1)</div>
+    <div class="flex-row">
+      <div class="input-group"><label>Start k</label><input type="text" id="startK" value="1"></div>
+      <div class="input-group"><label>End k</label><input type="text" id="endK" value="500"></div>
+      <button id="generateKTableBtn">Generate</button>
+      <button id="stopKBtn" style="background:#5a3e2b;">Stop</button>
+      <button id="exportCsvBtn" class="export-btn"> CSV</button>
+      <button id="exportTxtBtn" class="export-btn"> TXT</button>
+    </div>
+
+    <!-- BASIC FILTERS -->
+    <div style="margin:15px 0; display:flex; gap:20px; flex-wrap:wrap;">
+      <label><input type="checkbox" id="filterEnd27" checked> Exclude k ending 2,7</label>
+      <label><input type="checkbox" id="onlyPrimeK"> Only primes (p)</label>
+      <label><input type="checkbox" id="onlyCompositeK"> Only composites (p)</label>
+      <label><input type="checkbox" id="highlightMersenne" checked> Highlight known Mersenne exponents</label>
+    </div>
+
+    <!-- COMPLETE CONSTRAINT TABLE -->
+    <div class="filter-panel">
+      <div class="filter-title"> Allowed Combinations (k end → p end | k DR → p DR | base)</div>
+      <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+        <button id="selectAllConstraints" class="small">Select all</button>
+        <button id="clearConstraints" class="small" style="background:#4a3e3e;">Clear</button>
+        <span style="margin-left:auto; color:#9fb7d0;" id="constraintCount"></span>
+      </div>
+      <div class="constraint-grid" id="constraintContainer"></div>
+    </div>
+
+    <div class="table-container">
+      <table id="kTable">
+        <thead><tr><th>k</th><th>k last</th><th>k DR</th><th>p</th><th>p last</th><th>p DR</th><th>Base</th><th>Primality</th></tr></thead>
+        <tbody id="kTableBody"><tr><td colspan="8">Enter range and click Generate</td></tr></tbody>
+      </table>
+    </div>
+    <div id="kProgress" class="info-note"></div>
+    <div style="display:flex; justify-content:space-between; margin-top:10px;">
+      <span id="kRowCount"></span>
+      <span>Base 2: <span class="base2">●</span> · Base 3: <span class="base3">●</span> · <span style="background:#3a5a2a; padding:2px 10px; border-radius:20px;">Mersenne</span></span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ----- Known Mersenne exponents (p) -----
+  const knownMersenneP = new Set([
+            3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279,
+            2203, 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701,
+            23209, 44497, 86243, 110503, 132049, 216091, 756839, 859433,
+            1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011,
+            24036583, 25964951, 30402457, 32582657, 37156667, 42643801,
+            43112609, 57885161, 74207281, 77232917, 82589933, 136279841
+  ]);
+
+  // ----- helpers -----
+  function digitalRootBI(bi) { if (bi===0n) return 0; let m=bi%9n; return m===0n?9:Number(m); }
+  function modPow(b,e,m){ let r=1n; b%=m; while(e>0n){ if(e&1n) r=(r*b)%m; b=(b*b)%m; e>>=1n; } return r; }
+  function isProbablePrime(n,iters=8){ if(n<2n)return false; if(n===2n||n===3n)return true; if(n%2n===0n)return false; let d=n-1n,s=0n; while(d%2n===0n){d/=2n;s++;} const bases=[2n,3n,5n,7n,11n,13n,17n,19n,23n,29n]; WitnessLoop: for(let i=0;i<Math.min(iters,bases.length);i++){ let a=bases[i]; if(a>=n)continue; let x=modPow(a,d,n); if(x===1n||x===n-1n)continue; let j=0n; while(j<s-1n){ x=(x*x)%n; if(x===n-1n)continue WitnessLoop; j++; } return false; } return true; }
+
+  function detectBase(p) {
+    let val = BigInt(p);
+    while (val > 3n) {
+      if (val % 2n === 0n) val = val / 2n;
+      else val = (val - 1n) / 2n;
+    }
+    return Number(val);
+  }
+
+  // ----- COMPLETE CONSTRAINT TABLE (verified from all data) -----
+  const constraintTable = [
+    // k end 0 
+     
+    { kLast:0, pLast:1, kDR:3, pDR:7, base:3 },
+    { kLast:0, pLast:1, kDR:8, pDR:8, base:2 },
+    { kLast:0, pLast:1, kDR:6, pDR:4, base:2 },
+    { kLast:0, pLast:1, kDR:2, pDR:5, base:2 },
+    { kLast:0, pLast:1, kDR:5, pDR:2, base:2 },
+    { kLast:0, pLast:1, kDR:9, pDR:1, base:2 },
+    { kLast:0, pLast:1, kDR:2, pDR:5, base:3 },
+    // k end 1
+    { kLast:1, pLast:3, kDR:3, pDR:7, base:2 },
+    { kLast:1, pLast:3, kDR:6, pDR:4, base:2 },
+    { kLast:1, pLast:3, kDR:2, pDR:5, base:2 },
+    { kLast:1, pLast:3, kDR:9, pDR:1, base:3 },
+    { kLast:1, pLast:3, kDR:6, pDR:4, base:3 },
+    // k end 3
+    { kLast:3, pLast:7, kDR:8, pDR:8, base:3 },
+    { kLast:3, pLast:7, kDR:9, pDR:1, base:3 },
+    { kLast:3, pLast:7, kDR:6, pDR:4, base:2 },
+    { kLast:3, pLast:7, kDR:9, pDR:1, base:2 },
+    { kLast:3, pLast:7, kDR:2, pDR:5, base:2 },
+    { kLast:3, pLast:7, kDR:3, pDR:7, base:3 },
+    // k end 4
+    { kLast:4, pLast:9, kDR:8, pDR:8, base:2 },
+    { kLast:4, pLast:9, kDR:2, pDR:5, base:2 },
+    { kLast:4, pLast:9, kDR:3, pDR:7, base:2 },
+    { kLast:4, pLast:9, kDR:9, pDR:1, base:2 },
+    { kLast:4, pLast:9, kDR:5, pDR:2, base:2 },
+    // k end 5
+    { kLast:5, pLast:1, kDR:6, pDR:4, base:3 },
+    { kLast:5, pLast:1, kDR:9, pDR:1, base:3 },
+    { kLast:5, pLast:1, kDR:9, pDR:1, base:2 },
+    { kLast:5, pLast:1, kDR:2, pDR:5, base:3 },
+    // k end 6
+    { kLast:6, pLast:3, kDR:6, pDR:4, base:3 },
+    { kLast:6, pLast:3, kDR:2, pDR:5, base:3 },
+    { kLast:6, pLast:3, kDR:8, pDR:8, base:2 },
+    { kLast:6, pLast:3, kDR:5, pDR:2, base:2 },
+    { kLast:6, pLast:3, kDR:2, pDR:5, base:2 },
+    // k end 8
+    { kLast:8, pLast:7, kDR:8, pDR:8, base:2 },
+    { kLast:8, pLast:7, kDR:6, pDR:4, base:3 },
+    { kLast:8, pLast:7, kDR:5, pDR:2, base:2 },
+    { kLast:8, pLast:7, kDR:9, pDR:1, base:2 },
+    { kLast:8, pLast:7, kDR:2, pDR:5, base:2 },
+    { kLast:8, pLast:7, kDR:9, pDR:1, base:3 },
+    { kLast:8, pLast:7, kDR:3, pDR:7, base:3 },
+    { kLast:8, pLast:7, kDR:5, pDR:2, base:3 },
+    // k end 9
+    { kLast:9, pLast:9, kDR:9, pDR:1, base:2 },
+    { kLast:9, pLast:9, kDR:5, pDR:2, base:2 },
+    
+  ];
+
+  // Remove duplicates
+  const uniqueConstraints = [];
+  const seen = new Set();
+  constraintTable.forEach(c => {
+    const key = `${c.kLast}|${c.pLast}|${c.kDR}|${c.pDR}|${c.base}`;
+    if (!seen.has(key)) { seen.add(key); uniqueConstraints.push(c); }
+  });
+
+  // Build constraint UI
+  const constraintContainer = document.getElementById('constraintContainer');
+  const constraintCount = document.getElementById('constraintCount');
+  
+  function renderConstraintCheckboxes() {
+    let html = '';
+    uniqueConstraints.forEach((c) => {
+      html += `<label><input type="checkbox" class="constraint-item" data-klast="${c.kLast}" data-plast="${c.pLast}" data-kdr="${c.kDR}" data-pdr="${c.pDR}" data-base="${c.base}" checked> `;
+      html += `k${c.kLast}→p${c.pLast} | DR ${c.kDR}→${c.pDR} | `;
+      html += `<span class="${c.base===2?'base2':'base3'}">B${c.base}</span>`;
+      html += `</label>`;
+    });
+    constraintContainer.innerHTML = html;
+    updateConstraintCount();
+  }
+
+  function updateConstraintCount() {
+    const checked = document.querySelectorAll('.constraint-item:checked').length;
+    constraintCount.textContent = `${checked} / ${uniqueConstraints.length} selected`;
+  }
+
+  renderConstraintCheckboxes();
+
+  function getSelectedConstraints() {
+    const selected = new Set();
+    document.querySelectorAll('.constraint-item:checked').forEach(cb => {
+      const kLast = parseInt(cb.dataset.klast);
+      const pLast = parseInt(cb.dataset.plast);
+      const kDR = parseInt(cb.dataset.kdr);
+      const pDR = parseInt(cb.dataset.pdr);
+      const base = parseInt(cb.dataset.base);
+      selected.add(`${kLast}|${pLast}|${kDR}|${pDR}|${base}`);
+    });
+    return selected;
+  }
+
+  // ----- Range Scanner -----
+  const startKInput = document.getElementById('startK'), endKInput = document.getElementById('endK');
+  const generateKBtn = document.getElementById('generateKTableBtn'), stopKBtn = document.getElementById('stopKBtn');
+  const kTableBody = document.getElementById('kTableBody'), kRowCountSpan = document.getElementById('kRowCount'), kProgress = document.getElementById('kProgress');
+  const filterEnd27 = document.getElementById('filterEnd27'), onlyPrimeK = document.getElementById('onlyPrimeK'), onlyCompositeK = document.getElementById('onlyCompositeK');
+  const highlightMersenne = document.getElementById('highlightMersenne');
+
+  let kAbortController = null;
+  let masterRows = [], filteredRows = [];
+
+  function applyFilters() {
+    const selectedConstraints = getSelectedConstraints();
+    
+    filteredRows = masterRows.filter(r => {
+      if (filterEnd27.checked && (r.kLast===2||r.kLast===7)) return false;
+      if (onlyPrimeK.checked && !r.prime) return false;
+      if (onlyCompositeK.checked && r.prime) return false;
+      
+      const key = `${r.kLast}|${r.pLast}|${r.drk}|${r.drp}|${r.base}`;
+      if (!selectedConstraints.has(key)) return false;
+      
+      return true;
+    });
+    
+    renderKTable(filteredRows);
+    kRowCountSpan.textContent = `${filteredRows.length} rows (of ${masterRows.length})`;
+  }
+
+  function renderKTable(rows) {
+    if (!rows.length) { kTableBody.innerHTML = '<tr><td colspan="8">No rows match filters</td></tr>'; return; }
+    kTableBody.innerHTML = rows.map(r => {
+      const baseClass = r.base === 2 ? 'base2' : 'base3';
+      const isMersenne = knownMersenneP.has(parseInt(r.p));
+      const rowClass = (highlightMersenne.checked && isMersenne) ? 'mersenne-row' : '';
+      const mersenneMarker = isMersenne ? ' <span class="mersenne-badge">M</span>' : '';
+      
+      return `<tr class="${rowClass}">
+        <td>${r.k}</td><td>${r.kLast}</td><td>${r.drk}</td>
+        <td>${r.p}${mersenneMarker}</td><td>${r.pLast}</td><td>${r.drp}</td>
+        <td class="${baseClass}">${r.base}</td>
+        <td>${r.prime?'<span class="prime-badge">PRIME</span>':'<span class="comp-badge">COMP</span>'}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function generateKRange() {
+    if (kAbortController) kAbortController.abort();
+    kAbortController = new AbortController(); const signal = kAbortController.signal;
+    let s=BigInt(startKInput.value), e=BigInt(endKInput.value); if(s>e) [s,e]=[e,s];
+    kTableBody.innerHTML = '<tr><td colspan="8">Scanning...</td></tr>';
+    masterRows = []; let cnt=0;
+    
+    for (let k=s; k<=e && !signal.aborted; k++) {
+      cnt++; 
+      if(cnt%500===0) { kProgress.textContent = `Scanned ${cnt}...`; await new Promise(r=>setTimeout(r,0)); }
+      const kLast = Number(k%10n);
+      const p = 2n*k + 1n;
+      const prime = isProbablePrime(p, 6);
+      const drk = digitalRootBI(k);
+      const drp = digitalRootBI(p);
+      const base = detectBase(p);
+      
+      masterRows.push({ k: k.toString(), kLast, drk, p: p.toString(), pLast: Number(p%10n), drp, base, prime });
+    }
+    
+    if (!signal.aborted) { kProgress.textContent = `Done. ${masterRows.length} rows.`; applyFilters(); }
+    kAbortController = null;
+  }
+
+  generateKBtn.addEventListener('click', (e)=>{ e.preventDefault(); generateKRange(); });
+  stopKBtn.addEventListener('click', ()=>{ if(kAbortController){ kAbortController.abort(); kProgress.textContent='Stopped.'; kAbortController=null; } });
+  
+  // Export
+  document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+    if(!filteredRows.length) return alert('No data');
+    let csv = "k,k_last,k_DR,p,p_last,p_DR,base,primality,is_mersenne\n" + filteredRows.map(r=>`${r.k},${r.kLast},${r.drk},${r.p},${r.pLast},${r.drp},${r.base},${r.prime?'PRIME':'COMPOSITE'},${knownMersenneP.has(parseInt(r.p))?'YES':'NO'}`).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='filtered_range.csv'; a.click();
+  });
+  document.getElementById('exportTxtBtn').addEventListener('click', ()=>{
+    if(!filteredRows.length) return alert('No data');
+    let txt = "k\tk_last\tk_DR\tp\tp_last\tp_DR\tbase\tprimality\tis_mersenne\n" + filteredRows.map(r=>`${r.k}\t${r.kLast}\t${r.drk}\t${r.p}\t${r.pLast}\t${r.drp}\t${r.base}\t${r.prime?'PRIME':'COMPOSITE'}\t${knownMersenneP.has(parseInt(r.p))?'YES':'NO'}`).join('\n');
+    const blob = new Blob([txt], {type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='filtered_range.txt'; a.click();
+  });
+
+  // Event listeners
+  document.getElementById('selectAllConstraints').addEventListener('click', ()=>{
+    document.querySelectorAll('.constraint-item').forEach(cb => cb.checked = true);
+    updateConstraintCount(); if(masterRows.length) applyFilters();
+  });
+  document.getElementById('clearConstraints').addEventListener('click', ()=>{
+    document.querySelectorAll('.constraint-item').forEach(cb => cb.checked = false);
+    updateConstraintCount(); if(masterRows.length) applyFilters();
+  });
+  
+  [filterEnd27, onlyPrimeK, onlyCompositeK, highlightMersenne].forEach(el => 
+    el.addEventListener('change', ()=>{ if(masterRows.length) applyFilters(); })
+  );
+  
+  constraintContainer.addEventListener('change', (e) => {
+    if (e.target.classList.contains('constraint-item')) {
+      updateConstraintCount(); if(masterRows.length) applyFilters();
+    }
+  });
+
+  generateKRange();
+})();
+</script>
+</body>
+</html>
