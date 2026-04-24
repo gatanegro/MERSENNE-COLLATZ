@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mersenne Grammar Validator</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', 'Fira Code', monospace; }
+    body { background: #0b1016; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .app { max-width: 1400px; width: 100%; background: #16202a; border-radius: 36px; padding: 24px 30px; color: #e3ecf5; }
+    h1 { margin: 0 0 6px; font-weight: 450; font-size: 2rem; background: linear-gradient(145deg, #f2d98b, #b0d0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .subtitle { margin-left: 12px; margin-bottom: 20px; color: #aac1da; border-left: 5px solid #d9a822; padding-left: 22px; }
+    .panel { background: #101b25; border-radius: 28px; padding: 22px 24px; border: 1px solid #2e4a5e; margin-bottom: 20px; }
+    .flex-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-weight: 600; color: #b0cce6; }
+    .input-group input, .input-group textarea { background: #0c1721; border: 1px solid #456983; padding: 12px 18px; border-radius: 20px; font-size: 1rem; color: #ffe9b6; font-family: 'Fira Code', monospace; outline: none; }
+    button { background: #1e4b6e; border: 1px solid #8bb1d4; color: white; font-weight: bold; padding: 12px 28px; border-radius: 60px; cursor: pointer; }
+    button:hover { background: #2f6790; }
+    .result-box { background: #0b1722; border-radius: 20px; padding: 20px; margin-top: 20px; border-left: 6px solid #e6b422; }
+    .success { color: #8fc99c; }
+    .warning { color: #f0b37b; }
+    .danger { color: #f88; }
+    .parse-tree { font-family: 'Fira Code', monospace; background: #0a131c; padding: 16px; border-radius: 16px; margin: 15px 0; line-height: 1.8; }
+    .block-tag { background: #1a3345; padding: 2px 8px; border-radius: 16px; margin: 0 4px; }
+    .filler-tag { background: #3a2a1e; padding: 2px 8px; border-radius: 16px; margin: 0 4px; color: #f0b37b; }
+    .zero-run { color: #9fb7d0; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, auto)); gap: 10px; margin: 15px 0; }
+    .stat-item { background: #0f1922; padding: 10px; border-radius: 16px; text-align: center; }
+    .stat-value { font-size: 1.3rem; font-weight: bold; color: #fad98b; }
+    .grammar-ok { border-left-color: #1b5e1b; }
+    .grammar-fail { border-left-color: #962828; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1> Mersenne Grammar Validator</h1>
+  <div class="subtitle">Parse any p using the known Mersenne block decomposition rules</div>
+
+  <div class="panel">
+    <div class="flex-row">
+      <div class="input-group" style="flex:2;">
+        <label>Enter p (single or comma/newline separated list)</label>
+        <textarea id="pInput" rows="2" placeholder="e.g. 21701, 44497, 87553">21701, 44497, 86243, 87553, 132049, 32582657</textarea>
+      </div>
+      <button id="validateBtn">Validate</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+    <div id="resultsContainer"></div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title"> Known Mersenne Blocks (from data table)</div>
+    <div id="blockLibraryDisplay" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Known Mersenne exponents
+  const knownMersenneP = new Set([
+    3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,
+    11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,
+    1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,
+    32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841
+  ]);
+
+  // Fundamental Mersenne blocks (from your decomposition table)
+  const mersenneBlocks = [
+    { pattern: "1", label: "1 (p=3,5,7)" },
+    { pattern: "01", label: "01 (p=13)" },
+    { pattern: "001", label: "001 (p=17)" },
+    { pattern: "011", label: "011 (p=19)" },
+    { pattern: "111", label: "111 (p=31)" },
+    { pattern: "1101", label: "1101 (p=61)" },
+    { pattern: "11001", label: "11001 (p=89)" },
+    { pattern: "01011", label: "01011 (p=107)" },
+    { pattern: "11111", label: "11111 (p=127)" },
+    { pattern: "00001001", label: "00001001 (p=521)" }
+  ];
+
+  // Build block display
+  const blockLibDiv = document.getElementById('blockLibraryDisplay');
+  mersenneBlocks.forEach(b => {
+    const span = document.createElement('span');
+    span.className = 'block-tag';
+    span.textContent = `"${b.pattern}" ${b.label}`;
+    blockLibDiv.appendChild(span);
+  });
+
+  function detectBase(p) {
+    let val = BigInt(p);
+    while (val > 3n) {
+      if (val % 2n === 0n) val = val / 2n;
+      else val = (val - 1n) / 2n;
+    }
+    return Number(val);
+  }
+
+  function getPattern(p) {
+    let temp = BigInt(p);
+    const revBits = [];
+    while (temp > 3n) {
+      if (temp % 2n === 0n) {
+        revBits.push('0');
+        temp = temp / 2n;
+      } else {
+        revBits.push('1');
+        temp = (temp - 1n) / 2n;
+      }
+    }
+    return revBits.reverse().join('');
+  }
+
+  function parsePattern(pattern) {
+    const blocks = [...mersenneBlocks].sort((a,b) => b.pattern.length - a.pattern.length);
+    const parsed = [];
+    let remaining = pattern;
+    let pos = 0;
+    
+    while (remaining.length > 0) {
+      // First, try to match a known block
+      let matched = false;
+      for (let block of blocks) {
+        if (remaining.startsWith(block.pattern)) {
+          parsed.push({ type: 'block', value: block.pattern, label: block.label });
+          remaining = remaining.substring(block.pattern.length);
+          pos += block.pattern.length;
+          matched = true;
+          break;
+        }
+      }
+      
+      if (!matched) {
+        // Count consecutive zeros as filler
+        if (remaining[0] === '0') {
+          let zeros = '';
+          while (remaining[0] === '0') {
+            zeros += remaining[0];
+            remaining = remaining.substring(1);
+          }
+          parsed.push({ type: 'filler', value: zeros, count: zeros.length });
+        } else {
+          // Single 1 that doesn't match a block? This shouldn't happen in valid patterns
+          parsed.push({ type: 'unmatched', value: remaining[0] });
+          remaining = remaining.substring(1);
+        }
+      }
+    }
+    
+    return parsed;
+  }
+
+  function validatePattern(pattern, parsed) {
+    const issues = [];
+    
+    // Check if all characters are accounted for
+    const reconstructed = parsed.map(p => p.value).join('');
+    if (reconstructed !== pattern) {
+      issues.push('Pattern reconstruction mismatch');
+    }
+    
+    // Check for unmatched characters
+    const unmatched = parsed.filter(p => p.type === 'unmatched');
+    if (unmatched.length > 0) {
+      issues.push(`Contains unmatched characters: ${unmatched.map(u=>u.value).join('')}`);
+    }
+    
+    // Check block composition
+    const blocks = parsed.filter(p => p.type === 'block');
+    const fillerZeros = parsed.filter(p => p.type === 'filler').reduce((sum, f) => sum + f.count, 0);
+    const totalBits = pattern.length;
+    const onesCount = (pattern.match(/1/g) || []).length;
+    
+    // Heuristic: valid Mersenne patterns have block density ≥ 0.70
+    const blockBits = blocks.reduce((sum, b) => sum + b.value.length, 0);
+    const blockDensity = blockBits / totalBits;
+    if (blockDensity < 0.70) {
+      issues.push(`Block density ${blockDensity.toFixed(2)} < 0.70 (unusually low)`);
+    }
+    
+    // Heuristic: ones ratio ≥ 30%
+    const onesRatio = onesCount / totalBits;
+    if (onesRatio < 0.30) {
+      issues.push(`Ones ratio ${(onesRatio*100).toFixed(0)}% < 30%`);
+    }
+    
+    return { issues, blockDensity, onesRatio, blockBits, fillerZeros };
+  }
+
+  function analyzeNumber(pStr) {
+    try {
+      const p = BigInt(pStr);
+      const pNum = Number(p);
+      const base = detectBase(p);
+      const pattern = getPattern(p);
+      const isMersenne = knownMersenneP.has(pNum);
+      
+      const parsed = parsePattern(pattern);
+      const validation = validatePattern(pattern, parsed);
+      
+      return {
+        p: pStr, base, pattern, patternLength: pattern.length,
+        parsed, isMersenne, validation
+      };
+    } catch (e) {
+      return { error: e.message, p: pStr };
+    }
+  }
+
+  function renderParseTree(parsed) {
+    return parsed.map(item => {
+      if (item.type === 'block') {
+        return `<span class="block-tag" title="${item.label}">${item.value}</span>`;
+      } else if (item.type === 'filler') {
+        return `<span class="filler-tag" title="${item.count} filler zeros">${item.value}</span>`;
+      } else {
+        return `<span class="danger" title="Unmatched">${item.value}</span>`;
+      }
+    }).join('');
+  }
+
+  function renderResults(analyses) {
+    const container = document.getElementById('resultsContainer');
+    let html = '';
+    
+    analyses.forEach(a => {
+      if (a.error) {
+        html += `<div class="result-box grammar-fail"><span class="danger">Error: ${a.error}</span></div>`;
+        return;
+      }
+      
+      const isValid = a.validation.issues.length === 0;
+      const boxClass = isValid ? 'grammar-ok' : 'grammar-fail';
+      const statusText = a.isMersenne ? 'KNOWN MERSENNE' : (isValid ? ' GRAMMAR‑COMPLIANT (non‑Mersenne)' : ' NON‑COMPLIANT');
+      const statusClass = a.isMersenne ? 'success' : (isValid ? 'warning' : 'danger');
+      
+      html += `<div class="result-box ${boxClass}">`;
+      html += `<div style="display:flex; justify-content:space-between;">`;
+      html += `<h3 style="margin:0;">p = ${a.p} (base ${a.base})</h3>`;
+      html += `<span class="${statusClass}">${statusText}</span>`;
+      html += `</div>`;
+      
+      html += `<div class="parse-tree">`;
+      html += `<div style="margin-bottom:8px;"><strong>Pattern:</strong> ${a.pattern}</div>`;
+      html += `<div><strong>Parse:</strong> ${renderParseTree(a.parsed)}</div>`;
+      html += `</div>`;
+      
+      html += `<div class="stat-grid">`;
+      html += `<div class="stat-item"><div class="stat-value">${a.patternLength}</div><div>bits</div></div>`;
+      html += `<div class="stat-item"><div class="stat-value">${a.validation.blockDensity.toFixed(2)}</div><div>block density</div></div>`;
+      html += `<div class="stat-item"><div class="stat-value">${(a.validation.onesRatio*100).toFixed(0)}%</div><div>ones ratio</div></div>`;
+      html += `<div class="stat-item"><div class="stat-value">${a.parsed.filter(p=>p.type==='block').length}</div><div>blocks</div></div>`;
+      html += `<div class="stat-item"><div class="stat-value">${a.validation.fillerZeros}</div><div>filler zeros</div></div>`;
+      html += `</div>`;
+      
+      if (a.validation.issues.length) {
+        html += `<div style="margin-top:12px;"><strong class="warning"> Issues:</strong><ul>`;
+        a.validation.issues.forEach(i => html += `<li>${i}</li>`);
+        html += `</ul></div>`;
+      }
+      
+      html += `</div>`;
+    });
+    
+    container.innerHTML = html || '<div class="result-box">Enter numbers and click Validate.</div>';
+  }
+
+  function parseInput(input) {
+    return input.split(/[\s,\n\t]+/).filter(s => s.trim().length > 0);
+  }
+
+  document.getElementById('validateBtn').addEventListener('click', () => {
+    const input = document.getElementById('pInput').value;
+    const numbers = parseInput(input);
+    if (numbers.length === 0) return;
+    const analyses = numbers.map(p => analyzeNumber(p));
+    renderResults(analyses);
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    document.getElementById('pInput').value = '';
+    document.getElementById('resultsContainer').innerHTML = '<div class="result-box">Enter numbers and click Validate.</div>';
+  });
+
+  setTimeout(() => document.getElementById('validateBtn').click(), 100);
+})();
+</script>
+</body>
+</html>
