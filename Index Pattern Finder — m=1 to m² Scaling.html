@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Index Pattern + Multiplier</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #1e1e2f; color: #eee; margin: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; background: #2d2d44; padding: 20px; border-radius: 12px; }
+        h1 { color: #ffd966; }
+        textarea { width: 100%; height: 60px; background: #0a0a14; color: #0f0; font-family: 'Courier New', monospace; font-size: 13px; border: 1px solid #ffd966; border-radius: 4px; padding: 10px; }
+        .controls { background: #3a3a55; padding: 15px; border-radius: 8px; margin: 20px 0; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .gold { background: #ffd966; color: #000; }
+        .green { background: #4CAF50; color: #fff; }
+        .red { background: #f44336; color: #fff; }
+        input { background: #1a1a2e; border: 1px solid #ffd966; color: #eee; padding: 5px 10px; border-radius: 4px; width: 100px; }
+        .results-container { max-height: 600px; overflow-y: auto; background: #1a1a2e; border-radius: 8px; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { background: #2a2a50; color: #ffd966; padding: 8px; position: sticky; top: 0; text-align: center; }
+        td { padding: 3px 6px; border-bottom: 1px solid #3a3a5a; text-align: center; }
+        .match-found { background: #1a3a2a; }
+        .index-badge { display: inline-block; background: #2a2a50; padding: 2px 8px; border-radius: 12px; margin: 0 2px; }
+        .filter-bar { display: flex; gap: 10px; margin: 10px 0; }
+        .seed-2 { color: #f44336; }
+        .seed-3 { color: #2196F3; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1> Index Pattern Finder — m=1 to m² Scaling</h1>
+    <textarea id="exponentsInput">2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841</textarea>
+    <div style="color:#aaa;">Exponents: <span id="exponentCount">52</span></div>
+
+    <div class="controls">
+        <button class="gold" id="searchM1"> m=1 Only</button>
+        <button class="green" id="searchAll"> m up to 5000</button>
+        <button class="red" id="searchM50"> Find M50 (m up to 50000)</button>
+        <span id="progressText" style="color:#aaa;">Ready.</span>
+    </div>
+
+    <div class="filter-bar">
+        <label>Filter by e: <input type="text" id="filterE" style="width:60px;"></label>
+        <button id="applyFilter">Apply</button>
+        <button id="clearFilter">Show All</button>
+        <span style="color:#aaa;" id="matchCount"></span>
+    </div>
+
+    <div class="results-container">
+        <table id="resultsTable">
+            <thead><tr>
+                <th>a</th><th>b</th><th>c</th><th>d</th><th>e</th>
+                <th>M_a</th><th>M_b</th><th>M_c</th><th>M_d</th><th>M_e</th>
+                <th>Sign</th><th>Formula</th>
+            </tr></thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function(){
+    const exp = [2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841];
+    const knownSet = new Set(exp);
+    let matches = [];
+    let filtered = [];
+
+    function getSeed(p) {
+        const s2 = [2,5,17,19,89,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841];
+        return s2.includes(p) ? 2 : 3;
+    }
+
+    function findPatterns(maxM, targetOnly) {
+        matches = [];
+        const seen = new Set();
+        const N = exp.length;
+        
+        for (let m = 1; m <= maxM; m++) {
+            const m2 = m * m;
+            for (let a = 0; a < N; a++) {
+                for (let b = 0; b < N; b++) {
+                    const product = m2 * exp[a] * exp[b];
+                    for (let c = 0; c < N; c++) {
+                        for (let d = 0; d < N; d++) {
+                            if (c === d) continue;
+                            const k = exp[c] - exp[d];
+                            
+                            let cand = product + k;
+                            if (knownSet.has(cand) && cand > 0) {
+                                const e = exp.indexOf(cand);
+                                if (!targetOnly || e === targetOnly - 1) {
+                                    const key = `${m},${a},${b},${c},${d},+`;
+                                    if (!seen.has(key)) {
+                                        seen.add(key);
+                                        const f = m > 1 ? `(${m}×M${a+1})×(${m}×M${b+1}) + (M${c+1}−M${d+1}) = M${e+1}` : `M${a+1}×M${b+1} + (M${c+1}−M${d+1}) = M${e+1}`;
+                                        matches.push({ m, a: a+1, b: b+1, c: c+1, d: d+1, e: e+1, Ma: exp[a], Mb: exp[b], Mc: exp[c], Md: exp[d], Me: cand, sign: '+', formula: f });
+                                    }
+                                }
+                            }
+                            
+                            cand = product - k;
+                            if (knownSet.has(cand) && cand > 0) {
+                                const e = exp.indexOf(cand);
+                                if (!targetOnly || e === targetOnly - 1) {
+                                    const key = `${m},${a},${b},${c},${d},-`;
+                                    if (!seen.has(key)) {
+                                        seen.add(key);
+                                        const f = m > 1 ? `(${m}×M${a+1})×(${m}×M${b+1}) − (M${c+1}−M${d+1}) = M${e+1}` : `M${a+1}×M${b+1} − (M${c+1}−M${d+1}) = M${e+1}`;
+                                        matches.push({ m, a: a+1, b: b+1, c: c+1, d: d+1, e: e+1, Ma: exp[a], Mb: exp[b], Mc: exp[c], Md: exp[d], Me: cand, sign: '−', formula: f });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (m % 500 === 0) document.getElementById('progressText').textContent = `m=${m}... Found: ${matches.length}`;
+        }
+        filtered = matches;
+    }
+
+    function display(mList) {
+        if (mList.length === 0) {
+            document.getElementById('resultsBody').innerHTML = '<tr><td colspan="12">No matches.</td></tr>';
+            document.getElementById('matchCount').textContent = '';
+            return;
+        }
+        let html = '';
+        for (let r of mList) {
+            const sa = getSeed(r.Ma), sb = getSeed(r.Mb), sc = getSeed(r.Mc), sd = getSeed(r.Md), se = getSeed(r.Me);
+            html += `<tr class="match-found">
+                <td><span class="index-badge">${r.a}</span></td>
+                <td><span class="index-badge">${r.b}</span></td>
+                <td><span class="index-badge">${r.c}</span></td>
+                <td><span class="index-badge">${r.d}</span></td>
+                <td><span class="index-badge">${r.e}</span></td>
+                <td class="seed-${sa}">${r.Ma.toLocaleString()}</td>
+                <td class="seed-${sb}">${r.Mb.toLocaleString()}</td>
+                <td class="seed-${sc}">${r.Mc.toLocaleString()}</td>
+                <td class="seed-${sd}">${r.Md.toLocaleString()}</td>
+                <td class="seed-${se}">${r.Me.toLocaleString()}</td>
+                <td>${r.sign}</td>
+                <td style="font-size:11px; text-align:left;">${r.formula}</td>
+            </tr>`;
+        }
+        document.getElementById('resultsBody').innerHTML = html;
+        document.getElementById('matchCount').textContent = `${mList.length} matches`;
+    }
+
+    document.getElementById('searchM1').addEventListener('click', function(){
+        document.getElementById('resultsBody').innerHTML = '<tr><td colspan="12">Searching m=1...</td></tr>';
+        setTimeout(() => { findPatterns(1, null); display(filtered); 
+            document.getElementById('progressText').textContent = `Done! ${matches.length} matches.`; }, 10);
+    });
+
+    document.getElementById('searchAll').addEventListener('click', function(){
+        document.getElementById('resultsBody').innerHTML = '<tr><td colspan="12">Searching m=1 to 5000...</td></tr>';
+        setTimeout(() => { findPatterns(5000, null); display(filtered); 
+            document.getElementById('progressText').textContent = `Done! ${matches.length} matches.`; }, 10);
+    });
+
+    document.getElementById('searchM50').addEventListener('click', function(){
+        document.getElementById('resultsBody').innerHTML = '<tr><td colspan="12">Searching M50 with m up to 50000...</td></tr>';
+        setTimeout(() => { findPatterns(50000, 50); display(filtered); 
+            document.getElementById('progressText').textContent = `Found ${matches.length} for M50.`; }, 10);
+    });
+
+    document.getElementById('applyFilter').addEventListener('click', function(){
+        const e = parseInt(document.getElementById('filterE').value, 10);
+        filtered = e ? matches.filter(r => r.e === e) : matches;
+        display(filtered);
+    });
+
+    document.getElementById('clearFilter').addEventListener('click', function(){
+        filtered = matches; display(filtered);
+        document.getElementById('filterE').value = '';
+    });
+})();
+</script>
+</body>
+</html>
