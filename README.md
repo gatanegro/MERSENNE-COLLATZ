@@ -11,4 +11,3 @@ For Mersenne exponents pe with index e > 5 , the generative formula is:
 <img width="178" height="27" alt="image" src="https://github.com/user-attachments/assets/e992eb45-84f2-47c2-9af2-454ab35484f3" />
 
 
- 
