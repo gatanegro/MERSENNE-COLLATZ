@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>2n+1 · k‑Analyzer & Op‑String Lab (offline)</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', 'Fira Code', monospace; }
+    body {
+      background: #0b1016;
+      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .app {
+      max-width: 1800px; width: 100%; background: #16202a; border-radius: 36px;
+      box-shadow: 0 20px 40px #00000060, 0 0 0 1px #3e5a70;
+      padding: 24px 30px; color: #e3ecf5;
+    }
+    h1 {
+      margin: 0 0 6px; font-weight: 450; font-size: 2.2rem;
+      background: linear-gradient(145deg, #f2d98b, #b0d0ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .subtitle {
+      margin-left: 12px; margin-bottom: 20px; color: #aac1da;
+      border-left: 5px solid #d9a822; padding-left: 22px;
+    }
+    .tabs {
+      display: flex; gap: 10px; margin: 20px 0 10px;
+    }
+    .tab {
+      background: #1e2f3d; border: 1px solid #3f627b; color: #c6d9f0;
+      padding: 12px 32px; border-radius: 40px 40px 0 0; cursor: pointer;
+      font-weight: 600; font-size: 1.1rem; transition: 0.15s;
+    }
+    .tab.active {
+      background: #2d506b; color: white; border-bottom: 3px solid #eebb55;
+    }
+    .panel {
+      background: #101b25; border-radius: 28px; padding: 22px 24px;
+      border: 1px solid #2e4a5e; margin-bottom: 20px;
+    }
+    .flex-row {
+      display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-end;
+    }
+    .input-group {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .input-group label {
+      font-weight: 600; color: #b0cce6;
+    }
+    .input-group input, .input-group select {
+      background: #0c1721; border: 1px solid #456983; padding: 12px 18px;
+      border-radius: 40px; font-size: 1rem; color: #ffe9b6;
+      font-family: 'Fira Code', monospace; outline: none;
+    }
+    button {
+      background: #1e4b6e; border: 1px solid #8bb1d4; color: white;
+      font-weight: bold; padding: 12px 28px; border-radius: 60px;
+      cursor: pointer; font-size: 1rem; transition: 0.15s;
+    }
+    button:hover { background: #2f6790; box-shadow: 0 0 12px #6f9ac2; }
+    .table-container {
+      max-height: 500px; overflow-y: auto; border-radius: 20px;
+      background: #0b141c; border: 1px solid #2f4d64; margin-top: 20px;
+    }
+    table {
+      width: 100%; border-collapse: collapse; font-size: 0.85rem;
+    }
+    th {
+      background: #1c3343; color: #e2ecf7; padding: 12px 6px;
+      position: sticky; top: 0; font-weight: 600;
+    }
+    td {
+      padding: 6px 4px; text-align: center; border-bottom: 1px solid #2c4a61;
+      color: #d5e6ff;
+    }
+    .prime-badge { background: #1b5e1b; color: #bef5b4; padding: 4px 12px; border-radius: 30px; }
+    .comp-badge { background: #962828; color: #ffcfcf; padding: 4px 12px; border-radius: 30px; }
+    .info-note { margin-top: 16px; color: #9fb7d0; }
+    .mono { font-family: 'Fira Code', monospace; }
+    .section-title {
+      font-size: 1.4rem; font-weight: 400; margin: 0 0 16px 0;
+      color: #d7e6ff; border-bottom: 1px solid #3f627b; padding-bottom: 8px;
+    }
+    .badge { padding: 2px 10px; border-radius: 20px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1> 2n+1 · Op‑String (0/1) Lab</h1>
+  <div class="subtitle">
+    Study p from base B and sequence of 0=2n, 1=2n+1 · also k = (p-1)/2 view
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" data-tab="kTab"> k → p (range scanner)</div>
+    <div class="tab" data-tab="opTab"> Op‑String (0/1) → p</div>
+  </div>
+
+  <!-- ========== TAB 1: k-based range (previous functionality) ========= -->
+  <div id="kTab" class="tab-content">
+    <div class="panel">
+      <div class="section-title"> Scan k range (p = 2k+1)</div>
+      <div class="flex-row">
+        <div class="input-group">
+          <label>Start k</label>
+          <input type="text" id="startK" value="1000">
+        </div>
+        <div class="input-group">
+          <label>End k</label>
+          <input type="text" id="endK" value="1100">
+        </div>
+        <button id="generateKTableBtn">Generate</button>
+        <button id="stopKBtn" style="background:#5a3e2b;">Stop</button>
+      </div>
+      <div style="margin:15px 0; display:flex; gap:20px;">
+        <label><input type="checkbox" id="filterEnd27" checked> Exclude k ending 2,7</label>
+        <label><input type="checkbox" id="onlyPrimeK"> Only primes (p)</label>
+        <label><input type="checkbox" id="onlyCompositeK"> Only composites (p)</label>
+        <span id="kRowCount"></span>
+      </div>
+      <div class="table-container">
+        <table id="kTable">
+          <thead><tr><th>k</th><th>k last</th><th>k DR</th><th>p</th><th>p last</th><th>p DR</th><th>Primality</th></tr></thead>
+          <tbody id="kTableBody"><tr><td colspan="7">Enter range and click Generate</td></tr></tbody>
+        </table>
+      </div>
+      <div id="kProgress" class="info-note"></div>
+    </div>
+  </div>
+
+  <!-- ========== TAB 2: Op-String (0/1) interpreter & batch ========= -->
+  <div id="opTab" class="tab-content" style="display:none;">
+    <!-- Single sequence evaluator -->
+    <div class="panel">
+      <div class="section-title"> Single Op‑String → p</div>
+      <div class="flex-row">
+        <div class="input-group">
+          <label>Base B</label>
+          <input type="text" id="baseInput" value="2" style="width:100px;">
+        </div>
+        <div class="input-group" style="flex:2;">
+          <label>Sequence (0/1)</label>
+          <input type="text" id="seqInput" placeholder="e.g. 01011" value="1101" style="width:100%;">
+        </div>
+        <button id="evalSeqBtn">Compute p</button>
+      </div>
+      <div style="margin-top:16px; background:#0e1a23; padding:16px 20px; border-radius:20px;" id="singleOpResult">
+        <span style="color:#aac1da;">Result will appear here</span>
+      </div>
+      <div class="info-note">
+        <strong>Rule:</strong> Start with base B. For each bit: '0' → value = 2×value ; '1' → value = 2×value + 1.
+      </div>
+    </div>
+
+    <!-- Batch generator: all sequences of given length -->
+    <div class="panel">
+      <div class="section-title"> Batch: all sequences of length L (from base B)</div>
+      <div class="flex-row">
+        <div class="input-group">
+          <label>Base B</label>
+          <input type="text" id="batchBase" value="2" style="width:100px;">
+        </div>
+        <div class="input-group">
+          <label>Length L (1–12)</label>
+          <input type="number" id="seqLength" min="1" max="12" value="4" style="width:100px;">
+        </div>
+        <button id="generateBatchBtn">Generate all sequences</button>
+        <button id="stopBatchBtn" style="background:#5a3e2b;">Stop</button>
+      </div>
+      <div style="margin:15px 0;">
+        <label><input type="checkbox" id="batchOnlyPrime"> Only primes (p)</label>
+        <label><input type="checkbox" id="batchOnlyComposite"> Only composites (p)</label>
+        <span id="batchRowCount" style="margin-left:20px;"></span>
+      </div>
+      <div class="table-container" style="max-height:400px;">
+        <table id="batchTable">
+          <thead><tr><th>Sequence</th><th>p</th><th>p (binary)</th><th>p last</th><th>p DR</th><th>k=(p-1)/2</th><th>Primality</th></tr></thead>
+          <tbody id="batchTableBody"><tr><td colspan="7">Set base & length, click Generate</td></tr></tbody>
+        </table>
+      </div>
+      <div id="batchProgress" class="info-note"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // ----- helpers -----
+    function digitalRootBI(bi) {
+      if (bi === 0n) return 0;
+      let mod9 = bi % 9n;
+      return mod9 === 0n ? 9 : Number(mod9);
+    }
+    function digitalRootNum(n) {
+      if (n === 0) return 0;
+      let r = n % 9;
+      return r === 0 ? 9 : r;
+    }
+
+    // Miller-Rabin (BigInt)
+    function modPow(base, exp, mod) {
+      let result = 1n;
+      base = base % mod;
+      let e = exp;
+      while (e > 0n) {
+        if (e % 2n === 1n) result = (result * base) % mod;
+        base = (base * base) % mod;
+        e >>= 1n;
+      }
+      return result;
+    }
+    function isProbablePrime(n, iters=8) {
+      if (n < 2n) return false;
+      if (n === 2n || n === 3n) return true;
+      if (n % 2n === 0n) return false;
+      let d = n - 1n, s = 0n;
+      while (d % 2n === 0n) { d /= 2n; s++; }
+      const bases = [2n,3n,5n,7n,11n,13n,17n,19n,23n,29n];
+      WitnessLoop: for (let i=0; i<Math.min(iters,bases.length); i++) {
+        let a = bases[i];
+        if (a >= n) continue;
+        let x = modPow(a, d, n);
+        if (x === 1n || x === n-1n) continue;
+        let j = 0n;
+        while (j < s-1n) {
+          x = (x*x) % n;
+          if (x === n-1n) continue WitnessLoop;
+          j++;
+        }
+        return false;
+      }
+      return true;
+    }
+
+    // ----- op-string interpreter -----
+    function applyOpString(base, seq) {
+      let val = BigInt(base);
+      for (let ch of seq) {
+        if (ch === '0') val = val * 2n;
+        else if (ch === '1') val = val * 2n + 1n;
+        else throw new Error('Invalid char in sequence');
+      }
+      return val;
+    }
+
+    // ----- TABS -----
+    const tabs = document.querySelectorAll('.tab');
+    const contents = { kTab: document.getElementById('kTab'), opTab: document.getElementById('opTab') };
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        for (let id in contents) contents[id].style.display = 'none';
+        contents[tabId].style.display = 'block';
+      });
+    });
+
+    // ========== K-TAB (range scanner) ==========
+    const startKInput = document.getElementById('startK');
+    const endKInput = document.getElementById('endK');
+    const generateKBtn = document.getElementById('generateKTableBtn');
+    const stopKBtn = document.getElementById('stopKBtn');
+    const kTableBody = document.getElementById('kTableBody');
+    const filterEnd27 = document.getElementById('filterEnd27');
+    const onlyPrimeK = document.getElementById('onlyPrimeK');
+    const onlyCompositeK = document.getElementById('onlyCompositeK');
+    const kRowCountSpan = document.getElementById('kRowCount');
+    const kProgress = document.getElementById('kProgress');
+
+    let kAbortController = null;
+
+    async function generateKRange() {
+      if (kAbortController) kAbortController.abort();
+      kAbortController = new AbortController();
+      const signal = kAbortController.signal;
+
+      let startStr = startKInput.value.trim(), endStr = endKInput.value.trim();
+      if (!startStr || !endStr) { kTableBody.innerHTML = '<tr><td colspan="7">Enter start and end.</td></tr>'; return; }
+      let start, end;
+      try { start = BigInt(startStr); end = BigInt(endStr); } catch { kTableBody.innerHTML = '<tr><td colspan="7">Invalid integers.</td></tr>'; return; }
+      if (start > end) { let t=start; start=end; end=t; }
+
+      kTableBody.innerHTML = '<tr><td colspan="7">Generating...</td></tr>';
+      const filter27 = filterEnd27.checked;
+      const primeOnly = onlyPrimeK.checked;
+      const compOnly = onlyCompositeK.checked;
+
+      let rows = [], countShown = 0, countProcessed = 0;
+      
+      async function processBatch(current, batchSize=200) {
+        if (signal.aborted) return;
+        let endBatch = current + BigInt(batchSize);
+        if (endBatch > end) endBatch = end;
+        for (let k = current; k <= endBatch; k++) {
+          if (signal.aborted) return;
+          countProcessed++;
+          let lastK = Number(k % 10n);
+          if (filter27 && (lastK===2 || lastK===7)) continue;
+          let p = 2n*k + 1n;
+          let prime = isProbablePrime(p, 6);
+          if (primeOnly && !prime) continue;
+          if (compOnly && prime) continue;
+          rows.push({
+            k: k.toString(), lastK, drk: digitalRootBI(k),
+            p: p.toString(), pLast: Number(p%10n), drp: digitalRootBI(p), prime
+          });
+          countShown++;
+        }
+        renderKTable(rows);
+        kProgress.textContent = `Processed ${countProcessed} k · showing ${countShown}`;
+        let next = endBatch + 1n;
+        if (next <= end) {
+          setTimeout(() => processBatch(next, batchSize), 5);
+        } else {
+          kProgress.textContent = `Done. ${countShown} rows.`;
+          kRowCountSpan.textContent = `${countShown} rows`;
+          kAbortController = null;
+        }
+      }
+
+      function renderKTable(rowsArray) {
+        let html = rowsArray.map(r => `<tr>
+          <td>${r.k}</td><td>${r.lastK}</td><td>${r.drk}</td>
+          <td>${r.p}</td><td>${r.pLast}</td><td>${r.drp}</td>
+          <td>${r.prime ? '<span class="prime-badge">PRIME</span>' : '<span class="comp-badge">COMP</span>'}</td>
+        </tr>`).join('');
+        kTableBody.innerHTML = html;
+      }
+
+      rows = []; countProcessed = 0; countShown = 0;
+      await processBatch(start);
+    }
+
+    generateKBtn.addEventListener('click', (e) => { e.preventDefault(); generateKRange(); });
+    stopKBtn.addEventListener('click', () => { if (kAbortController) { kAbortController.abort(); kProgress.textContent = 'Stopped.'; kAbortController = null; } });
+
+    // ========== OP-STRING TAB ==========
+    // single eval
+    const baseInput = document.getElementById('baseInput');
+    const seqInput = document.getElementById('seqInput');
+    const evalBtn = document.getElementById('evalSeqBtn');
+    const singleOpResult = document.getElementById('singleOpResult');
+
+    evalBtn.addEventListener('click', () => {
+      let baseStr = baseInput.value.trim();
+      let seq = seqInput.value.trim().replace(/\s/g, '');
+      if (!baseStr) { singleOpResult.innerHTML = '<span style="color:#f88;">Enter base B</span>'; return; }
+      let base;
+      try { base = BigInt(baseStr); } catch { singleOpResult.innerHTML = '<span style="color:#f88;">Invalid base</span>'; return; }
+      if (!/^[01]*$/.test(seq)) { singleOpResult.innerHTML = '<span style="color:#f88;">Sequence must contain only 0 and 1</span>'; return; }
+      try {
+        let p = applyOpString(base, seq);
+        let prime = isProbablePrime(p);
+        let drp = digitalRootBI(p);
+        let k = (p - 1n) / 2n;
+        singleOpResult.innerHTML = `
+          <div><strong>Base:</strong> ${base} &nbsp; <strong>Sequence:</strong> "${seq}"</div>
+          <div style="font-size:1.3rem; margin:10px 0;"><strong>p =</strong> ${p.toString()}</div>
+          <div>p (binary): ${p.toString(2)}</div>
+          <div>p last digit: ${p % 10n} · DR(p): ${drp}</div>
+          <div>k = (p-1)/2 = ${k.toString()}</div>
+          <div>Primality: ${prime ? '<span class="prime-badge">PRIME</span>' : '<span class="comp-badge">COMPOSITE</span>'}</div>
+        `;
+      } catch (e) {
+        singleOpResult.innerHTML = `<span style="color:#f88;">Error: ${e.message}</span>`;
+      }
+    });
+
+    // batch generator for sequences of given length
+    const batchBase = document.getElementById('batchBase');
+    const seqLength = document.getElementById('seqLength');
+    const generateBatchBtn = document.getElementById('generateBatchBtn');
+    const stopBatchBtn = document.getElementById('stopBatchBtn');
+    const batchTableBody = document.getElementById('batchTableBody');
+    const batchOnlyPrime = document.getElementById('batchOnlyPrime');
+    const batchOnlyComposite = document.getElementById('batchOnlyComposite');
+    const batchRowCount = document.getElementById('batchRowCount');
+    const batchProgress = document.getElementById('batchProgress');
+
+    let batchAbortController = null;
+
+    function* generateSequences(len) {
+      const total = 1 << len;
+      for (let i = 0; i < total; i++) {
+        yield i.toString(2).padStart(len, '0');
+      }
+    }
+
+    async function generateBatch() {
+      if (batchAbortController) batchAbortController.abort();
+      batchAbortController = new AbortController();
+      const signal = batchAbortController.signal;
+
+      let baseStr = batchBase.value.trim();
+      let len = parseInt(seqLength.value, 10);
+      if (!baseStr) { alert('Enter base'); return; }
+      let base;
+      try { base = BigInt(baseStr); } catch { alert('Invalid base'); return; }
+      if (isNaN(len) || len < 1 || len > 12) { alert('Length 1-12'); return; }
+
+      batchTableBody.innerHTML = '<tr><td colspan="7">Generating all sequences...</td></tr>';
+      const primeOnly = batchOnlyPrime.checked;
+      const compOnly = batchOnlyComposite.checked;
+
+      let rows = [];
+      let count = 0, shown = 0;
+      const gen = generateSequences(len);
+      
+      function processNext() {
+        if (signal.aborted) { batchProgress.textContent = 'Stopped.'; return; }
+        let next = gen.next();
+        if (next.done) {
+          renderBatchTable(rows);
+          batchProgress.textContent = `Done. ${shown} rows (total ${count} sequences)`;
+          batchRowCount.textContent = `${shown} rows`;
+          batchAbortController = null;
+          return;
+        }
+        let seq = next.value;
+        count++;
+        try {
+          let p = applyOpString(base, seq);
+          let prime = isProbablePrime(p, 5);
+          if (primeOnly && !prime) { setTimeout(processNext, 0); return; }
+          if (compOnly && prime) { setTimeout(processNext, 0); return; }
+          let drp = digitalRootBI(p);
+          let k = (p - 1n) / 2n;
+          rows.push({
+            seq, p: p.toString(), pBin: p.toString(2), pLast: Number(p%10n), drp, k: k.toString(), prime
+          });
+          shown++;
+          if (rows.length % 20 === 0) renderBatchTable(rows);
+        } catch (e) { console.warn(e); }
+        batchProgress.textContent = `Processed ${count} / ${1<<len} · showing ${shown}`;
+        setTimeout(processNext, 0);
+      }
+
+      function renderBatchTable(rowsArray) {
+        let html = rowsArray.map(r => `<tr>
+          <td class="mono">${r.seq}</td><td>${r.p}</td><td class="mono">${r.pBin}</td>
+          <td>${r.pLast}</td><td>${r.drp}</td><td>${r.k}</td>
+          <td>${r.prime ? '<span class="prime-badge">P</span>' : '<span class="comp-badge">C</span>'}</td>
+        </tr>`).join('');
+        batchTableBody.innerHTML = html;
+      }
+
+      rows = []; count = 0; shown = 0;
+      processNext();
+    }
+
+    generateBatchBtn.addEventListener('click', generateBatch);
+    stopBatchBtn.addEventListener('click', () => {
+      if (batchAbortController) { batchAbortController.abort(); batchProgress.textContent = 'Stopped.'; batchAbortController = null; }
+    });
+
+    // initialize with default single eval
+    setTimeout(() => evalBtn.click(), 50);
+  })();
+</script>
+</body>
+</html>
