@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Index Pattern - Earlier Exponents Only</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #1e1e2f; color: #eee; margin: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; background: #2d2d44; padding: 20px; border-radius: 12px; }
+        h1 { color: #ffd966; }
+        .controls { background: #3a3a55; padding: 15px; border-radius: 8px; margin: 20px 0; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: #fff; }
+        .gold { background: #ffd966; color: #000; }
+        .green { background: #4CAF50; }
+        .red { background: #f44336; }
+        .blue { background: #2196F3; }
+        input { background: #1a1a2e; border: 1px solid #ffd966; color: #eee; padding: 5px 10px; border-radius: 4px; width: 100px; }
+        .results-container { max-height: 600px; overflow-y: auto; background: #1a1a2e; border-radius: 8px; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #2a2a50; color: #ffd966; padding: 6px; position: sticky; top: 0; text-align: center; }
+        td { padding: 2px 5px; border-bottom: 1px solid #3a3a5a; text-align: center; }
+        .match-found { background: #1a3a2a; }
+        .index-badge { display: inline-block; background: #2a2a50; padding: 1px 6px; border-radius: 10px; margin: 0 1px; }
+        .filter-bar { display: flex; gap: 10px; margin: 10px 0; align-items: center; }
+        .seed-2 { color: #f44336; }
+        .seed-3 { color: #2196F3; }
+        .notfound { color: #f44336; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1> Mersennes exponents p  Grammar — Only Earlier Exponents</h1>
+    <p>For each M_e, uses only a, b, c, d < e (strictly earlier exponents).</p>
+
+    <div class="controls">
+        <button class="gold" id="searchM1"> m=1 Only</button>
+        <button class="green" id="searchAll"> m up to 7000</button>
+        <button class="red" id="searchGaps"> GAPs Only (m up to 15000)</button>
+        <button class="blue" id="exportBtn"> Export TXT</button>
+        <span id="progressText" style="color:#aaa;">Ready.</span>
+    </div>
+
+    <div class="filter-bar">
+        <label>Filter by e: <input type="text" id="filterE" style="width:50px;"></label>
+        <button id="applyFilter">Apply</button>
+        <button id="clearFilter">All</button>
+        <span style="color:#aaa;" id="matchCount"></span>
+    </div>
+
+    <div class="results-container">
+        <table id="resultsTable">
+            <thead><tr>
+                <th>e</th><th>M_e</th><th>m</th><th>a</th><th>b</th><th>M_a</th><th>M_b</th><th>c</th><th>d</th><th>k=M_c−M_d</th><th>Sign</th><th>Formula</th>
+            </tr></thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+(function(){
+    const exp = [2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841];
+    const N = exp.length;
+    const knownSet = new Set(exp);
+    let matches = [];
+    let filtered = [];
+    let stopSearch = false;
+
+    function getSeed(p) {
+        const s2 = [2, 5, 17, 19, 89, 521, 607, 1279,
+            2203, 2281, 4253, 4423, 9689, 9941, 11213, 19937, 21701,
+            23209, 44497, 86243, 132049, 756839, 1257787, 1398269, 2976221, 3021377, 20996011,
+            24036583, 37156667, 42643801, 43112609, 74207281, 77232917, 82589933, 136279841];
+        return s2.includes(p) ? 2 : 3;
+    }
+
+    function findPatterns(maxM, targetList) {
+        matches = [];
+        stopSearch = false;
+        const seen = new Set();
+        
+        const targets = targetList || [];
+        const useAll = targets.length === 0;
+        
+        for (let ei = 0; ei < N; ei++) {
+            const e = ei + 1;
+            const target = exp[ei];
+            
+            // Skip if not in target list and not using all
+            if (!useAll && !targets.includes(e)) continue;
+            
+            // Only for M5+ (e>=5)
+            if (e < 5) continue;
+            
+            document.getElementById('progressText').textContent = `M${e}... Found: ${matches.length}`;
+            
+            for (let m = 1; m <= maxM; m++) {
+                if (stopSearch) break;
+                const m2 = m * m;
+                
+                // ONLY EARLIER EXPONENTS: a, b, c, d < ei
+                for (let a = 0; a < ei; a++) {
+                    for (let b = 0; b < ei; b++) {
+                        const product = m2 * exp[a] * exp[b];
+                        
+                        for (let c = 0; c < ei; c++) {
+                            for (let d = 0; d < ei; d++) {
+                                if (c === d) continue;
+                                const k = exp[c] - exp[d];
+                                
+                                // Addition: target = product + k
+                                if (product + k === target) {
+                                    const key = `e${e},m${m},a${a},b${b},c${c},d${d},+`;
+                                    if (!seen.has(key)) {
+                                        seen.add(key);
+                                        const f = m > 1 ? 
+                                            `(${m}×M${a+1})×(${m}×M${b+1}) + (M${c+1}−M${d+1})` :
+                                            `M${a+1}×M${b+1} + (M${c+1}−M${d+1})`;
+                                        matches.push({ e, Me: target, m, a: a+1, b: b+1, c: c+1, d: d+1, Ma: exp[a], Mb: exp[b], k, sign: '+', formula: f });
+                                    }
+                                }
+                                
+                                // Subtraction: target = product - k
+                                if (product - k === target) {
+                                    const key = `e${e},m${m},a${a},b${b},c${c},d${d},-`;
+                                    if (!seen.has(key)) {
+                                        seen.add(key);
+                                        const f = m > 1 ? 
+                                            `(${m}×M${a+1})×(${m}×M${b+1}) − (M${c+1}−M${d+1})` :
+                                            `M${a+1}×M${b+1} − (M${c+1}−M${d+1})`;
+                                        matches.push({ e, Me: target, m, a: a+1, b: b+1, c: c+1, d: d+1, Ma: exp[a], Mb: exp[b], k, sign: '−', formula: f });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (stopSearch) break;
+        }
+        filtered = matches;
+    }
+
+    function display(mList) {
+        if (mList.length === 0) {
+            document.getElementById('resultsBody').innerHTML = '<tr><td colspan="12">No matches.</td></tr>';
+            document.getElementById('matchCount').textContent = '';
+            return;
+        }
+        let html = '';
+        for (let r of mList) {
+            const sa = getSeed(r.Ma), sb = getSeed(r.Mb);
+            html += `<tr class="match-found">
+                <td><span class="index-badge">${r.e}</span></td>
+                <td><strong>${r.Me.toLocaleString()}</strong></td>
+                <td>${r.m}</td>
+                <td><span class="index-badge">${r.a}</span></td>
+                <td><span class="index-badge">${r.b}</span></td>
+                <td class="seed-${sa}">${r.Ma.toLocaleString()}</td>
+                <td class="seed-${sb}">${r.Mb.toLocaleString()}</td>
+                <td><span class="index-badge">${r.c}</span></td>
+                <td><span class="index-badge">${r.d}</span></td>
+                <td>${r.k.toLocaleString()}</td>
+                <td>${r.sign}</td>
+                <td style="font-size:10px; text-align:left;">${r.formula} = M${r.e}</td>
+            </tr>`;
+        }
+        document.getElementById('resultsBody').innerHTML = html;
+        document.getElementById('matchCount').textContent = `${mList.length} matches`;
+    }
+
+    document.getElementById('searchM1').addEventListener('click', function(){
+        document.getElementById('resultsBody').innerHTML = '<tr><td colspan="12">Searching m=1 (earlier exponents only)...</td></tr>';
+        stopSearch = true; setTimeout(() => {
+            stopSearch = false;
+            findPatterns(1, []);
+            display(filtered);
+            document.getElementById('progressText').textContent = `Done! ${matches.length} matches with m=1.`;
+        }, 10);
+    });
+
+    document.getElementById('searchAll').addEventListener('click', function(){
+        document.getElementById('resultsBody').innerHTML = '<tr><td colspan="12">Searching m=1 to 7000...</td></tr>';
+        stopSearch = true; setTimeout(() => {
+            stopSearch = false;
+            findPatterns(7000, []);
+            display(filtered);
+            document.getElementById('progressText').textContent = `Done! ${matches.length} matches with m≤5000.`;
+        }, 10);
+    });
+
+    document.getElementById('searchGaps').addEventListener('click', function(){
+        document.getElementById('resultsBody').innerHTML = '<tr><td colspan="12">Searching GAPs: M38,M42,M45,M48,M50,M51,M52 with m up to 15000...</td></tr>';
+        stopSearch = true; setTimeout(() => {
+            stopSearch = false;
+            findPatterns(50000, [38,42,45,48,50,51,52]);
+            display(filtered);
+            let found = new Set(filtered.map(r => r.e));
+            let missing = [38,42,45,48,50,51,52].filter(e => !found.has(e));
+            document.getElementById('progressText').textContent = `Found: ${[...found].join(',')} | Missing: ${missing.join(',')}`;
+        }, 10);
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', function(){
+        const data = filtered.length > 0 ? filtered : matches;
+        if (data.length === 0) { alert('No matches'); return; }
+        let txt = "MERSENNE GRAMMAR MATCHES (Earlier Exponents Only)\n==============================================\n\n";
+        txt += "e\tM_e\tm\ta\tb\tM_a\tM_b\tc\td\tk\tSign\tFormula\n";
+        for (let r of data) {
+            txt += `${r.e}\t${r.Me}\t${r.m}\t${r.a}\t${r.b}\t${r.Ma}\t${r.Mb}\t${r.c}\t${r.d}\t${r.k}\t${r.sign}\t${r.formula}\n`;
+        }
+        const blob = new Blob([txt], {type:'text/plain'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'mersenne_grammar_matches.txt'; a.click();
+    });
+
+    document.getElementById('applyFilter').addEventListener('click', function(){
+        const e = parseInt(document.getElementById('filterE').value, 10);
+        filtered = e ? matches.filter(r => r.e === e) : matches;
+        display(filtered);
+    });
+
+    document.getElementById('clearFilter').addEventListener('click', function(){
+        filtered = matches; display(filtered);
+        document.getElementById('filterE').value = '';
+    });
+})();
+</script>
+</body>
+</html>
