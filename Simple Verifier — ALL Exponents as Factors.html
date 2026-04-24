@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Formula Verifier - ALL Exponents</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #0a0a14; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1500px; margin: 0 auto; background: #1a1a2e; padding: 20px; border-radius: 12px; }
+        h1 { color: #ffd966; font-size: 1.2rem; }
+        button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 3px; color: #fff; }
+        .gold { background: #ffd966; color: #000; }
+        .green { background: #4CAF50; }
+        #output { background: #0f0f1a; padding: 15px; border-radius: 8px; max-height: 600px; overflow-y: auto; font-size: 12px; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #2a2a50; color: #ffd966; padding: 4px; position: sticky; top: 0; }
+        td { padding: 3px 5px; border-bottom: 1px solid #3a3a5a; }
+        .match-row { background: #1a3a2a; }
+        .gap-row { background: #3a1a1a; }
+        .found { color: #4CAF50; }
+        .notfound { color: #f44336; }
+        .seed2 { color: #f44336; }
+        .seed3 { color: #2196F3; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1> Simple Verifier — ALL Exponents as Factors</h1>
+    <button class="gold" id="runBtn"> Verify ALL 52 (Pure + Multiplier)</button>
+    <button class="green" id="deepBtn"> Deep Search GAPs</button>
+    <span id="status" style="color:#aaa; margin-left:20px;"></span>
+    <div id="output" style="margin-top:15px;">Ready.</div>
+</div>
+
+<script>
+    (function(){
+        const exp = [2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841];
+
+        const s2 = new Set([2,5,17,19,89,521,607,1279,2203,2281,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,132049,756839,1257787,1398269,2976221,3021377,20996011,24036583,37156667,42643801,43112609,74207281,77232917,82589933,136279841]);
+        const s3 = new Set([3,7,13,31,61,107,127,3217,110503,216091,859433,6972593,13466917,25964951,30402457,32582657,57885161]);
+
+        function seed(p) {
+            if (p === 2 || p === 5) return 'N';
+            if (s2.has(p)) return 2;
+            if (s3.has(p)) return 3;
+            return 'N';
+        }
+
+        function signs(sa, sb) {
+            if (sa === 'N' || sb === 'N') return ['+', '-'];
+            return (sa === sb) ? ['-'] : ['+'];
+        }
+
+        function buildK() {
+            const km = new Map();
+            for (let c = 0; c < exp.length; c++) {
+                for (let d = 0; d < exp.length; d++) {
+                    const k = exp[c] - exp[d];
+                    if (!km.has(k)) km.set(k, []);
+                    km.get(k).push({ pc: exp[c], pd: exp[d], ci: c+1, di: d+1 });
+                }
+            }
+            return km;
+        }
+
+        function find(targetIdx, maxM, km) {
+            const target = exp[targetIdx];
+            const N = targetIdx; // ALL earlier exponents
+            
+            // TRY EVERY PAIR of earlier exponents
+            for (let a = 0; a < N; a++) {
+                const pa = exp[a], sa = seed(pa);
+                for (let b = 0; b < N; b++) {
+                    const pb = exp[b], sb = seed(pb);
+                    const baseProd = pa * pb;
+                    const ss = signs(sa, sb);
+                    
+                    // Try m=1
+                    for (let s of ss) {
+                        const k = (s === '+') ? target - baseProd : baseProd - target;
+                        if (km.has(k)) {
+                            const pairs = km.get(k);
+                            for (let p of pairs) {
+                                if (p.ci <= N && p.di <= N) return { m: 1, pa, pb, sa, sb, prod: baseProd, k, sign: s, pc: p.pc, pd: p.pd };
+                            }
+                        }
+                    }
+                    
+                    // Try m > 1
+                    if (maxM > 1) {
+                        const est = Math.sqrt(target / baseProd);
+                        const lo = Math.max(2, Math.floor(est * 0.5));
+                        const hi = Math.min(maxM, Math.ceil(est * 2));
+                        for (let m = lo; m <= hi; m++) {
+                            const scaled = baseProd * m * m;
+                            for (let s of ss) {
+                                const k = (s === '+') ? target - scaled : scaled - target;
+                                if (km.has(k)) {
+                                    const pairs = km.get(k);
+                                    for (let p of pairs) {
+                                        if (p.ci <= N && p.di <= N) return { m, pa, pb, sa, sb, prod: scaled, k, sign: s, pc: p.pc, pd: p.pd };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        document.getElementById('runBtn').addEventListener('click', function() {
+            const km = buildK();
+            let html = '<table><tr><th>M#</th><th>p_e</th><th>m</th><th>p_a</th><th>p_b</th><th>Sd</th><th>Sg</th><th>k</th></tr>';
+            let f = 0;
+            for (let e = 4; e < exp.length; e++) {
+                document.getElementById('status').textContent = 'M' + (e+1) + '...';
+                const r = find(e, 5000, km);
+                if (r) {
+                    f++;
+                    html += `<tr class="match-row"><td>M${e+1}</td><td>${exp[e].toLocaleString()}</td><td>${r.m}</td>
+                        <td class="seed${r.sa}">${r.pa.toLocaleString()}</td><td class="seed${r.sb}">${r.pb.toLocaleString()}</td>
+                        <td>${r.sa}-${r.sb}</td><td>${r.sign}</td><td>${r.k.toLocaleString()}</td></tr>`;
+                } else {
+                    html += `<tr class="gap-row"><td>M${e+1}</td><td>${exp[e].toLocaleString()}</td><td colspan="7" class="notfound">NOT FOUND</td></tr>`;
+                }
+            }
+            html += '</table><p><strong>' + f + '/' + (exp.length-4) + ' found</strong></p>';
+            document.getElementById('output').innerHTML = html;
+            document.getElementById('status').textContent = 'Done: ' + f + ' found';
+        });
+
+        document.getElementById('deepBtn').addEventListener('click', function() {
+            const km = buildK();
+            const gaps = [37,41,44,47,49,50,51];
+            let html = '<table><tr><th>M#</th><th>p_e</th><th>m</th><th>p_a</th><th>p_b</th><th>Sd</th><th>Sg</th><th>k</th></tr>';
+            for (let idx of gaps) {
+                document.getElementById('status').textContent = 'Deep M' + (idx+1) + '...';
+                const r = find(idx, 500000, km);
+                if (r) {
+                    html += `<tr class="match-row"><td>M${idx+1}</td><td>${exp[idx].toLocaleString()}</td><td>${r.m}</td>
+                        <td class="seed${r.sa}">${r.pa}</td><td class="seed${r.sb}">${r.pb}</td>
+                        <td>${r.sa}-${r.sb}</td><td>${r.sign}</td><td>${r.k.toLocaleString()}</td></tr>`;
+                } else {
+                    html += `<tr class="gap-row"><td>M${idx+1}</td><td>${exp[idx].toLocaleString()}</td><td colspan="7" class="notfound">NOT FOUND</td></tr>`;
+                }
+            }
+            html += '</table>';
+            document.getElementById('output').innerHTML = html;
+            document.getElementById('status').textContent = 'Deep search done';
+        });
+    })();
+</script>
+</body>
+</html>
