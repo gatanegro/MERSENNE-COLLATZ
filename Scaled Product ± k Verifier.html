@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scaled Product ± k Verifier</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #1e1e2f; color: #eee; margin: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: #2d2d44; padding: 20px; border-radius: 12px; }
+        h1, h2 { color: #ffd966; }
+        textarea { width: 100%; height: 100px; background: #0a0a14; color: #0f0; font-family: 'Courier New', monospace; font-size: 13px; border: 1px solid #ffd966; border-radius: 4px; padding: 10px; }
+        .controls { margin: 20px 0; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button.export { background: #2196F3; }
+        .results-container { max-height: 600px; overflow-y: auto; background: #1a1a2e; border-radius: 8px; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #2a2a50; color: #ffd966; padding: 10px; position: sticky; top: 0; text-align: left; }
+        td { padding: 4px 8px; border-bottom: 1px solid #3a3a5a; }
+        .match { background: #1a3a2a; }
+        .seed-2 { color: #f44336; }
+        .seed-3 { color: #2196F3; }
+        .param-row { display: flex; gap: 20px; align-items: center; margin-bottom: 10px; }
+        input { background: #1a1a2e; border: 1px solid #ffd966; color: #eee; padding: 5px 10px; border-radius: 4px; width: 100px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1> Scaled Product ± k Verifier</h1>
+    <p>Tests: <strong>(m × p_a) × (m × p_b) ± (p_c − p_d) = known_p</strong> with a,b,c,d < target index.</p>
+
+    <div class="param-row">
+        <label>Multiplier m: <input type="number" id="multiplier" value="2" min="1" max="10" step="1"></label>
+        <label>Start testing from index (e ≥): <input type="number" id="startIdx" value="31" min="5" max="52"></label>
+        <label><input type="checkbox" id="useSeedSignRule" checked> Enforce seed‑sign rule (same seed → −, diff → +)</label>
+    </div>
+
+    <textarea id="exponentsInput" placeholder="Paste Mersenne exponents in order (comma/space separated)">2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203, 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049, 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583, 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933, 136279841</textarea>
+    <div style="color:#aaa; margin:5px 0;">Exponents count: <span id="exponentCount">0</span></div>
+
+    <div class="controls">
+        <button id="verifyBtn"> Verify Scaled Product</button>
+        <button id="exportBtn" class="export">📄 Export Matches</button>
+        <span class="stats" id="progressText">Ready. Set multiplier and click Verify.</span>
+    </div>
+
+    <div class="results-container">
+        <table id="resultsTable">
+            <thead><tr><th>Target (e)</th><th>p_e</th><th>Seed</th><th>m·p_a</th><th>m·p_b</th><th>p_c</th><th>p_d</th><th>k</th><th>Sign</th><th>Formula</th></tr></thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+    </div>
+    <div class="note">* Only combinations where a,b,c,d < e are considered. Sign rule (optional): same seed → subtract (−), different → add (+).</div>
+</div>
+
+<script>
+    (function(){
+        const defaultList = [2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841];
+        
+        const exponentsInput = document.getElementById('exponentsInput');
+        const exponentCount = document.getElementById('exponentCount');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const resultsBody = document.getElementById('resultsBody');
+        const progressText = document.getElementById('progressText');
+        const multiplierInput = document.getElementById('multiplier');
+        const startIdxInput = document.getElementById('startIdx');
+        const useSeedSignRule = document.getElementById('useSeedSignRule');
+
+        function getSeed(p) {
+            const seed2 = new Set([2, 5, 17, 19, 89, 521, 607, 1279,
+            2203, 2281, 4253, 4423, 9689, 9941, 11213, 19937, 21701,
+            23209, 44497, 86243, 132049, 756839, 1257787, 1398269, 2976221, 3021377, 20996011,
+            24036583, 37156667, 42643801, 43112609, 74207281, 77232917, 82589933, 136279841]);
+            if (p === 2 || p === 5) return 'neutral';
+            return seed2.has(p) ? 2 : 3;
+        }
+
+        function parseExponents(text) {
+            return text.split(/[,\s\n;]+/).map(s => parseInt(s,10)).filter(n => !isNaN(n));
+        }
+
+        exponentsInput.value = defaultList.join(', ');
+        exponentCount.textContent = defaultList.length;
+
+        verifyBtn.addEventListener('click', () => {
+            const exponents = parseExponents(exponentsInput.value);
+            const m = parseInt(multiplierInput.value, 10) || 2;
+            const startE = parseInt(startIdxInput.value, 10) || 31;
+            const enforceSign = useSeedSignRule.checked;
+            
+            if (exponents.length < 4) { alert('Need at least 4 exponents.'); return; }
+            exponentCount.textContent = exponents.length;
+            
+            resultsBody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Verifying with multiplier ' + m + '...</td></tr>';
+            progressText.textContent = `Testing m = ${m} from index ${startE}...`;
+            
+            setTimeout(() => {
+                const n = exponents.length;
+                const knownSet = new Set(exponents);
+                const matches = [];
+                
+                // Precompute differences: map from k to list of (c,d)
+                const diffMap = new Map();
+                for (let c = 0; c < n; c++) {
+                    for (let d = 0; d < n; d++) {
+                        if (c === d) continue;
+                        const k = exponents[c] - exponents[d];
+                        if (!diffMap.has(k)) diffMap.set(k, []);
+                        diffMap.get(k).push({ c, d, valC: exponents[c], valD: exponents[d] });
+                    }
+                }
+                
+                for (let e = Math.max(startE, 4) - 1; e < n; e++) {
+                    const target = exponents[e];
+                    
+                    for (let a = 0; a < e; a++) {
+                        const scaledA = m * exponents[a];
+                        for (let b = 0; b < e; b++) {
+                            const scaledB = m * exponents[b];
+                            const prod = scaledA * scaledB;
+                            
+                            // Determine allowed signs based on seeds of original p_a, p_b (not scaled)
+                            const seedA = getSeed(exponents[a]);
+                            const seedB = getSeed(exponents[b]);
+                            let allowedSigns;
+                            if (!enforceSign) {
+                                allowedSigns = ['+', '−'];
+                            } else {
+                                if (seedA === 'neutral' || seedB === 'neutral') allowedSigns = ['+', '−'];
+                                else if (seedA === seedB) allowedSigns = ['−'];
+                                else allowedSigns = ['+'];
+                            }
+                            
+                            for (let sign of allowedSigns) {
+                                let k;
+                                if (sign === '+') {
+                                    k = target - prod;
+                                } else {
+                                    k = prod - target;
+                                }
+                                
+                                if (diffMap.has(k)) {
+                                    const diffs = diffMap.get(k);
+                                    for (let diff of diffs) {
+                                        if (diff.c < e && diff.d < e) {
+                                            matches.push({
+                                                e: e+1, target, targetSeed: getSeed(target),
+                                                a: exponents[a], b: exponents[b], scaledA, scaledB,
+                                                c: diff.valC, d: diff.valD, k, sign,
+                                                formula: `(${m}×${exponents[a]}) × (${m}×${exponents[b]}) ${sign} (${diff.valC} − ${diff.valD}) = ${target}`
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Deduplicate
+                const seen = new Set();
+                const uniqueMatches = matches.filter(m => {
+                    const key = `${m.scaledA}|${m.scaledB}|${m.c}|${m.d}|${m.sign}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+                
+                if (uniqueMatches.length === 0) {
+                    resultsBody.innerHTML = '<tr><td colspan="10" style="text-align:center;">No matches found with multiplier ' + m + '.</td></tr>';
+                } else {
+                    let html = '';
+                    for (let m of uniqueMatches) {
+                        const targetClass = m.targetSeed === 2 ? 'seed-2' : (m.targetSeed === 3 ? 'seed-3' : '');
+                        html += `<tr class="match">
+                            <td>${m.e}</td>
+                            <td class="${targetClass}">${m.target.toLocaleString()}</td>
+                            <td>${m.targetSeed}</td>
+                            <td>${m.scaledA}</td>
+                            <td>${m.scaledB}</td>
+                            <td>${m.c}</td>
+                            <td>${m.d}</td>
+                            <td>${m.k}</td>
+                            <td>${m.sign}</td>
+                            <td style="font-family:monospace;">${m.formula}</td>
+                        </tr>`;
+                    }
+                    resultsBody.innerHTML = html;
+                }
+                progressText.textContent = `Done! ${uniqueMatches.length} matches with m = ${m}.`;
+            }, 20);
+        });
+
+        exportBtn.addEventListener('click', () => {
+            const rows = resultsBody.querySelectorAll('tr.match');
+            if (rows.length === 0) { alert('No matches to export.'); return; }
+            let content = `Scaled Product Matches (m = ${multiplierInput.value})\n=================================\n`;
+            content += `Generated: ${new Date().toLocaleString()}\n\n`;
+            content += "Target\tp_e\tSeed\tm·p_a\tm·p_b\tp_c\tp_d\tk\tSign\tFormula\n";
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                content += `${cells[0].textContent}\t${cells[1].textContent}\t${cells[2].textContent}\t${cells[3].textContent}\t${cells[4].textContent}\t${cells[5].textContent}\t${cells[6].textContent}\t${cells[7].textContent}\t${cells[8].textContent}\t${cells[9].textContent}\n`;
+            });
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `scaled_product_m${multiplierInput.value}_matches.txt`; a.click();
+            URL.revokeObjectURL(url);
+        });
+    })();
+</script>
+</body>
+</html>
