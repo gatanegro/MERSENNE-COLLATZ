@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base Finder · Find Seed 2 or 3 & Pattern</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', 'Fira Code', monospace; }
+    body { background: #0c121c; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    .app { max-width: 900px; width: 100%; background: #16202a; border-radius: 36px; padding: 28px 30px; color: #e3ecf5; box-shadow: 0 20px 40px rgba(0,0,0,0.7); }
+    h1 { margin: 0 0 10px; font-weight: 450; font-size: 2rem; background: linear-gradient(145deg, #f2d98b, #b0d0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .sub { margin-bottom: 20px; color: #aac1da; }
+    .flex-row { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 20px; }
+    input { background: #0c1721; border: 1px solid #456983; padding: 14px 20px; border-radius: 40px; color: #ffe9b6; font-family: 'Fira Code'; font-size: 1.2rem; outline: none; flex: 1; min-width: 200px; }
+    button { background: #1e4b6e; border: 1px solid #8bb1d4; color: white; font-weight: bold; padding: 14px 28px; border-radius: 60px; cursor: pointer; font-size: 1rem; }
+    button:hover { background: #2f6790; }
+    .result { background: #0b1722; border-radius: 24px; padding: 20px; margin-top: 20px; border-left: 8px solid #e6b422; }
+    .label { color: #9fb7d0; font-weight: 600; }
+    .value { font-family: 'Fira Code', monospace; color: #fad98b; font-weight: 700; word-break: break-all; }
+    .steps { max-height: 300px; overflow-y: auto; background: #0a131c; border-radius: 16px; padding: 12px; margin-top: 10px; }
+    .step-item { padding: 4px 0; border-bottom: 1px dotted #2e4a5e; }
+    .note { margin-top: 16px; color: #9fb7d0; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1> Base Finder (Seed 2 or 3)</h1>
+  <div class="sub">Reverses ×2 / ×2+1 until reaching 2, 3, or 1</div>
+  <div class="flex-row">
+    <input type="text" id="numberInput" placeholder="e.g. 43112609" value="43112609">
+    <button id="findBtn">Find Base</button>
+    <button id="clearBtn">Clear</button>
+  </div>
+  <div id="resultPanel" class="result">
+    <p>Enter a number and click "Find Base".</p>
+  </div>
+  <div class="note">
+    Reverse: if odd → (p-1)/2 (bit 1); if even → p/2 (bit 0). Stops at 2, 3, or 1.
+  </div>
+</div>
+
+<script>
+  (function(){
+    const input = document.getElementById('numberInput');
+    const findBtn = document.getElementById('findBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const panel = document.getElementById('resultPanel');
+
+    function findBase(p) {
+      let val = BigInt(p);
+      const steps = [];
+      const bits = [];
+      // Stop when val is 2, 3, or 1 (can't reduce further with these rules)
+      while (val > 3n) {
+        if (val % 2n === 0n) {
+          steps.push({ value: val.toString(), op: '÷2 (even → bit 0)' });
+          bits.push('0');
+          val = val / 2n;
+        } else {
+          steps.push({ value: val.toString(), op: '-1 then ÷2 (odd → bit 1)' });
+          bits.push('1');
+          val = (val - 1n) / 2n;
+        }
+      }
+      // If val is 2 or 3, it's a seed; if 1, it's special (like p=3 gives 1)
+      const base = val.toString();
+      const pattern = bits.reverse().join('');
+      
+      // Build forward path from base using pattern
+      let cur = BigInt(base);
+      const forward = [base];
+      for (let bit of pattern) {
+        cur = bit === '0' ? cur * 2n : cur * 2n + 1n;
+        forward.push(cur.toString());
+      }
+
+      let html = `<p><span class="label">Base (seed):</span> <span class="value">${base}</span>`;
+      if (base === '2') html += ` (seed 2)`;
+      else if (base === '3') html += ` (seed 3)`;
+      else if (base === '1') html += ` (reduced from p=3)`;
+      html += `</p>`;
+      
+      html += `<p><span class="label">Operation pattern:</span> <span class="value">"${pattern}"</span> (0=×2, 1=×2+1)</p>`;
+      html += `<p><span class="label">Forward path:</span> <span class="value">${forward.join(' → ')}</span></p>`;
+      
+      html += `<div class="steps"><strong>Reverse steps (from p down to base):</strong><br>`;
+      const reversed = [...steps].reverse();
+      reversed.forEach((step, idx) => {
+        let nextVal = idx === reversed.length - 1 ? base : reversed[idx+1]?.value || base;
+        html += `<div class="step-item">${step.value} → ${step.op} → ${nextVal}</div>`;
+      });
+      html += `</div>`;
+      
+      return html;
+    }
+
+    findBtn.addEventListener('click', () => {
+      const pStr = input.value.trim();
+      if (!pStr) { panel.innerHTML = '<p>Please enter a number.</p>'; return; }
+      try {
+        BigInt(pStr);
+      } catch {
+        panel.innerHTML = '<p>Invalid integer.</p>';
+        return;
+      }
+      panel.innerHTML = findBase(pStr);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      panel.innerHTML = '<p>Enter a number and click "Find Base".</p>';
+    });
+
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') findBtn.click();
+    });
+
+    // Example on load
+    findBtn.click();
+  })();
+</script>
+</body>
+</html>
