@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Operations Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+        }
+        
+        .input-panel, .results-panel {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .panel-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .panel-title i {
+            color: #4b6cb7;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #444;
+        }
+        
+        textarea, input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        textarea {
+            height: 150px;
+            resize: vertical;
+            font-family: monospace;
+        }
+        
+        textarea:focus, input:focus, select:focus {
+            outline: none;
+            border-color: #4b6cb7;
+            box-shadow: 0 0 0 2px rgba(75, 108, 183, 0.2);
+        }
+        
+        .operations {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .operation-btn {
+            padding: 12px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .operation-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .operation-btn.selected {
+            background: #4b6cb7;
+            color: white;
+            border-color: #3a5795;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            flex: 1;
+            min-width: 140px;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .calculate-btn {
+            background: linear-gradient(to right, #4b6cb7, #3a5795);
+            color: white;
+        }
+        
+        .calculate-btn:hover {
+            background: linear-gradient(to right, #3a5795, #2c4370);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .export-btn {
+            background: linear-gradient(to right, #27ae60, #219653);
+            color: white;
+        }
+        
+        .export-btn:hover {
+            background: linear-gradient(to right, #219653, #1e8449);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .clear-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+        }
+        
+        .clear-btn:hover {
+            background: linear-gradient(to right, #c0392b, #a93226);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-container {
+            margin-top: 15px;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+        
+        .results-table th {
+            background-color: #f1f5f9;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .results-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .results-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .result-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4b6cb7;
+        }
+        
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .result-expression {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .result-value {
+            font-size: 1.1rem;
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .error-message {
+            background-color: #ffeaea;
+            color: #c0392b;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .success-message {
+            background-color: #eafaf1;
+            color: #27ae60;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .instructions {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .instructions h3 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .input-panel, .results-panel {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calculator"></i> Math Operations Calculator</h1>
+            <p class="subtitle">Perform calculations on multiple numbers and export results</p>
+        </header>
+        
+        <div class="app-container">
+            <div class="input-panel">
+                <div class="panel-title">
+                    <i class="fas fa-edit"></i> Input Parameters
+                </div>
+                
+                <div class="input-group">
+                    <label for="numbersInput"><i class="fas fa-list-ol"></i> Enter Numbers (comma or space separated)</label>
+                    <textarea id="numbersInput" placeholder="Example: 1, 5, 857, 42, 1000, 3.14">1, 5, 857, 42, 1000, 3.14</textarea>
+                </div>
+                
+                <div class="input-group">
+                    <label><i class="fas fa-cogs"></i> Select Operation</label>
+                    <div class="operations">
+                        <div class="operation-btn" data-operation="add">Add (+)</div>
+                        <div class="operation-btn selected" data-operation="subtract">Subtract (-)</div>
+                        <div class="operation-btn" data-operation="multiply">Multiply (×)</div>
+                        <div class="operation-btn" data-operation="divide">Divide (÷)</div>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="operationValue"><i class="fas fa-hashtag"></i> Operation Value</label>
+                    <input type="number" id="operationValue" step="any" value="2">
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="calculate-btn" id="calculateBtn">
+                        <i class="fas fa-calculator"></i> Calculate
+                    </button>
+                    <button class="clear-btn" id="clearBtn">
+                        <i class="fas fa-broom"></i> Clear All
+                    </button>
+                </div>
+                
+                <div class="instructions">
+                    <h3><i class="fas fa-info-circle"></i> How to use:</h3>
+                    <ul>
+                        <li>Enter numbers separated by commas or spaces</li>
+                        <li>Select the operation (add, subtract, multiply, or divide)</li>
+                        <li>Enter the value to use in the operation</li>
+                        <li>Click "Calculate" to see results</li>
+                        <li>Click "Export Results" to copy results to clipboard</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="results-panel">
+                <div class="panel-title">
+                    <i class="fas fa-chart-line"></i> Calculation Results
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="export-btn" id="exportBtn">
+                        <i class="fas fa-file-export"></i> Export Results
+                    </button>
+                </div>
+                
+                <div class="results-container" id="resultsContainer">
+                    <p class="instruction-text">Click "Calculate" to see results here...</p>
+                </div>
+                
+                <div id="messageArea"></div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Math Operations Calculator &copy; 2023 | Made with <i class="fas fa-heart" style="color: #e74c3c;"></i></p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM elements
+        const numbersInput = document.getElementById('numbersInput');
+        const operationValue = document.getElementById('operationValue');
+        const operationBtns = document.querySelectorAll('.operation-btn');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const messageArea = document.getElementById('messageArea');
+        
+        let selectedOperation = 'subtract';
+        let results = [];
+        
+        // Initialize operation buttons
+        operationBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Remove selected class from all buttons
+                operationBtns.forEach(b => b.classList.remove('selected'));
+                // Add selected class to clicked button
+                this.classList.add('selected');
+                // Update selected operation
+                selectedOperation = this.getAttribute('data-operation');
+            });
+        });
+        
+        // Calculate results
+        calculateBtn.addEventListener('click', function() {
+            // Clear previous messages
+            messageArea.innerHTML = '';
+            
+            // Get input numbers
+            const inputText = numbersInput.value.trim();
+            if (!inputText) {
+                showMessage('Please enter some numbers', 'error');
+                return;
+            }
+            
+            // Parse numbers (allow commas, spaces, or both as separators)
+            const numberStrings = inputText.split(/[, \n]+/).filter(str => str.trim() !== '');
+            const numbers = [];
+            
+            for (const str of numberStrings) {
+                const num = parseFloat(str);
+                if (isNaN(num)) {
+                    showMessage(`"${str}" is not a valid number. Please check your input.`, 'error');
+                    return;
+                }
+                numbers.push(num);
+            }
+            
+            // Get operation value
+            const opValue = parseFloat(operationValue.value);
+            if (isNaN(opValue)) {
+                showMessage('Please enter a valid number for the operation value', 'error');
+                return;
+            }
+            
+            // Check for division by zero
+            if (selectedOperation === 'divide' && opValue === 0) {
+                showMessage('Cannot divide by zero. Please enter a non-zero value.', 'error');
+                return;
+            }
+            
+            // Calculate results
+            results = [];
+            for (const num of numbers) {
+                let resultValue;
+                let operationSymbol;
+                
+                switch(selectedOperation) {
+                    case 'add':
+                        resultValue = num + opValue;
+                        operationSymbol = '+';
+                        break;
+                    case 'subtract':
+                        resultValue = num - opValue;
+                        operationSymbol = '-';
+                        break;
+                    case 'multiply':
+                        resultValue = num * opValue;
+                        operationSymbol = '×';
+                        break;
+                    case 'divide':
+                        resultValue = num / opValue;
+                        operationSymbol = '÷';
+                        break;
+                }
+                
+                results.push({
+                    original: num,
+                    operation: selectedOperation,
+                    symbol: operationSymbol,
+                    value: opValue,
+                    result: resultValue
+                });
+            }
+            
+            // Display results
+            displayResults();
+            showMessage(`Calculated ${results.length} results successfully!`, 'success');
+        });
+        
+        // Display results in the results container
+        function displayResults() {
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<p class="instruction-text">No results to display. Click "Calculate" to see results here...</p>';
+                return;
+            }
+            
+            // Create a table for results
+            let html = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Number</th>
+                            <th>Operation</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            results.forEach(item => {
+                html += `
+                    <tr>
+                        <td>${item.original}</td>
+                        <td>${item.original} ${item.symbol} ${item.value}</td>
+                        <td><strong>${item.result.toLocaleString(undefined, {maximumFractionDigits: 10})}</strong></td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+                <div style="margin-top: 15px; font-weight: 600; color: #4b6cb7;">
+                    Total calculations: ${results.length}
+                </div>
+            `;
+            
+            resultsContainer.innerHTML = html;
+        }
+        
+        // Export results as text
+        exportBtn.addEventListener('click', function() {
+            if (results.length === 0) {
+                showMessage('No results to export. Please calculate first.', 'error');
+                return;
+            }
+            
+            // Format results as text
+            let exportText = `Math Operations Results\n`;
+            exportText += `Generated on: ${new Date().toLocaleString()}\n`;
+            exportText += `Operation: ${selectedOperation} with value ${operationValue.value}\n`;
+            exportText += `Numbers: ${numbersInput.value}\n\n`;
+            
+            results.forEach(item => {
+                exportText += `${item.original} ${item.symbol} ${item.value} = ${item.result}\n`;
+            });
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(exportText)
+                .then(() => {
+                    showMessage('Results copied to clipboard!', 'success');
+                })
+                .catch(err => {
+                    console.error('Failed to copy: ', err);
+                    showMessage('Failed to copy to clipboard. Please try again.', 'error');
+                });
+        });
+        
+        // Clear all inputs and results
+        clearBtn.addEventListener('click', function() {
+            numbersInput.value = '';
+            operationValue.value = '2';
+            results = [];
+            resultsContainer.innerHTML = '<p class="instruction-text">Click "Calculate" to see results here...</p>';
+            messageArea.innerHTML = '';
+            
+            // Reset operation to subtract
+            operationBtns.forEach(b => b.classList.remove('selected'));
+            document.querySelector('[data-operation="subtract"]').classList.add('selected');
+            selectedOperation = 'subtract';
+            
+            showMessage('All inputs and results cleared.', 'success');
+        });
+        
+        // Show message
+        function showMessage(message, type) {
+            messageArea.innerHTML = `
+                <div class="${type}-message">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+            
+            // Auto-hide success messages after 4 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    if (messageArea.innerHTML.includes('success-message')) {
+                        messageArea.innerHTML = '';
+                    }
+                }, 4000);
+            }
+        }
+        
+        // Initialize with example calculation
+        window.addEventListener('load', function() {
+            // Trigger calculation on load
+            setTimeout(() => {
+                calculateBtn.click();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
