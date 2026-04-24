@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2k+1 · Full Lab + Seed Constraint (p end 9 → seed 2)</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', 'Fira Code', monospace; }
+    body { background: #0c121c; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+    .app { max-width: 1800px; width: 100%; background: #16202a; border-radius: 36px; padding: 28px 30px; color: #e3ecf5; }
+    h1 { margin: 0 0 6px; font-weight: 450; font-size: 2.2rem; background: linear-gradient(145deg, #f2d98b, #b0d0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .subtitle { margin-left: 12px; margin-bottom: 20px; color: #aac1da; border-left: 5px solid #d9a822; padding-left: 22px; }
+    .tabs { display: flex; gap: 10px; margin: 20px 0 10px; flex-wrap: wrap; }
+    .tab { background: #1e2f3d; border: 1px solid #3f627b; color: #c6d9f0; padding: 12px 24px; border-radius: 40px 40px 0 0; cursor: pointer; font-weight: 600; }
+    .tab.active { background: #2d506b; color: white; border-bottom: 3px solid #eebb55; }
+    .panel { background: #101b25; border-radius: 28px; padding: 22px 24px; border: 1px solid #2e4a5e; margin-bottom: 30px; }
+    .flex-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-weight: 600; color: #b0cce6; }
+    .input-group input, .input-group select { background: #0c1721; border: 1px solid #456983; padding: 12px 18px; border-radius: 40px; color: #ffe9b6; font-family: 'Fira Code'; outline: none; }
+    button { background: #1e4b6e; border: 1px solid #8bb1d4; color: white; font-weight: bold; padding: 12px 28px; border-radius: 60px; cursor: pointer; }
+    button.small { padding: 6px 16px; font-size: 0.9rem; }
+    button:hover { background: #2f6790; }
+    .filter-bar { display: flex; gap: 24px; margin: 20px 0 10px; flex-wrap: wrap; align-items: center; }
+    .filter-bar label { display: flex; align-items: center; gap: 8px; color: #c6d9f0; }
+    .dr-filter-panel, .lastdigit-panel { background: #0f1922; border-radius: 20px; padding: 12px 18px; margin: 10px 0; border: 1px solid #3e5a70; }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px 30px; margin-top: 8px; }
+    .table-container { max-height: 550px; overflow-y: auto; border-radius: 20px; background: #0b141c; border: 1px solid #2f4d64; margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { background: #1c3343; color: #e2ecf7; padding: 14px 8px; position: sticky; top: 0; }
+    td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #2c4a61; color: #d5e6ff; }
+    .prime-badge { background: #1b5e1b; color: #bef5b4; padding: 4px 12px; border-radius: 30px; }
+    .comp-badge { background: #962828; color: #ffcfcf; padding: 4px 12px; border-radius: 30px; }
+    .pass { background: #1b5e1b; color: #bef5b4; padding: 2px 10px; border-radius: 20px; }
+    .fail { background: #962828; color: #ffcfcf; padding: 2px 10px; border-radius: 20px; }
+    .warning-icon { color: #f0b37b; margin-left: 8px; }
+    .path-container { background: #0a131c; border-radius: 20px; padding: 20px; font-family: 'Fira Code', monospace; font-size: 15px; line-height: 1.8; overflow-x: auto; }
+    .path-step { display: flex; align-items: center; margin: 6px 0; cursor: pointer; padding: 4px 8px; border-radius: 12px; }
+    .path-step:hover { background: #1a2f40; }
+    .step-value { min-width: 80px; font-weight: bold; }
+    .step-op { min-width: 70px; color: #9fb7d0; }
+    .step-arrow { margin: 0 10px; color: #6f9ac2; }
+    .sibling-branch { margin-left: 40px; border-left: 2px dashed #3e6a8a; padding-left: 20px; display: none; }
+    .sibling-branch.show { display: block; }
+    .duplicate-mark { color: #f2a07e; font-size: 0.8rem; margin-left: 8px; background: #3a2a1e; padding: 2px 8px; border-radius: 20px; }
+    .block-palette { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+    .block-btn { background: #1a3345; border: 1px solid #4e7b9c; padding: 8px 16px; border-radius: 30px; }
+    .bit-bar { display: flex; flex-wrap: wrap; gap: 6px; margin: 20px 0; }
+    .bit { width: 48px; height: 48px; border-radius: 12px; background: #1e3a4e; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: bold; color: #f2d98b; cursor: pointer; border: 2px solid #3e6a8a; }
+    .bit.one { background: #2d6b4a; border-color: #8fc99c; color: #bef5b4; }
+    .result-panel { background: #0b1722; border-radius: 24px; padding: 20px; margin-top: 20px; }
+    .block-item { background: #1f4a5e; padding: 6px 12px; border-radius: 20px; display: inline-flex; align-items: center; gap: 8px; margin: 4px; }
+  </style>1
+</head>
+<body>
+<div class="app">
+  <h1> 2k+1 · Full Lab + Seed Constraint (p end 9 → seed 2)</h1>
+  <div class="subtitle">Range Scanner · Slot Machine · Block Builder · Path Explorer</div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="rangeTab"> Range Scanner</div>
+    <div class="tab" data-tab="slotTab"> Slot Machine</div>
+    <div class="tab" data-tab="blockTab"> Block Builder</div>
+    <div class="tab" data-tab="pathTab"> Path Explorer</div>
+  </div>
+
+  <!-- ========== RANGE SCANNER ========= -->
+  <div id="rangeTab" class="tab-content">
+    <div class="panel">
+      <h2> Scan range of k</h2>
+      <div class="flex-row">
+        <div class="input-group"><label>Start k</label><input type="text" id="startK" value="1"></div>
+        <div class="input-group"><label>End k</label><input type="text" id="endK" value="261"></div>
+        <button id="generateTableBtn">Generate Table</button>
+        <button id="refreshFilterBtn" style="background:#5f4b2e;"> Re‑filter</button>
+        <button id="stopBtn" style="background:#5a3e2b;">Stop</button>
+        <button id="exportCsvBtn" style="background:#3a6b4a;"> CSV</button>
+        <button id="exportTxtBtn" style="background:#3a6b4a;"> TXT</button>
+      </div>
+      <!-- FIXED: removed filterSeedConstraintRS -->
+      <div class="filter-bar">
+        <label><input type="checkbox" id="filterEnd27" checked> Exclude k ending 2/7</label>
+        <label><input type="checkbox" id="onlyPrime"> Only primes (p)</label>
+        <label><input type="checkbox" id="onlyComposite"> Only composites (p)</label>
+        <span id="rowCountDisplay" style="margin-left:auto;"></span>
+      </div>
+      <div class="lastdigit-panel">
+        <div><label><input type="checkbox" id="enableLastDigitFilter"> Filter by last‑digit pairs</label></div>
+        <div class="checkbox-group">
+          <label><input type="checkbox" class="ld-pair" data-klast="0,5" data-plast="1"> 0,5→1</label>
+          <label><input type="checkbox" class="ld-pair" data-klast="1,6" data-plast="3"> 1,6→3</label>
+          <label><input type="checkbox" class="ld-pair" data-klast="3,8" data-plast="7"> 3,8→7</label>
+          <label><input type="checkbox" class="ld-pair" data-klast="4,9" data-plast="9"> 4,9→9</label>
+        </div>
+      </div>
+      <div class="dr-filter-panel">
+        <div><label><input type="checkbox" id="enableDRFilter"> Filter by DR pairs</label></div>
+        <div class="checkbox-group">
+          <label><input type="checkbox" class="dr-pair" data-drk="2" data-drp="5"> (2,5)</label>
+          <label><input type="checkbox" class="dr-pair" data-drk="5" data-drp="2"> (5,2)</label>
+          <label><input type="checkbox" class="dr-pair" data-drk="8" data-drp="8"> (8,8)</label>
+          <label><input type="checkbox" class="dr-pair" data-drk="3" data-drp="7"> (3,7)</label>
+          <label><input type="checkbox" class="dr-pair" data-drk="6" data-drp="4"> (6,4)</label>
+          <label><input type="checkbox" class="dr-pair" data-drk="9" data-drp="1"> (9,1)</label>
+        </div>
+      </div>
+      <div class="table-container">
+        <table id="dataTable">
+          <thead><tr><th>k</th><th>k last</th><th>k DR</th><th>p</th><th>p last</th><th>p DR</th><th>Primality</th></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div id="progressNote"></div>
+    </div>
+  </div>
+
+  <!-- ========== SLOT MACHINE ========= -->
+  <div id="slotTab" class="tab-content" style="display:none;">
+    <div class="panel">
+      <h2> Bit Slot Machine</h2>
+      <div class="flex-row">
+        <div class="input-group"><label>Seed</label><select id="slotSeed"><option value="2">2</option><option value="3">3</option></select></div>
+        <div class="input-group"><label>Pattern length</label><input type="number" id="slotLength" min="1" max="32" value="8"></div>
+        <button id="slotApplyLength">Set Length</button>
+        <button id="slotRandom"> Randomize</button>
+        <button id="slotClear">Clear</button>
+      </div>
+      <div id="bitContainer" class="bit-bar"></div>
+      <div class="result-panel">
+        <div><strong>Pattern:</strong> <span id="slotPatternDisplay"></span> <strong>p =</strong> <span id="slotP"></span> <strong>k =</strong> <span id="slotK"></span></div>
+        <div>k last: <span id="slotKLast"></span> · k DR: <span id="slotKDR"></span> · p last: <span id="slotPLast"></span> · p DR: <span id="slotPDR"></span></div>
+        <div>Primality: <span id="slotPrimeBadge"></span> Known: <span id="slotKnown"></span></div>
+        <div>Filters: <span id="slotFilterStatus"></span> <span id="slotSeedWarning"></span></div>
+      </div>
+      <div style="margin-top:20px;">
+        <label><input type="checkbox" id="slotFilterEnd27" checked> Exclude k end 2/7</label>
+        <label><input type="checkbox" id="slotFilterLD"> Last‑digit pairs</label>
+        <label><input type="checkbox" id="slotFilterDR"> DR pairs</label>
+        <label><input type="checkbox" id="slotFilterSeed"> Enforce seed rule (p end 9 → seed 2)</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== BLOCK BUILDER ========= -->
+  <div id="blockTab" class="tab-content" style="display:none;">
+    <div class="panel">
+      <h2> Block Builder</h2>
+      <div class="flex-row">
+        <div class="input-group"><label>Seed</label><select id="blockSeed"><option value="2">2</option><option value="3">3</option></select></div>
+        <div class="input-group"><label>Target length</label><input type="number" id="blockTargetLength" min="1" max="64" value="16"></div>
+        <button id="blockCheckLength">Check</button>
+        <span id="lengthWarning" style="color:#f88;"></span>
+      </div>
+      <div class="block-palette" id="blockPalette"></div>
+      <div id="blockSequenceContainer" style="margin:10px 0;"></div>
+      <button id="blockClearAll" class="small">Clear all</button>
+      <button id="blockRemoveLast" class="small">Remove last</button>
+      <div class="flex-row">
+        <span>Insert filler after pos:</span>
+        <select id="fillerPosition"></select>
+        <input type="text" id="fillerBits" placeholder="0/1 string">
+        <button id="applyFiller">Insert</button>
+      </div>
+      <div class="result-panel">
+        <div><strong>Full pattern:</strong> <span id="blockFullPattern"></span></div>
+        <div><strong>p =</strong> <span id="blockP"></span> <strong>k =</strong> <span id="blockK"></span></div>
+        <div>k last: <span id="blockKLast"></span> · k DR: <span id="blockKDR"></span> · p last: <span id="blockPLast"></span> · p DR: <span id="blockPDR"></span></div>
+        <div>Primality: <span id="blockPrimeBadge"></span> Known: <span id="blockKnown"></span> Filters: <span id="blockFilterStatus"></span></div>
+        <div><span id="blockSeedWarning"></span></div>
+      </div>
+      <div style="margin-top:20px;">
+        <label><input type="checkbox" id="blockFilterEnd27" checked> Exclude k end 2/7</label>
+        <label><input type="checkbox" id="blockFilterLD"> Last‑digit pairs</label>
+        <label><input type="checkbox" id="blockFilterDR"> DR pairs</label>
+        <label><input type="checkbox" id="blockFilterSeed"> Enforce seed rule</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PATH EXPLORER ========= -->
+  <div id="pathTab" class="tab-content" style="display:none;">
+    <div class="panel">
+      <h2> Path Explorer</h2>
+      <div class="flex-row">
+        <label>Mersenne exponent (p):</label>
+        <select id="exponentSelect" style="width:280px;"></select>
+        <button id="loadPathBtn">Load Path</button>
+        <span id="pathInfo" style="color:#9fb7d0;"></span>
+      </div>
+      <div id="pathDisplay" class="path-container">Select an exponent.</div>
+      <div class="legend"><span class="duplicate-mark">⤴ branch</span> = branch point.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  // ---------- Helpers ----------
+  function digitalRoot(n) { if (typeof n==='bigint') n=Number(n); if (n===0) return 0; let r=n%9; return r===0?9:r; }
+  function bigIntDigitalRoot(bi) { if (bi===0n) return 0; let m=bi%9n; return m===0n?9:Number(m); }
+  function modPow(b,e,m){ let r=1n; b%=m; while(e>0n){ if(e%2n===1n) r=(r*b)%m; b=(b*b)%m; e>>=1n; } return r; }
+  function isProbablePrime(n,iters=8){ if(n<2n)return false; if(n===2n||n===3n)return true; if(n%2n===0n)return false; let d=n-1n,s=0n; while(d%2n===0n){d/=2n;s++;} const bases=[2n,3n,5n,7n,11n,13n,17n,19n,23n,29n]; WitnessLoop: for(let i=0;i<Math.min(iters,bases.length);i++){ let a=bases[i]; if(a>=n)continue; let x=modPow(a,d,n); if(x===1n||x===n-1n)continue; let j=0n; while(j<s-1n){ x=(x*x)%n; if(x===n-1n)continue WitnessLoop; j++; } return false; } return true; }
+  const knownExponents = new Set([3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841]);
+
+  function passesSeedConstraint(seed, pLastDigit) { return pLastDigit !== 9 || seed === 2; }
+
+  // ---------- Range Scanner ----------
+  let masterRows = [], filteredRows = [], abortCtrl = null;
+  const startK = document.getElementById('startK'), endK = document.getElementById('endK');
+  const generateBtn = document.getElementById('generateTableBtn'), refreshBtn = document.getElementById('refreshFilterBtn'), stopBtn = document.getElementById('stopBtn');
+  const tableBody = document.getElementById('tableBody'), rowCount = document.getElementById('rowCountDisplay'), progress = document.getElementById('progressNote');
+  const filterEnd27 = document.getElementById('filterEnd27'), onlyPrime = document.getElementById('onlyPrime'), onlyComposite = document.getElementById('onlyComposite');
+  const enableLD = document.getElementById('enableLastDigitFilter'), ldChecks = document.querySelectorAll('.ld-pair');
+  const enableDR = document.getElementById('enableDRFilter'), drChecks = document.querySelectorAll('.dr-pair');
+
+  function getSelectedLDPairs() {
+    if (!enableLD.checked) return null;
+    const pairs = [];
+    ldChecks.forEach(cb => { if(cb.checked) { const kset=new Set(cb.dataset.klast.split(',').map(Number)); pairs.push({klastSet:kset, plast:Number(cb.dataset.plast)}); }});
+    return pairs;
+  }
+  function getSelectedDRPairs() {
+    if (!enableDR.checked) return null;
+    const set = new Set();
+    drChecks.forEach(cb => { if(cb.checked) set.add(`${cb.dataset.drk},${cb.dataset.drp}`); });
+    return set;
+  }
+
+  function applyFilters() {
+    const ldPairs = getSelectedLDPairs(), drPairs = getSelectedDRPairs();
+    filteredRows = masterRows.filter(r => {
+      if (filterEnd27.checked && (r.kLast===2||r.kLast===7)) return false;
+      if (onlyPrime.checked && !r.prime) return false;
+      if (onlyComposite.checked && r.prime) return false;
+      // NO seed constraint here
+      if (ldPairs && !ldPairs.some(p=>p.klastSet.has(r.kLast) && p.plast===r.pLast)) return false;
+      if (drPairs && !drPairs.has(`${r.drk},${r.drp}`)) return false;
+      return true;
+    });
+    renderTable(filteredRows);
+    rowCount.textContent = `${filteredRows.length} rows (of ${masterRows.length})`;
+  }
+
+  function renderTable(rows) {
+    if (!rows.length) { tableBody.innerHTML = '<tr><td colspan="7">No rows</td></tr>'; return; }
+    tableBody.innerHTML = rows.map(r => `<tr><td>${r.k}</td><td>${r.kLast}</td><td>${r.drk}</td><td>${r.p}</td><td>${r.pLast}</td><td>${r.drp}</td><td>${r.prime?'<span class="prime-badge">PRIME</span>':'<span class="comp-badge">COMPOSITE</span>'}</td></tr>`).join('');
+  }
+
+  async function generateRange() {
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController(); const signal = abortCtrl.signal;
+    let s=BigInt(startK.value), e=BigInt(endK.value); if(s>e) [s,e]=[e,s];
+    tableBody.innerHTML = '<tr><td colspan="7">Scanning...</td></tr>'; masterRows = []; let cnt=0;
+    for (let k=s; k<=e && !signal.aborted; k++) {
+      cnt++; if (cnt%1000===0) { progress.textContent = `Scanned ${cnt}...`; await new Promise(r=>setTimeout(r,0)); }
+      const kLast=Number(k%10n), p=2n*k+1n, prime=isProbablePrime(p,6), drk=digitalRoot(Number(k)), drp=bigIntDigitalRoot(p);
+      masterRows.push({k:k.toString(), kLast, drk, p:p.toString(), pLast:Number(p%10n), drp, prime});
+    }
+    if (!signal.aborted) { progress.textContent = `Done. ${masterRows.length} rows.`; applyFilters(); }
+    abortCtrl = null;
+  }
+
+  generateBtn.addEventListener('click', generateRange);
+  refreshBtn.addEventListener('click', applyFilters);
+  stopBtn.addEventListener('click', ()=> abortCtrl && abortCtrl.abort());
+  document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+    if(!filteredRows.length) return alert('No data');
+    let csv = "k,k_last,k_DR,p,p_last,p_DR,primality\n" + filteredRows.map(r=>`${r.k},${r.kLast},${r.drk},${r.p},${r.pLast},${r.drp},${r.prime?'PRIME':'COMPOSITE'}`).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='range.csv'; a.click();
+  });
+  document.getElementById('exportTxtBtn').addEventListener('click', ()=>{
+    if(!filteredRows.length) return alert('No data');
+    let txt = "k\tk_last\tk_DR\tp\tp_last\tp_DR\tprimality\n" + filteredRows.map(r=>`${r.k}\t${r.kLast}\t${r.drk}\t${r.p}\t${r.pLast}\t${r.drp}\t${r.prime?'PRIME':'COMPOSITE'}`).join('\n');
+    const blob = new Blob([txt], {type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='range.txt'; a.click();
+  });
+
+  // ---------- Slot Machine ----------
+  let slotBits = Array(8).fill(0);
+  const slotSeed = document.getElementById('slotSeed'), slotLength = document.getElementById('slotLength'), bitContainer = document.getElementById('bitContainer');
+  const slotPattern = document.getElementById('slotPatternDisplay'), slotP = document.getElementById('slotP'), slotK = document.getElementById('slotK');
+  const slotKLast = document.getElementById('slotKLast'), slotKDR = document.getElementById('slotKDR'), slotPLast = document.getElementById('slotPLast'), slotPDR = document.getElementById('slotPDR');
+  const slotPrime = document.getElementById('slotPrimeBadge'), slotKnown = document.getElementById('slotKnown'), slotFilterStat = document.getElementById('slotFilterStatus'), slotWarn = document.getElementById('slotSeedWarning');
+  const slotFilterEnd27 = document.getElementById('slotFilterEnd27'), slotFilterSeed = document.getElementById('slotFilterSeed');
+  function computeSlot() {
+    const seed = BigInt(slotSeed.value); let val = seed;
+    for (let b of slotBits) val = b===0 ? val*2n : val*2n+1n;
+    const p = val, k = (p-1n)/2n, kLast=Number(k%10n), pLast=Number(p%10n), kDR=digitalRoot(Number(k)), pDR=bigIntDigitalRoot(p);
+    const prime = isProbablePrime(p), known = knownExponents.has(Number(p));
+    let passes = true;
+    if (slotFilterEnd27.checked && (kLast===2||kLast===7)) passes = false;
+    if (slotFilterSeed.checked && !passesSeedConstraint(Number(seed), pLast)) passes = false;
+    slotPattern.textContent = slotBits.join(''); slotP.textContent = p; slotK.textContent = k;
+    slotKLast.textContent = kLast; slotKDR.textContent = kDR; slotPLast.textContent = pLast; slotPDR.textContent = pDR;
+    slotPrime.innerHTML = prime ? '<span class="prime-badge">PRIME</span>' : '<span class="comp-badge">COMPOSITE</span>';
+    slotKnown.innerHTML = known ? ' YES' : ' No';
+    slotFilterStat.innerHTML = passes ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>';
+    slotWarn.innerHTML = (slotFilterSeed.checked && !passesSeedConstraint(Number(seed), pLast)) ? '<span class="warning-icon"> Seed rule violation</span>' : '';
+  }
+  function renderSlotBits() {
+    bitContainer.innerHTML = '';
+    slotBits.forEach((b,i)=>{
+      const d=document.createElement('div'); d.className=`bit ${b?'one':''}`; d.textContent=b;
+      d.addEventListener('click', ()=>{ slotBits[i]=b?0:1; renderSlotBits(); computeSlot(); });
+      bitContainer.appendChild(d);
+    });
+  }
+  document.getElementById('slotApplyLength').addEventListener('click', ()=>{
+    let len=parseInt(slotLength.value); len=Math.min(32,Math.max(1,len));
+    if(slotBits.length>len) slotBits=slotBits.slice(0,len); else while(slotBits.length<len) slotBits.push(0);
+    renderSlotBits(); computeSlot();
+  });
+  document.getElementById('slotRandom').addEventListener('click', ()=>{ slotBits=slotBits.map(()=>Math.random()<0.5?0:1); renderSlotBits(); computeSlot(); });
+  document.getElementById('slotClear').addEventListener('click', ()=>{ slotBits.fill(0); renderSlotBits(); computeSlot(); });
+  [slotSeed, slotFilterEnd27, slotFilterSeed].forEach(el=>el.addEventListener('change', computeSlot));
+  renderSlotBits(); computeSlot();
+
+  // ---------- Block Builder ----------
+  const blocks = [{patt:"01",lbl:"5 (01)"},{patt:"001",lbl:"6 (001)"},{patt:"011",lbl:"7 (011)"},{patt:"111",lbl:"8 (111)"},{patt:"1101",lbl:"9 (1101)"},{patt:"11001",lbl:"a (11001)"},{patt:"01011",lbl:"b (01011)"},{patt:"11111",lbl:"c (11111)"}];
+  let bSeq = [];
+  const bSeed = document.getElementById('blockSeed'), bTarget = document.getElementById('blockTargetLength'), bWarn = document.getElementById('lengthWarning');
+  const bFull = document.getElementById('blockFullPattern'), bP = document.getElementById('blockP'), bK = document.getElementById('blockK'), bKLast = document.getElementById('blockKLast'), bKDR = document.getElementById('blockKDR'), bPLast = document.getElementById('blockPLast'), bPDR = document.getElementById('blockPDR'), bPrime = document.getElementById('blockPrimeBadge'), bKnown = document.getElementById('blockKnown'), bFilt = document.getElementById('blockFilterStatus'), bWarnSeed = document.getElementById('blockSeedWarning');
+  const bFilter27 = document.getElementById('blockFilterEnd27'), bFilterSeed = document.getElementById('blockFilterSeed');
+  function getFull(){ return bSeq.map(i=>i.type==='block'?i.patt:i.bits).join(''); }
+  function computeBlock(){
+    const full=getFull(); bFull.textContent=full||'(empty)'; if(!full)return;
+    const seed=BigInt(bSeed.value); let v=seed; for(let c of full) v=(c==='0')?v*2n:v*2n+1n;
+    const p=v,k=(p-1n)/2n,kL=Number(k%10n),pL=Number(p%10n),kDR=digitalRoot(Number(k)),pDR=bigIntDigitalRoot(p);
+    const prime=isProbablePrime(p), known=knownExponents.has(Number(p));
+    let passes=true;
+    if(bFilter27.checked && (kL===2||kL===7)) passes=false;
+    if(bFilterSeed.checked && !passesSeedConstraint(Number(seed),pL)) passes=false;
+    bP.textContent=p; bK.textContent=k; bKLast.textContent=kL; bKDR.textContent=kDR; bPLast.textContent=pL; bPDR.textContent=pDR;
+    bPrime.innerHTML=prime?'<span class="prime-badge">PRIME</span>':'<span class="comp-badge">COMPOSITE</span>';
+    bKnown.innerHTML=known?' YES':' No';
+    bFilt.innerHTML=passes?'<span class="pass">PASS</span>':'<span class="fail">FAIL</span>';
+    bWarnSeed.innerHTML=(bFilterSeed.checked && !passesSeedConstraint(Number(seed),pL))?'<span class="warning-icon"> Seed rule violation</span>':'';
+    bWarn.textContent = full.length===parseInt(bTarget.value)?' Length OK':` Length ${full.length} ≠ target`;
+  }
+  function renderBSeq(){
+    const cont=document.getElementById('blockSequenceContainer'); cont.innerHTML='';
+    bSeq.forEach((it,i)=>{ const d=document.createElement('span'); d.className='block-item'; d.innerHTML=`${i}: ${it.type==='block'?it.lbl:'filler "'+it.bits+'"'} <button class="small" data-rem="${i}">✕</button>`; cont.appendChild(d); });
+    document.querySelectorAll('[data-rem]').forEach(b=>b.addEventListener('click',e=>{ bSeq.splice(e.target.dataset.rem,1); renderBSeq(); computeBlock(); }));
+    const pos=document.getElementById('fillerPosition'); pos.innerHTML=''; for(let i=0;i<=bSeq.length;i++){ const o=document.createElement('option'); o.value=i; o.textContent=i===0?'Before first':i===bSeq.length?'After last':`After ${i-1}`; pos.appendChild(o); }
+    computeBlock();
+  }
+  const palette=document.getElementById('blockPalette');
+  blocks.forEach(b=>{ const btn=document.createElement('button'); btn.className='block-btn'; btn.textContent=b.lbl; btn.addEventListener('click',()=>{ bSeq.push({type:'block',patt:b.patt,lbl:b.lbl}); renderBSeq(); }); palette.appendChild(btn); });
+  document.getElementById('blockClearAll').addEventListener('click',()=>{ bSeq=[]; renderBSeq(); });
+  document.getElementById('blockRemoveLast').addEventListener('click',()=>{ bSeq.pop(); renderBSeq(); });
+  document.getElementById('applyFiller').addEventListener('click',()=>{ const pos=parseInt(document.getElementById('fillerPosition').value); const bits=document.getElementById('fillerBits').value.trim(); if(!/^[01]+$/.test(bits)){alert('Only 0/1');return;} bSeq.splice(pos,0,{type:'filler',bits}); renderBSeq(); document.getElementById('fillerBits').value=''; });
+  [bSeed,bFilter27,bFilterSeed].forEach(e=>e.addEventListener('change',computeBlock));
+  renderBSeq();
+
+  // ---------- Path Explorer (with lattice data) ----------
+  const latticePaths = [ {p:5,seed:2,pattern:"1",path:[2,5]},{p:7,seed:3,pattern:"1",path:[3,7]},{p:13,seed:3,pattern:"01",path:[3,6,13]},{p:17,seed:2,pattern:"001",path:[2,4,8,17]},{p:19,seed:2,pattern:"011",path:[2,4,9,19]},{p:31,seed:3,pattern:"111",path:[3,7,15,31]},{p:61,seed:3,pattern:"1101",path:[3,7,15,30,61]},{p:89,seed:2,pattern:"11001",path:[2,5,11,22,44,89]},{p:107,seed:3,pattern:"01011",path:[3,6,13,26,53,107]},{p:127,seed:3,pattern:"11111",path:[3,7,15,31,63,127]},{p:521,seed:2,pattern:"00001001",path:[2,4,8,16,32,65,130,260,521]},{p:607,seed:2,pattern:"01011111",path:[2,4,9,18,37,75,151,303,607]},{p:1279,seed:2,pattern:"011111111",path:[2,4,9,19,39,79,159,319,639,1279]},{p:2203,seed:2,pattern:"0010011011",path:[2,4,8,17,34,68,137,275,550,1101,2203]},{p:2281,seed:2,pattern:"0011101001",path:[2,4,8,17,35,71,142,285,570,1140,2281]},{p:3217,seed:3,pattern:"0010010001",path:[3,6,12,25,50,100,201,402,804,1608,3217]},{p:4253,seed:2,pattern:"00010011101",path:[2,4,8,16,33,66,132,265,531,1063,2126,4253]},{p:4423,seed:2,pattern:"00101000111",path:[2,4,8,17,34,69,138,276,552,1105,2211,4423]},{p:9689,seed:2,pattern:"010111011001",path:[2,4,9,18,37,75,151,302,605,1211,2422,4844,9689]},{p:9941,seed:2,pattern:"011011010101",path:[2,4,9,19,38,77,155,310,621,1242,2485,4970,9941]},{p:11213,seed:2,pattern:"101111001101",path:[2,5,10,21,43,87,175,350,700,1401,2803,5606,11213]},{p:19937,seed:2,pattern:"0110111100001",path:[2,4,9,19,38,77,155,311,623,1246,2492,4984,9968,19937]},{p:21701,seed:2,pattern:"1010011000101",path:[2,5,10,21,42,84,169,339,678,1356,2712,5425,10850,21701]},{p:23209,seed:2,pattern:"1101010101001",path:[2,5,11,22,45,90,181,362,725,1450,2901,5802,11604,23209]},{p:44497,seed:2,pattern:"10110111010001",path:[2,5,10,21,43,86,173,347,695,1390,2781,5562,11124,22248,44497]},{p:86243,seed:2,pattern:"101000011100011",path:[2,5,10,21,42,84,168,336,673,1347,2695,5390,10780,21560,43121,86243]},{p:110503,seed:3,pattern:"010111110100111",path:[3,6,13,26,53,107,215,431,863,1726,3453,6906,13812,27625,55251,110503]},{p:132049,seed:2,pattern:"0000001111010001",path:[2,4,8,16,32,64,128,257,515,1031,2063,4126,8253,16506,33012,66024,132049]},{p:216091,seed:3,pattern:"0100110000011011",path:[3,6,13,26,52,105,211,422,844,1688,3376,6752,13505,27011,54022,108045,216091]},{p:756839,seed:2,pattern:"111000110001100111",path:[2,5,11,23,46,92,184,369,739,1478,2956,5912,11825,23651,47302,94604,189209,378419,756839]},{p:859433,seed:3,pattern:"010001110100101001",path:[3,6,13,26,52,104,209,419,839,1678,3357,6714,13428,26857,53714,107429,214858,429716,859433]},{p:1257787,seed:2,pattern:"0110011000100111011",path:[2,4,9,19,38,76,153,307,614,1228,2456,4913,9826,19652,39305,78611,157223,314446,628893,1257787]},{p:1398269,seed:2,pattern:"1010101010111111101",path:[2,5,10,21,42,85,170,341,682,1365,2730,5461,10923,21847,43695,87391,174783,349567,699134,1398269]},{p:2976221,seed:2,pattern:"11010110100111011101",path:[2,5,11,22,45,90,181,363,726,1453,2906,5812,11625,23251,46503,93006,186013,372027,744055,1488110,2976221]},{p:3021377,seed:2,pattern:"11100001101001000001",path:[2,5,11,23,46,92,184,368,737,1475,2950,5901,11802,23604,47209,94418,188836,377672,755344,1510688,3021377]},{p:6972593,seed:3,pattern:"010100110010010110001",path:[3,6,13,26,53,106,212,425,851,1702,3404,6809,13618,27236,54473,108946,217893,435787,871574,1743148,3486296,6972593]},{p:13466917,seed:3,pattern:"0011010111110100100101",path:[3,6,12,25,51,102,205,410,821,1643,3287,6575,13151,26302,52605,105210,210420,420841,841682,1683364,3366729,6733458,13466917]},{p:20996011,seed:2,pattern:"10000000101111110101011",path:[2,5,10,20,40,80,160,320,640,1281,2562,5125,10251,20503,41007,82015,164031,328062,656125,1312250,2624501,5249002,10498005,20996011]},{p:24036583,seed:2,pattern:"11011101100010011100111",path:[2,5,11,22,45,91,183,366,733,1467,2934,5868,11736,23473,46946,93892,187785,375571,751143,1502286,3004572,6009145,12018291,24036583]},{p:25964951,seed:3,pattern:"00011000011000110010111",path:[3,6,12,24,49,99,198,396,792,1584,3169,6339,12678,25356,50712,101425,202851,405702,811404,1622809,3245618,6491237,12982475,25964951]},{p:30402457,seed:3,pattern:"10011111110011110011001",path:[3,7,14,28,57,115,231,463,927,1855,3711,7422,14844,29689,59379,118759,237519,475038,950076,1900153,3800307,7600614,15201228,30402457]},{p:32582657,seed:3,pattern:"11100010010110000000001",path:[3,7,15,31,62,124,248,497,994,1988,3977,7954,15909,31819,63638,127276,254552,509104,1018208,2036416,4072832,8145664,16291328,32582657]},{p:37156667,seed:2,pattern:"001101101111011100111011",path:[2,4,8,17,35,70,141,283,566,1133,2267,4535,9071,18142,36285,72571,145143,290286,580572,1161145,2322291,4644583,9289166,18578333,37156667]},{p:42643801,seed:2,pattern:"100010101011000101011001",path:[2,5,10,20,40,81,162,325,650,1301,2602,5205,10411,20822,41644,83288,166577,333154,666309,1332618,2665237,5330475,10660950,21321900,42643801]},{p:43112609,seed:2,pattern:"100100011101100010100001",path:[2,5,10,20,41,82,164,328,657,1315,2631,5262,10525,21051,42102,84204,168408,336817,673634,1347269,2694538,5389076,10778152,21556304,43112609]},{p:57885161,seed:3,pattern:"011100110100000111101001",path:[3,6,13,27,55,110,220,441,883,1766,3533,7066,14132,28264,56528,113056,226113,452227,904455,1808911,3617822,7235645,14471290,28942580,57885161]},{p:74207281,seed:2,pattern:"0011011000101000000110001",path:[2,4,8,17,35,70,141,283,566,1132,2264,4529,9058,18117,36234,72468,144936,289872,579744,1159488,2318977,4637955,9275910,18551820,37103640,74207281]},{p:77232917,seed:2,pattern:"0100110100111101100010101",path:[2,4,9,18,36,73,147,294,589,1178,2356,4713,9427,18855,37711,75422,150845,301691,603382,1206764,2413528,4827057,9654114,19308229,38616458,77232917]},{p:82589933,seed:2,pattern:"0111011000011100011101101",path:[2,4,9,19,39,78,157,315,630,1260,2520,5040,10081,20163,40327,80654,161308,322616,645233,1290467,2580935,5161870,10323741,20647483,41294966,82589933]},{p:136279841,seed:2,pattern:"00000111110111011100100001",path:[2,4,8,16,32,64,129,259,519,1039,2079,4158,8317,16635,33271,66542,133085,266171,532343,1064686,2129372,4258745,8517490,17034980,34069960,68139920,136279841]} ];
+  const dupSet = new Set([4,5,6,7,8,9,10,11,12,13,15,16,17,18,19,20,21,22,23,25,26,31,32,34,35,37,38,39,40,42,43,45,46,52,53,64,70,75,77,84,90,92,107,141,151,155,181,184,283,566]);
+  const childrenMap = new Map();
+  latticePaths.forEach(l=>{ const pth=l.path; for(let i=0;i<pth.length-1;i++){ const par=pth[i], ch=pth[i+1]; if(!childrenMap.has(par)) childrenMap.set(par,new Set()); childrenMap.get(par).add(ch); }});
+  const sel = document.getElementById('exponentSelect');
+  latticePaths.sort((a,b)=>a.p-b.p).forEach(l=>{ const o=document.createElement('option'); o.value=l.p; o.textContent=`${l.p} (seed ${l.seed}, pattern "${l.pattern}")`; sel.appendChild(o); });
+  function renderPath(p){
+    const lat = latticePaths.find(l=>l.p===p); if(!lat) return;
+    const {seed,pattern,path}=lat;
+    document.getElementById('pathInfo').innerHTML = `Seed: ${seed} · Pattern: "${pattern}" · Depth: ${path.length-1}`;
+    let html=`<div style="margin-bottom:16px;"><span class="block-pattern">Pattern: ${pattern}</span> <span>Seed ${seed}</span></div>`;
+    for(let i=0;i<path.length;i++){
+      const val=path[i], isDup=dupSet.has(val), last=i===path.length-1, next=path[i+1];
+      const op = next ? (next%2===0?'×2':'×2+1') : '';
+      html+=`<div class="path-step" data-step="${i}" data-value="${val}">`;
+      html+=`<span class="step-value" style="${last?'color:#fad98b;':''}">${val}</span>`;
+      if(isDup) html+=`<span class="duplicate-mark">⤴ branch</span>`;
+      if(!last) html+=`<span class="step-arrow">→</span><span class="step-op">${op}</span><span class="step-arrow">→</span>`;
+      html+=`</div>`;
+      if(!last && childrenMap.has(val)){
+        const sibs = Array.from(childrenMap.get(val)).filter(c=>c!==next);
+        if(sibs.length){
+          html+=`<div class="sibling-branch" id="sib-${i}-${val}"><div style="color:#8fb0d0;">↳ Siblings:</div>`;
+          sibs.forEach(s=>{ html+=`<div>→ ${s} (${s%2===0?'×2':'×2+1'})</div>`; });
+          html+=`</div>`;
+        }
+      }
+    }
+    document.getElementById('pathDisplay').innerHTML = html;
+    document.querySelectorAll('.path-step').forEach(el=>{ el.addEventListener('click',()=>{ const sib=document.getElementById(`sib-${el.dataset.step}-${el.dataset.value}`); if(sib) sib.classList.toggle('show'); }); });
+  }
+  document.getElementById('loadPathBtn').addEventListener('click',()=>renderPath(parseInt(sel.value)));
+  renderPath(latticePaths[0].p);
+
+  // Tabs
+  const tabs=document.querySelectorAll('.tab'), conts={rangeTab:document.getElementById('rangeTab'),slotTab:document.getElementById('slotTab'),blockTab:document.getElementById('blockTab'),pathTab:document.getElementById('pathTab')};
+  tabs.forEach(t=>t.addEventListener('click',()=>{ tabs.forEach(x=>x.classList.remove('active')); t.classList.add('active'); for(let id in conts) conts[id].style.display = id===t.dataset.tab?'block':'none'; }));
+  // Initial range scan
+  generateRange();
+})();
+</script>
+</body>
+</html>
