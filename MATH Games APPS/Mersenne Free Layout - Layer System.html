@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mersenne Free Layout - Layer System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body { background:#f8f8ff; color:#000036; font-family:Courier New, monospace; padding:10px; }
+.container { max-width:1400px; margin:auto; background:#f8f8ff; padding:15px; border-radius:10px; border:2px solid #64ffda; }
+h1,h5 { text-align:center; color:#000036; margin:5px 0; }
+
+.mersenne-btn { 
+    padding:8px 12px; margin:2px; cursor:pointer; font-size:14px; font-weight:bold; 
+    border-radius:50%; user-select:none; min-width:45px; min-height:45px;
+    transition: all 0.2s; position:relative;
+}
+.mersenne-btn.seed-2 { background-color:#ff6b6b; color:white; border:2px solid #ff4444; }
+.mersenne-btn.seed-3 { background-color:#4ecdc4; color:white; border:2px solid #3dbdb4; }
+.mersenne-btn.special-purple { background-color:#9b59b6; color:white; border:2px solid #8e44ad; }
+.mersenne-btn:hover { opacity:0.85; transform: scale(1.1); }
+
+.mersenne-btn.draggable { cursor:grab; }
+.mersenne-btn.dragging { opacity:0.7; cursor:grabbing; z-index:10000; box-shadow:0 0 25px gold; }
+.mersenne-btn.selected { box-shadow:0 0 20px gold, 0 0 40px gold !important; animation: pulse 1s infinite; }
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 20px gold; }
+    50% { box-shadow: 0 0 40px gold, 0 0 60px orange; }
+    100% { box-shadow: 0 0 20px gold; }
+}
+
+.canvas-container { 
+    position:relative; min-height:600px; background:#f0f0f8; 
+    border:2px dashed #ccc; border-radius:10px; margin:10px 0;
+    overflow:auto;
+}
+
+.toolbar {
+    display:flex; justify-content:center; gap:10px; margin:10px 0;
+    flex-wrap:wrap; align-items:center;
+}
+
+.toolbar-group {
+    display:flex; gap:5px; align-items:center;
+    padding:8px 12px; background:#e8e8f0; border-radius:8px;
+    flex-wrap:wrap;
+}
+
+.layer-list {
+    display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;
+    padding:12px; background:#e8e8f0; border-radius:8px;
+    min-height:40px; align-items:center;
+}
+
+.layer-tag {
+    padding:8px 15px; background:#4ecdc4; color:white;
+    border-radius:20px; font-size:13px; cursor:pointer;
+    display:flex; align-items:center; gap:8px;
+    transition: all 0.2s;
+}
+.layer-tag:hover { transform: scale(1.05); }
+.layer-tag.active { background:#9b59b6; box-shadow:0 0 15px #9b59b6; }
+
+.layer-tag .delete-layer {
+    background:rgba(255,255,255,0.3); border:none; color:white; 
+    cursor:pointer; font-size:16px; padding:2px 6px; border-radius:50%;
+    width:24px; height:24px; display:flex; align-items:center; justify-content:center;
+}
+.layer-tag .delete-layer:hover { background:rgba(255,0,0,0.5); }
+
+.scale-simple {
+    width:80px; padding:10px; font-size:15px; text-align:center;
+    border:2px solid #4ecdc4; border-radius:8px; font-weight:bold;
+}
+
+button { 
+    padding:8px 14px; cursor:pointer; border-radius:6px; 
+    font-family:Courier New, monospace; font-weight:bold;
+    transition: all 0.2s; border:none; font-size:13px;
+}
+button:hover { transform: translateY(-1px); box-shadow:0 3px 8px rgba(0,0,0,0.2); }
+
+.btn-primary { background:#4ecdc4; color:white; }
+.btn-success { background:#4CAF50; color:white; }
+.btn-warning { background:#ff6b6b; color:white; }
+.btn-purple { background:#9b59b6; color:white; }
+.btn-gray { background:#666; color:white; }
+.btn-blue { background:#3498db; color:white; }
+
+#sumDisplay { font-size:2em; text-align:center; word-break:break-all; padding:10px; }
+.filter-pass { color:#008000; font-weight:bold; }
+.filter-fail { color:#e74c3c; font-weight:bold; }
+
+/* FIXED MODAL */
+.modal-overlay {
+    display:none; 
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.8); z-index:100000; 
+    justify-content:center; align-items:center;
+}
+.modal-overlay.show { display:flex !important; }
+
+.modal-box {
+    background:white; padding:30px; border-radius:15px; 
+    max-width:600px; width:90%; max-height:80vh; 
+    box-shadow:0 10px 40px rgba(0,0,0,0.3);
+    border:3px solid #4ecdc4;
+    overflow-y:auto;
+}
+
+.modal-box h3 {
+    margin-top:0; color:#000036;
+    border-bottom:2px solid #4ecdc4; padding-bottom:15px;
+    font-size:20px;
+}
+
+.modal-box textarea {
+    width:100%; height:200px; font-family:monospace; 
+    padding:12px; border:2px solid #ddd; border-radius:8px;
+    font-size:14px; resize:vertical; margin:10px 0;
+    box-sizing:border-box;
+}
+
+.modal-box .btn-row {
+    display:flex; gap:10px; margin-top:20px; justify-content:flex-end;
+}
+
+.file-upload-area {
+    border:2px dashed #4ecdc4; padding:20px; text-align:center;
+    border-radius:8px; margin:10px 0; cursor:pointer;
+    transition: all 0.2s;
+}
+.file-upload-area:hover { background:#f0fffe; border-color:#3dbdb4; }
+
+.instruction-text {
+    font-size:12px; color:#666; margin:5px 0;
+    text-align:center;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1> Mersenne Free Layout — Layer System</h1>
+<h5>Author Martin Doina</h5>
+<div class="instruction-text">
+    <b> Right-click drag</b> to move balls · <b> Left-click</b> to select for sum · 
+    <b> Save layers</b> to reuse arrangements
+</div>
+
+<div class="color-key" style="display:flex; justify-content:center; gap:20px; margin:10px 0;">
+    <span><span style="background-color:#9b59b6;width:16px;height:16px;display:inline-block;border-radius:50%;"></span> M01,M03</span>
+    <span><span style="background-color:#4ecdc4;width:16px;height:16px;display:inline-block;border-radius:50%;"></span> Seed 3</span>
+    <span><span style="background-color:#ff6b6b;width:16px;height:16px;display:inline-block;border-radius:50%;"></span> Seed 2</span>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+    <div class="toolbar-group">
+        <label style="font-weight:bold;">Scale: ×</label>
+        <input type="number" class="scale-simple" id="scaleInput" value="1" min="1" oninput="calculateSum()">
+        <button class="btn-primary" onclick="setScale(1)">×1</button>
+        <button class="btn-primary" onclick="setScale(10)">×10</button>
+        <button class="btn-primary" onclick="setScale(100)">×100</button>
+    </div>
+    
+    <div class="toolbar-group">
+        <button class="btn-warning" onclick="toggleDragMode()">
+            <span id="dragModeText"> Drag: ON</span>
+        </button>
+        <button class="btn-primary" onclick="resetToDefault()"> Reset Layout</button>
+    </div>
+</div>
+
+<!-- LAYER MANAGEMENT -->
+<div class="toolbar">
+    <div class="toolbar-group">
+        <button class="btn-purple" onclick="saveCurrentLayer()"> Save Layer</button>
+        <button class="btn-success" onclick="loadLayerDialog()"> Load Layer</button>
+        <button class="btn-blue" onclick="exportLayers()"> Export JSON</button>
+        <button class="btn-blue" onclick="openImportDialog()"> Import JSON</button>
+        <button class="btn-warning" onclick="clearAllLayers()"> Clear All</button>
+    </div>
+</div>
+
+<div class="layer-list" id="layerList">
+    <span style="color:#999;"> No layers saved yet. Arrange balls and click "Save Layer"</span>
+</div>
+
+<!-- MAIN CANVAS -->
+<div class="canvas-container" id="canvas"></div>
+
+<!-- CALCULATION AREA -->
+<div id="currentNumbers" style="text-align:center;margin:8px;font-size:1.1em;min-height:30px;padding:10px;background:#f0f0f8;border-radius:8px;"></div>
+
+<div style="text-align:center;margin:8px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+<button class="btn-warning" onclick="clearAll()"> Clear Selection</button>
+<button class="btn-primary" onclick="removeLast()"> Remove Last</button>
+<button class="btn-purple" onclick="calculateSum()"> Calculate Sum</button>
+</div>
+
+<div id="sumDisplay">0</div>
+<div id="filterResults" style="text-align:center;"></div>
+<div id="nearestResult" style="text-align:center;"></div>
+
+</div>
+
+<!-- FIXED IMPORT MODAL -->
+<div class="modal-overlay" id="importModal">
+    <div class="modal-box">
+        <h3> Import Layers from JSON</h3>
+        <p style="color:#666;margin:10px 0;">Choose a JSON file or paste your data below:</p>
+        
+        <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+            <p style="font-size:24px;"></p>
+            <p style="font-weight:bold;color:#4ecdc4;">Click to Select JSON File</p>
+            <p style="font-size:12px;color:#999;" id="fileNameDisplay">No file selected</p>
+        </div>
+        <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="handleFileSelect(event)">
+        
+        <p style="font-weight:bold;color:#666;margin:15px 0 5px 0;">Or paste JSON here:</p>
+        <textarea id="importTextarea" placeholder='Paste your JSON data here...'></textarea>
+        
+        <div class="btn-row">
+            <button class="btn-success" onclick="doImport()" style="font-size:16px;padding:10px 25px;"> Import Layers</button>
+            <button class="btn-warning" onclick="closeImportDialog()" style="font-size:16px;padding:10px 25px;"> Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- LOAD LAYER DIALOG -->
+<div class="modal-overlay" id="loadLayerModal">
+    <div class="modal-box">
+        <h3> Load Saved Layer</h3>
+        <div id="loadLayerList" style="margin:15px 0;"></div>
+        <div class="btn-row">
+            <button class="btn-warning" onclick="closeLoadDialog()" style="font-size:16px;padding:10px 25px;"> Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const MERSENNES = [
+ {label:"M52",value:136279841,color:"seed-2"},{label:"M51",value:82589933,color:"seed-2"},
+ {label:"M50",value:77232917,color:"seed-2"},{label:"M49",value:74207281,color:"seed-2"},
+ {label:"M48",value:57885161,color:"seed-3"},{label:"M47",value:43112609,color:"seed-2"},
+ {label:"M46",value:42643801,color:"seed-2"},{label:"M45",value:37156667,color:"seed-2"},
+ {label:"M44",value:32582657,color:"seed-3"},{label:"M43",value:30402457,color:"seed-3"},
+ {label:"M42",value:25964951,color:"seed-3"},{label:"M41",value:24036583,color:"seed-2"},
+ {label:"M40",value:20996011,color:"seed-2"},{label:"M39",value:13466917,color:"seed-3"},
+ {label:"M38",value:6972593,color:"seed-3"},{label:"M37",value:3021377,color:"seed-2"},
+ {label:"M36",value:2976221,color:"seed-2"},{label:"M35",value:1398269,color:"seed-2"},
+ {label:"M34",value:1257787,color:"seed-2"},{label:"M33",value:859433,color:"seed-3"},
+ {label:"M32",value:756839,color:"seed-2"},{label:"M31",value:216091,color:"seed-3"},
+ {label:"M30",value:132049,color:"seed-2"},{label:"M29",value:110503,color:"seed-3"},
+ {label:"M28",value:86243,color:"seed-2"},{label:"M27",value:44497,color:"seed-2"},
+ {label:"M26",value:23209,color:"seed-2"},{label:"M25",value:21701,color:"seed-2"},
+ {label:"M24",value:19937,color:"seed-2"},{label:"M23",value:11213,color:"seed-2"},
+ {label:"M22",value:9941,color:"seed-2"},{label:"M21",value:9689,color:"seed-2"},
+ {label:"M20",value:4423,color:"seed-2"},{label:"M19",value:4253,color:"seed-2"},
+ {label:"M18",value:3217,color:"seed-3"},{label:"M17",value:2281,color:"seed-2"},
+ {label:"M16",value:2203,color:"seed-2"},{label:"M15",value:1279,color:"seed-2"},
+ {label:"M14",value:607,color:"seed-2"},{label:"M13",value:521,color:"seed-2"},
+ {label:"M12",value:127,color:"seed-3"},{label:"M11",value:107,color:"seed-3"},
+ {label:"M10",value:89,color:"seed-2"},{label:"M09",value:61,color:"seed-3"},
+ {label:"M08",value:31,color:"seed-3"},{label:"M07",value:19,color:"seed-2"},
+ {label:"M06",value:17,color:"seed-2"},{label:"M05",value:13,color:"seed-3"},
+ {label:"M04",value:7,color:"seed-3"},{label:"M03",value:5,color:"special-purple"},
+ {label:"M02",value:3,color:"seed-3"},{label:"M01",value:2,color:"special-purple"}
+];
+
+let currentNumbers = [];
+let dragMode = true;
+let layers = {};
+let activeLayer = null;
+let buttonElements = new Map();
+
+// ============ INITIALIZATION ============
+function init() {
+    const canvas = document.getElementById("canvas");
+    canvas.innerHTML = '';
+    buttonElements.clear();
+    
+    const positions = getDefaultPositions();
+    
+    MERSENNES.forEach((m, index) => {
+        const pos = positions[index];
+        const btn = createButton(m, pos.x, pos.y);
+        canvas.appendChild(btn);
+        buttonElements.set(m.label, btn);
+    });
+    
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+function getDefaultPositions() {
+    const distribution = [3, 5, 7, 9, 11, 13, 4];
+    const positions = [];
+    let y = 500;
+    const spacing = 55;
+    let mersenneIndex = 51;
+    
+    for (let row = 0; row < distribution.length; row++) {
+        const count = distribution[row];
+        const startX = (1400 - (count * spacing)) / 2 + 30;
+        
+        for (let i = 0; i < count && mersenneIndex >= 0; i++) {
+            positions[mersenneIndex] = {
+                x: startX + i * spacing,
+                y: y
+            };
+            mersenneIndex--;
+        }
+        y -= 80;
+    }
+    
+    return positions;
+}
+
+// ============ BUTTON CREATION ============
+function createButton(m, x, y) {
+    const btn = document.createElement("button");
+    btn.textContent = m.label;
+    btn.className = `mersenne-btn ${m.color}`;
+    btn.style.position = 'absolute';
+    btn.style.left = x + 'px';
+    btn.style.top = y + 'px';
+    btn.dataset.label = m.label;
+    btn.dataset.value = m.value;
+    
+    if (dragMode) btn.classList.add('draggable');
+    
+    btn.addEventListener('click', (e) => {
+        if (!wasDragged) {
+            toggleSelection(btn, m);
+        }
+    });
+    
+    makeDraggable(btn);
+    return btn;
+}
+
+function toggleSelection(btn, m) {
+    const idx = currentNumbers.indexOf(m.value);
+    if (idx >= 0) {
+        currentNumbers.splice(idx, 1);
+        btn.classList.remove('selected');
+    } else {
+        currentNumbers.push(m.value);
+        btn.classList.add('selected');
+    }
+    update();
+}
+
+// ============ DRAG SYSTEM ============
+let wasDragged = false;
+
+function makeDraggable(el) {
+    let startX, startY, origLeft, origTop, rect;
+    
+    el.addEventListener('mousedown', function(e) {
+        if (e.button !== 2) return;
+        if (!dragMode) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        wasDragged = false;
+        
+        rect = el.getBoundingClientRect();
+        const canvasRect = document.getElementById("canvas").getBoundingClientRect();
+        
+        startX = e.clientX;
+        startY = e.clientY;
+        origLeft = rect.left - canvasRect.left;
+        origTop = rect.top - canvasRect.top;
+        
+        el.style.position = 'fixed';
+        el.style.left = rect.left + 'px';
+        el.style.top = rect.top + 'px';
+        el.style.zIndex = '9999';
+        el.classList.add('dragging');
+        
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        document.addEventListener('contextmenu', blockContext);
+    });
+    
+    function onMove(e2) {
+        const dx = e2.clientX - startX;
+        const dy = e2.clientY - startY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) wasDragged = true;
+        el.style.left = (rect.left + dx) + 'px';
+        el.style.top = (rect.top + dy) + 'px';
+    }
+    
+    function onUp(e2) {
+        el.classList.remove('dragging');
+        
+        const canvasRect = document.getElementById("canvas").getBoundingClientRect();
+        const finalX = parseFloat(el.style.left) - canvasRect.left;
+        const finalY = parseFloat(el.style.top) - canvasRect.top;
+        
+        el.style.position = 'absolute';
+        el.style.left = finalX + 'px';
+        el.style.top = finalY + 'px';
+        el.style.zIndex = '';
+        
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('contextmenu', blockContext);
+        
+        setTimeout(() => { wasDragged = false; }, 100);
+    }
+    
+    function blockContext(e2) {
+        e2.preventDefault();
+    }
+    
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+function toggleDragMode() {
+    dragMode = !dragMode;
+    document.getElementById("dragModeText").textContent = dragMode ? '🔓 Drag: ON' : '🔒 Drag: OFF';
+    
+    document.querySelectorAll('.mersenne-btn').forEach(btn => {
+        if (dragMode) {
+            btn.classList.add('draggable');
+        } else {
+            btn.classList.remove('draggable');
+        }
+    });
+}
+
+function resetToDefault() {
+    if (confirm("Reset all balls to default pyramid layout?")) {
+        const canvas = document.getElementById("canvas");
+        canvas.innerHTML = '';
+        buttonElements.clear();
+        currentNumbers = [];
+        
+        const positions = getDefaultPositions();
+        
+        MERSENNES.forEach((m, index) => {
+            const pos = positions[index];
+            const btn = createButton(m, pos.x, pos.y);
+            canvas.appendChild(btn);
+            buttonElements.set(m.label, btn);
+        });
+        
+        update();
+    }
+}
+
+// ============ LAYER MANAGEMENT ============
+function saveCurrentLayer() {
+    const layerName = prompt(" Enter layer name:", "Layer " + (Object.keys(layers).length + 1));
+    if (!layerName) return;
+    
+    const positions = {};
+    document.querySelectorAll('.mersenne-btn').forEach(btn => {
+        positions[btn.dataset.label] = {
+            x: parseFloat(btn.style.left),
+            y: parseFloat(btn.style.top),
+            selected: btn.classList.contains('selected')
+        };
+    });
+    
+    layers[layerName] = {
+        positions: positions,
+        selectedNumbers: [...currentNumbers],
+        timestamp: new Date().toISOString()
+    };
+    
+    activeLayer = layerName;
+    updateLayerList();
+    alert(`✅ Layer "${layerName}" saved successfully!`);
+}
+
+function loadLayerDialog() {
+    const layerNames = Object.keys(layers);
+    if (layerNames.length === 0) {
+        alert(" No layers saved yet!");
+        return;
+    }
+    
+    const modal = document.getElementById("loadLayerModal");
+    const list = document.getElementById("loadLayerList");
+    
+    list.innerHTML = layerNames.map(name => `
+        <div style="padding:15px;margin:8px 0;background:#f5f5f5;border-radius:8px;cursor:pointer;
+                    border:2px solid transparent;transition:all 0.2s;"
+             onmouseover="this.style.borderColor='#4ecdc4';this.style.background='#f0fffe'"
+             onmouseout="this.style.borderColor='transparent';this.style.background='#f5f5f5'"
+             onclick="loadLayerByName('${name}'); closeLoadDialog();">
+            <div style="font-weight:bold;font-size:16px;"> ${name}</div>
+            <div style="color:#999;font-size:12px;margin-top:4px;">Saved: ${new Date(layers[name].timestamp).toLocaleString()}</div>
+        </div>
+    `).join('');
+    
+    modal.classList.add("show");
+}
+
+function closeLoadDialog() {
+    document.getElementById("loadLayerModal").classList.remove("show");
+}
+
+function loadLayerByName(name) {
+    const layer = layers[name];
+    if (!layer) return;
+    
+    activeLayer = name;
+    
+    Object.entries(layer.positions).forEach(([label, pos]) => {
+        const btn = buttonElements.get(label);
+        if (btn) {
+            btn.style.left = pos.x + 'px';
+            btn.style.top = pos.y + 'px';
+            if (pos.selected) {
+                btn.classList.add('selected');
+            } else {
+                btn.classList.remove('selected');
+            }
+        }
+    });
+    
+    currentNumbers = [...layer.selectedNumbers];
+    update();
+    updateLayerList();
+}
+
+function deleteLayer(name) {
+    if (confirm(`🗑 Delete layer "${name}"?`)) {
+        delete layers[name];
+        if (activeLayer === name) activeLayer = Object.keys(layers)[0] || null;
+        updateLayerList();
+    }
+}
+
+function clearAllLayers() {
+    if (confirm(" Delete ALL layers? This cannot be undone!")) {
+        layers = {};
+        activeLayer = null;
+        updateLayerList();
+    }
+}
+
+function activateLayer(name) {
+    loadLayerByName(name);
+}
+
+function updateLayerList() {
+    const list = document.getElementById("layerList");
+    const layerNames = Object.keys(layers);
+    
+    if (layerNames.length === 0) {
+        list.innerHTML = '<span style="color:#999;"> No layers saved yet. Arrange balls and click "Save Layer"</span>';
+        return;
+    }
+    
+    list.innerHTML = layerNames.map(name => {
+        const isActive = name === activeLayer;
+        const timestamp = new Date(layers[name].timestamp).toLocaleTimeString();
+        return `
+            <div class="layer-tag ${isActive ? 'active' : ''}">
+                <span onclick="activateLayer('${name}')" style="flex:1;cursor:pointer;">
+                    ${isActive ? '' : ''} ${name} <small>(${timestamp})</small>
+                </span>
+                <button class="delete-layer" onclick="event.stopPropagation(); deleteLayer('${name}')">×</button>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============ IMPORT/EXPORT ============
+function exportLayers() {
+    if (Object.keys(layers).length === 0) {
+        alert(" No layers to export!");
+        return;
+    }
+    
+    const exportData = {
+        version: "1.0",
+        layers: layers,
+        activeLayer: activeLayer,
+        exportDate: new Date().toISOString()
+    };
+    
+    const json = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mersenne_layers_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert(" Layers exported successfully!");
+}
+
+function openImportDialog() {
+    const modal = document.getElementById("importModal");
+    modal.classList.add("show");
+    document.getElementById("importTextarea").value = '';
+    document.getElementById("fileNameDisplay").textContent = 'No file selected';
+    document.getElementById("fileInput").value = '';
+}
+
+function closeImportDialog() {
+    document.getElementById("importModal").classList.remove("show");
+}
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    document.getElementById("fileNameDisplay").textContent = `📄 ${file.name}`;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById("importTextarea").value = e.target.result;
+    };
+    reader.readAsText(file);
+}
+
+function doImport() {
+    const text = document.getElementById("importTextarea").value.trim();
+    if (!text) {
+        alert(" Please select a JSON file or paste JSON data first!");
+        return;
+    }
+    
+    try {
+        const data = JSON.parse(text);
+        
+        if (!data.layers) {
+            alert(" Invalid format! JSON must contain 'layers' object.\n\nExample format:\n{\n  \"layers\": {\n    \"Layer1\": {\n      \"positions\": {...},\n      \"selectedNumbers\": [...]\n    }\n  }\n}");
+            return;
+        }
+        
+        const importedCount = Object.keys(data.layers).length;
+        layers = { ...layers, ...data.layers };
+        
+        if (data.activeLayer && data.layers[data.activeLayer]) {
+            activeLayer = data.activeLayer;
+            loadLayerByName(activeLayer);
+        }
+        
+        updateLayerList();
+        closeImportDialog();
+        alert(` Successfully imported ${importedCount} layer(s)!`);
+    } catch (e) {
+        alert(" Invalid JSON format! Please check your data.\n\nError: " + e.message);
+    }
+}
+
+// ============ CALCULATION ============
+function setScale(value) {
+    document.getElementById("scaleInput").value = value;
+    calculateSum();
+}
+
+function getScaleFactor() {
+    const value = parseInt(document.getElementById("scaleInput").value);
+    return (value && value > 0) ? value : 1;
+}
+
+function digitalRoot(n){ if(n===3) return 3; return 1+((n-1)%9); }
+function passesFilters(n){
+    if(n===3) return true;
+    const last=n%10;
+    const root=digitalRoot(n);
+    return [1,3,7,9].includes(last) && ![3,6,9].includes(root);
+}
+function nearestMersenne(n){
+    let best=null, dist=Infinity;
+    for(let m of MERSENNES){ const d=Math.abs(n-m.value); if(d<dist){dist=d;best=m;} }
+    return {best,dist};
+}
+
+function calculateSum(){
+    const scale = getScaleFactor();
+    const base = currentNumbers.reduce((a,b)=>a+b,0);
+    const sum = scale * base;
+    document.getElementById("sumDisplay").innerText = sum.toLocaleString();
+    const ok = passesFilters(sum);
+    document.getElementById("filterResults").innerHTML = ok 
+      ? "<p class='filter-pass'> Passes prime sieves</p>"
+      : "<p class='filter-fail'> Fails prime sieves</p>";
+    const near = nearestMersenne(sum);
+    const diff = sum - near.best.value;
+    document.getElementById("nearestResult").innerHTML = 
+     `<p>Nearest Mersenne: <b>${near.best.label}</b> (${near.best.value.toLocaleString()}) — ${Math.abs(diff).toLocaleString()} ${diff>0?'above':'below'}</p>`;
+}
+
+function update(){
+    document.getElementById("currentNumbers").innerHTML = currentNumbers.length ? 
+        currentNumbers.map(n=>n.toLocaleString()).join(" + ") : 
+        " Click balls to select them for calculation";
+    calculateSum();
+}
+
+function clearAll(){ 
+    currentNumbers=[]; 
+    document.querySelectorAll('.mersenne-btn.selected').forEach(b => b.classList.remove('selected'));
+    update(); 
+}
+
+function removeLast(){ 
+    if(currentNumbers.length > 0) {
+        const removed = currentNumbers.pop();
+        document.querySelectorAll('.mersenne-btn').forEach(b => {
+            if(parseInt(b.dataset.value) === removed) {
+                b.classList.remove('selected');
+            }
+        });
+    }
+    update(); 
+}
+
+// Close modals when clicking overlay
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('show');
+    }
+});
+
+window.onload = init;
+</script>
+</body>
+</html>

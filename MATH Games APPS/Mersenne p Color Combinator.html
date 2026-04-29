@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne p Color Combinator - Research Edition</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a1929 0%, #1a237e 100%);
+            color: #e3f2fd;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 2000px;
+            margin: 0 auto;
+            background-color: rgba(10, 25, 41, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            border: 1px solid #ff9800;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #ffb74d;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #90caf9;
+        }
+        
+        .color-legend {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 30px;
+            background: rgba(21, 45, 75, 0.8);
+            padding: 15px;
+            border-radius: 40px;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel {
+            background: rgba(21, 45, 75, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ff9800;
+        }
+        
+        .data-panel {
+            background: rgba(21, 45, 75, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ff9800;
+        }
+        
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+        
+        .color-count {
+            width: 70px;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #7e57c2;
+            border-radius: 4px;
+            color: white;
+        }
+        
+        .total-display {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 152, 0, 0.2);
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        button {
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+        }
+        
+        .search-btn { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .export-btn { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); }
+        .clear-btn { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); }
+        
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffb74d;
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-input {
+            flex: 1;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #ff9800;
+            color: white;
+            border-radius: 4px;
+        }
+        
+        .results-table {
+            max-height: 500px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .result-row {
+            display: grid;
+            grid-template-columns: 100px 150px 1fr 80px 100px;
+            gap: 10px;
+            padding: 8px;
+            margin-bottom: 4px;
+            background: rgba(81, 45, 168, 0.3);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .result-row:hover {
+            background: rgba(255, 152, 0, 0.3);
+        }
+        
+        .result-row.header {
+            background: rgba(255, 152, 0, 0.5);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        
+        .prime-number {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .copy-area {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            border: 1px dashed #ff9800;
+        }
+        
+        .copy-textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffb74d;
+            border: 1px solid #7e57c2;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .factorization-info {
+            color: #ffb74d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Mersenne Exponents p Color Research Lab</h1>
+        <p class="subtitle">Generate, filter, export and factorize prime candidates</p>
+        
+        <div class="color-legend">
+            <span>⚫ Black (ends 1)</span>
+            <span>🔵 Blue (ends 3)</span>
+            <span>🔴 Red (ends 7)</span>
+            <span>🟡 Yellow (ends 9)</span>
+        </div>
+        
+        <div class="main-grid">
+            <div class="control-panel">
+                <h3>🎯 Color Pattern</h3>
+                
+                <div class="color-row">
+                    <span>⚫ Black:</span>
+                    <input type="number" id="blackCount" class="color-count" min="0" max="20" value="3">
+                </div>
+                <div class="color-row">
+                    <span>🔵 Blue:</span>
+                    <input type="number" id="blueCount" class="color-count" min="0" max="20" value="3">
+                </div>
+                <div class="color-row">
+                    <span>🔴 Red:</span>
+                    <input type="number" id="redCount" class="color-count" min="0" max="20" value="3">
+                </div>
+                <div class="color-row">
+                    <span>🟡 Yellow:</span>
+                    <input type="number" id="yellowCount" class="color-count" min="0" max="20" value="3">
+                </div>
+                
+                <div id="totalDisplay" class="total-display">Total: 12 terms</div>
+                
+                <select id="mersenneRange" style="width: 100%; padding: 8px; margin-bottom: 15px;">
+                    <option value="15-52">M15-M52 (All)</option>
+                    <option value="20-52">M20-M52</option>
+                    <option value="25-52">M25-M52</option>
+                    <option value="30-52">M30-M52</option>
+                    <option value="35-52">M35-M52</option>
+                    <option value="38-52" selected>M38-M52 (Your range)</option>
+                </select>
+                
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button onclick="generateRandom()" style="flex: 1;">🎲 Random</button>
+                    <button onclick="searchForPrimes()" class="search-btn" style="flex: 2;">🔍 Auto-Search</button>
+                </div>
+                <button onclick="clearAllData()" class="clear-btn" style="margin-top: 10px;">🗑️ Clear All Data</button>
+            </div>
+            
+            <div class="data-panel">
+                <h3>📊 Research Data</h3>
+                
+                <div class="stats-bar">
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalAttempts">0</div>
+                        <div>Attempts</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="totalPrimes">0</div>
+                        <div>Primes</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="uniquePrimes">0</div>
+                        <div>Unique</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="avgSum">0</div>
+                        <div>Avg Sum</div>
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <input type="text" id="minSumFilter" class="filter-input" placeholder="Min sum">
+                    <input type="text" id="maxSumFilter" class="filter-input" placeholder="Max sum">
+                    <input type="text" id="colorFilter" class="filter-input" placeholder="Filter by colors (e.g., 3,3,3,3)">
+                    <button onclick="applyFilters()" style="padding: 8px 15px;">🔍 Filter</button>
+                    <button onclick="exportData()" class="export-btn">📥 Export CSV</button>
+                </div>
+                
+                <div class="results-table" id="resultsTable">
+                    <div class="result-row header">
+                        <span>Sum</span>
+                        <span>Terms</span>
+                        <span>Decomposition</span>
+                        <span>Colors</span>
+                        <span>Actions</span>
+                    </div>
+                    <div id="resultsList"></div>
+                </div>
+                
+                <div class="copy-area">
+                    <h4>📋 Copy Data (CSV Format)</h4>
+                    <textarea id="copyData" class="copy-textarea" readonly placeholder="Click 'Copy to Clipboard' to get data..."></textarea>
+                    <button onclick="copyToClipboard()" style="width: 200px;">📋 Copy to Clipboard</button>
+                    <button onclick="copyFactorizationFormat()" style="width: 200px;">🔢 Copy for Factorization</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="currentDecomposition" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+            <h4>🔍 Current Decomposition</h4>
+            <div id="decompositionDetails"></div>
+        </div>
+    </div>
+
+    <script>
+        // Mersenne data
+        const MERSENNES = [
+            { index: 15, value: 1279, color: 'yellow' },
+            { index: 16, value: 2203, color: 'blue' },
+            { index: 17, value: 2281, color: 'black' },
+            { index: 18, value: 3217, color: 'red' },
+            { index: 19, value: 4253, color: 'blue' },
+            { index: 20, value: 4423, color: 'blue' },
+            { index: 21, value: 9689, color: 'yellow' },
+            { index: 22, value: 9941, color: 'black' },
+            { index: 23, value: 11213, color: 'blue' },
+            { index: 24, value: 19937, color: 'red' },
+            { index: 25, value: 21701, color: 'black' },
+            { index: 26, value: 23209, color: 'yellow' },
+            { index: 27, value: 44497, color: 'red' },
+            { index: 28, value: 86243, color: 'blue' },
+            { index: 29, value: 110503, color: 'blue' },
+            { index: 30, value: 132049, color: 'yellow' },
+            { index: 31, value: 216091, color: 'black' },
+            { index: 32, value: 756839, color: 'yellow' },
+            { index: 33, value: 859433, color: 'blue' },
+            { index: 34, value: 1257787, color: 'red' },
+            { index: 35, value: 1398269, color: 'yellow' },
+            { index: 36, value: 2976221, color: 'black' },
+            { index: 37, value: 3021377, color: 'red' },
+            { index: 38, value: 6972593, color: 'blue' },
+            { index: 39, value: 13466917, color: 'red' },
+            { index: 40, value: 20996011, color: 'black' },
+            { index: 41, value: 24036583, color: 'blue' },
+            { index: 42, value: 25964951, color: 'black' },
+            { index: 43, value: 30402457, color: 'red' },
+            { index: 44, value: 32582657, color: 'red' },
+            { index: 45, value: 37156667, color: 'red' },
+            { index: 46, value: 42643801, color: 'black' },
+            { index: 47, value: 43112609, color: 'yellow' },
+            { index: 48, value: 57885161, color: 'black' },
+            { index: 49, value: 74207281, color: 'black' },
+            { index: 50, value: 77232917, color: 'red' },
+            { index: 51, value: 82589933, color: 'blue' },
+            { index: 52, value: 136279841, color: 'black' }
+        ];
+
+        // Store all results
+        let allResults = [];
+        let filteredResults = [];
+        let attempts = 0;
+
+        function updateTotal() {
+            const b = +document.getElementById('blackCount').value || 0;
+            const bl = +document.getElementById('blueCount').value || 0;
+            const r = +document.getElementById('redCount').value || 0;
+            const y = +document.getElementById('yellowCount').value || 0;
+            document.getElementById('totalDisplay').textContent = `Total: ${b+bl+r+y} terms`;
+            return { black: b, blue: bl, red: r, yellow: y, total: b+bl+r+y };
+        }
+
+        function getAvailableMersennes() {
+            const [min, max] = document.getElementById('mersenneRange').value.split('-').map(Number);
+            return MERSENNES.filter(m => m.index >= min && m.index <= max);
+        }
+
+        function getRandomByColor(color, count, available) {
+            const colorMersennes = available.filter(m => m.color === color);
+            if (!colorMersennes.length || !count) return [];
+            return Array(count).fill().map(() => 
+                colorMersennes[Math.floor(Math.random() * colorMersennes.length)]
+            );
+        }
+
+        function isPrime(num) {
+            if (num <= 1) return false;
+            if (num <= 3) return true;
+            if (num % 2 === 0 || num % 3 === 0) return false;
+            for (let i = 5; i * i <= num; i += 6) {
+                if (num % i === 0 || num % (i + 1) === 0) return false;
+            }
+            return true;
+        }
+
+        function generateRandom() {
+            const { black, blue, red, yellow } = updateTotal();
+            const available = getAvailableMersennes();
+            
+            const terms = [
+                ...getRandomByColor('black', black, available),
+                ...getRandomByColor('blue', blue, available),
+                ...getRandomByColor('red', red, available),
+                ...getRandomByColor('yellow', yellow, available)
+            ];
+            
+            const sum = terms.reduce((acc, t) => acc + t.value, 0);
+            const prime = isPrime(sum);
+            
+            attempts++;
+            
+            if (prime) {
+                const result = {
+                    id: allResults.length,
+                    sum: sum,
+                    terms: terms.map(t => `M${t.index}`).join('+'),
+                    termDetails: terms,
+                    colors: `${terms.filter(t => t.color === 'black').length}bk,${terms.filter(t => t.color === 'blue').length}bl,${terms.filter(t => t.color === 'red').length}r,${terms.filter(t => t.color === 'yellow').length}y`,
+                    timestamp: new Date().toISOString(),
+                    decomposition: terms.map(t => t.index).join(',')
+                };
+                allResults.push(result);
+            }
+            
+            displayCurrentDecomposition(terms, sum, prime);
+            updateStats();
+            applyFilters();
+        }
+
+        function displayCurrentDecomposition(terms, sum, prime) {
+            const div = document.getElementById('decompositionDetails');
+            let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 5px;">';
+            terms.sort((a,b) => a.index - b.index).forEach(t => {
+                html += `<div style="padding: 5px; background: rgba(255,152,0,0.1); border-radius: 3px;">
+                    M${t.index}: ${t.value.toLocaleString()} (${t.color})
+                </div>`;
+            });
+            html += `</div><div style="margin-top: 10px; font-size: 18px;">
+                <strong>SUM = ${sum.toLocaleString()}</strong> 
+                <span style="color: ${prime ? '#4caf50' : '#f44336'}">${prime ? '✓ PRIME' : '✗ NOT PRIME'}</span>
+            </div>`;
+            div.innerHTML = html;
+        }
+
+        function updateStats() {
+            const primes = allResults.filter(r => isPrime(r.sum));
+            document.getElementById('totalAttempts').textContent = attempts;
+            document.getElementById('totalPrimes').textContent = primes.length;
+            
+            const uniqueSums = new Set(primes.map(p => p.sum)).size;
+            document.getElementById('uniquePrimes').textContent = uniqueSums;
+            
+            const avg = primes.length ? Math.round(primes.reduce((a,b) => a + b.sum, 0) / primes.length) : 0;
+            document.getElementById('avgSum').textContent = avg.toLocaleString();
+        }
+
+        function applyFilters() {
+            const minSum = parseInt(document.getElementById('minSumFilter').value) || 0;
+            const maxSum = parseInt(document.getElementById('maxSumFilter').value) || Infinity;
+            const colorFilter = document.getElementById('colorFilter').value;
+            
+            filteredResults = allResults.filter(r => {
+                if (r.sum < minSum || r.sum > maxSum) return false;
+                if (colorFilter) {
+                    const [bk, bl, rCol, y] = colorFilter.split(',').map(Number);
+                    const colors = r.termDetails.reduce((acc, t) => {
+                        acc[t.color] = (acc[t.color] || 0) + 1;
+                        return acc;
+                    }, {});
+                    if (bk !== undefined && (colors.black || 0) !== bk) return false;
+                    if (bl !== undefined && (colors.blue || 0) !== bl) return false;
+                    if (rCol !== undefined && (colors.red || 0) !== rCol) return false;
+                    if (y !== undefined && (colors.yellow || 0) !== y) return false;
+                }
+                return true;
+            });
+            
+            displayResults();
+            updateCopyData();
+        }
+
+        function displayResults() {
+            const list = document.getElementById('resultsList');
+            if (!filteredResults.length) {
+                list.innerHTML = '<div style="padding: 20px; text-align: center;">No results match filters</div>';
+                return;
+            }
+            
+            let html = '';
+            filteredResults.slice(-100).reverse().forEach(r => {
+                html += `
+                    <div class="result-row" onclick="viewResult(${r.id})">
+                        <span class="prime-number">${r.sum.toLocaleString()}</span>
+                        <span>${r.terms}</span>
+                        <span style="font-size: 12px;">M${r.decomposition.replace(/,/g, ' + M')}</span>
+                        <span>${r.colors}</span>
+                        <span>
+                            <button onclick="event.stopPropagation(); copyForFactorization('${r.sum}')" style="padding: 2px 5px; font-size: 11px;">📋</button>
+                        </span>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function updateCopyData() {
+            let csv = 'Sum,Terms,Decomposition,Black,Blue,Red,Yellow\n';
+            filteredResults.forEach(r => {
+                const colors = r.termDetails.reduce((acc, t) => {
+                    acc[t.color] = (acc[t.color] || 0) + 1;
+                    return acc;
+                }, {});
+                csv += `${r.sum},"${r.terms}","${r.decomposition}",${colors.black || 0},${colors.blue || 0},${colors.red || 0},${colors.yellow || 0}\n`;
+            });
+            document.getElementById('copyData').value = csv;
+        }
+
+        function viewResult(id) {
+            const result = allResults.find(r => r.id === id);
+            if (result) {
+                displayCurrentDecomposition(result.termDetails, result.sum, true);
+            }
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('copyData').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Data copied to clipboard!');
+            });
+        }
+
+        function copyFactorizationFormat() {
+            let text = filteredResults.map(r => r.sum).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Factorization list copied!');
+            });
+        }
+
+        function exportData() {
+            const data = document.getElementById('copyData').value;
+            const blob = new Blob([data], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mersenne_colors_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+
+        function clearAllData() {
+            if (confirm('Clear all research data?')) {
+                allResults = [];
+                filteredResults = [];
+                attempts = 0;
+                updateStats();
+                displayResults();
+                updateCopyData();
+                document.getElementById('decompositionDetails').innerHTML = 'No data';
+            }
+        }
+
+        async function searchForPrimes() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '🔍 Searching...';
+            
+            for (let i = 0; i < 50; i++) {
+                generateRandom();
+                await new Promise(r => setTimeout(r, 10));
+            }
+            
+            btn.disabled = false;
+            btn.textContent = '🔍 Auto-Search';
+        }
+
+        // Initialize
+        ['blackCount','blueCount','redCount','yellowCount'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateTotal);
+        });
+        
+        updateTotal();
+    </script>
+</body>
+</html>

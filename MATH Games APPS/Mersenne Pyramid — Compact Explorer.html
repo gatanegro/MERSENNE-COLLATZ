@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mersenne Pyramid — Compact Explorer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:#f8f8ff; color:#000036; font-family:Courier New, monospace; height:100vh; overflow:hidden; }
+
+.main-layout { display:flex; height:100vh; }
+
+/* LEFT SIDE — PYRAMID */
+.pyramid-side {
+    flex:1; min-width:700px; padding:10px;
+    display:flex; flex-direction:column;
+    border-right:2px solid #64ffda;
+    overflow-y:auto;
+}
+
+.header-mini { text-align:center; margin-bottom:5px; }
+.header-mini h1 { font-size:16px; color:#000036; }
+.header-mini h5 { font-size:10px; color:#9b59b6; }
+
+.mersenne-btn { 
+    padding:3px 6px; margin:1px; cursor:pointer; font-size:10px; font-weight:bold; 
+    border-radius:50%; width:35px; height:35px; transition:all 0.15s;
+    display:flex; align-items:center; justify-content:center;
+}
+.mersenne-btn.seed-2 { background-color:#ff6b6b; color:white; border:1px solid #ff4444; }
+.mersenne-btn.seed-3 { background-color:#4ecdc4; color:white; border:1px solid #3dbdb4; }
+.mersenne-btn.special-purple { background-color:#9b59b6; color:white; border:1px solid #8e44ad; }
+.mersenne-btn:hover { opacity:0.85; transform:scale(1.2); z-index:10; }
+.mersenne-btn.selected-add { box-shadow:0 0 10px #008000, 0 0 20px #008000 !important; border-color:#008000 !important; }
+.mersenne-btn.selected-sub { box-shadow:0 0 10px #e74c3c, 0 0 20px #e74c3c !important; border-color:#e74c3c !important; }
+
+.pyramid-container { text-align:center; flex:1; }
+.pyramid-row { display:flex; justify-content:center; gap:2px; margin:1px 0; }
+
+.color-key { display:flex; justify-content:center; gap:10px; margin:3px 0; font-size:9px; flex-wrap:wrap; }
+.color-box { width:12px; height:12px; border-radius:50%; display:inline-block; margin-right:3px; }
+
+/* RIGHT SIDE — RESULTS */
+.results-side {
+    width:380px; padding:10px; display:flex; flex-direction:column;
+    gap:6px; overflow-y:auto; background:#fafaff;
+}
+
+.results-side h3 { font-size:12px; color:#000036; text-align:center; }
+
+.control-row {
+    display:flex; gap:5px; align-items:center; flex-wrap:wrap;
+    background:#f0f0f8; padding:6px 10px; border-radius:6px;
+    font-size:11px;
+}
+.control-row label { font-weight:bold; font-size:10px; }
+.control-row input { width:55px; padding:4px; font-size:11px; text-align:center; border:1px solid #4ecdc4; border-radius:4px; font-family:Courier New; }
+.control-row select { padding:3px; font-size:10px; border:1px solid #4ecdc4; border-radius:4px; font-family:Courier New; }
+
+button {
+    padding:4px 10px; cursor:pointer; border-radius:4px;
+    font-family:Courier New; font-weight:bold; border:none; font-size:10px;
+    color:white; transition:all 0.15s;
+}
+.btn-scale { background:#4ecdc4; color:#000; }
+.btn-clear { background:#e74c3c; }
+.btn-undo { background:#9b59b6; }
+
+.formula-bar {
+    background:#f0f0f8; padding:8px; border-radius:6px;
+    font-size:11px; text-align:center; min-height:24px;
+    word-break:break-all;
+}
+
+.sum-display { font-size:1.4em; text-align:center; font-weight:bold; }
+
+.distance-box {
+    background:#f0f0f8; padding:8px; border-radius:6px;
+    text-align:center; font-size:11px;
+}
+.exact-hit { color:#008000; font-weight:bold; font-size:1.1em; }
+.near-hit { color:#4ecdc4; }
+.far-hit { color:#e74c3c; }
+
+.op-indicator { text-align:center; font-size:9px; }
+.op-add { color:#008000; }
+.op-sub { color:#e74c3c; }
+
+.filter-pass { color:#008000; font-size:10px; }
+.filter-fail { color:#e74c3c; font-size:10px; }
+</style>
+</head>
+<body>
+<div class="main-layout">
+
+<!-- LEFT SIDE: PYRAMID -->
+<div class="pyramid-side">
+    <div class="header-mini">
+        <h1>🔺 Mersenne Pyramid Explorer</h1>
+        <h5>Author: Martin Doina</h5>
+    </div>
+    
+    <div class="color-key">
+        <span><span class="color-box" style="background-color:#9b59b6;"></span>M01,M03</span>
+        <span><span class="color-box" style="background-color:#4ecdc4;"></span>Seed-3</span>
+        <span><span class="color-box" style="background-color:#ff6b6b;"></span>Seed-2</span>
+        <span style="color:#008000;">● +ADD</span>
+        <span style="color:#e74c3c;">● −SUB</span>
+    </div>
+    
+    <div class="pyramid-container" id="mersenneNav"></div>
+</div>
+
+<!-- RIGHT SIDE: RESULTS -->
+<div class="results-side">
+    <h3>📐 Formula Builder</h3>
+    
+    <div class="control-row">
+        <label>Scale:×</label>
+        <input type="number" id="scaleInput" value="1" min="1" oninput="update()">
+        <button class="btn-scale" onclick="setScale(1)">×1</button>
+        <button class="btn-scale" onclick="setScale(2)">×2</button>
+        <button class="btn-scale" onclick="setScale(10)">×10</button>
+    </div>
+    
+    <div class="control-row">
+        <button class="btn-clear" onclick="clearAll()">🗑 Clear</button>
+        <button class="btn-undo" onclick="removeLast()">↩ Undo</button>
+    </div>
+    
+    <div class="op-indicator">
+        <span class="op-add">🟢 LEFT CLICK = ADD</span> | 
+        <span class="op-sub">🔴 RIGHT CLICK = SUBTRACT</span>
+    </div>
+    
+    <div class="formula-bar" id="formulaBar">Click balls to build formula...</div>
+    
+    <div class="sum-display" id="sumDisplay">0</div>
+    
+    <div class="distance-box" id="distanceDisplay">
+        Distance to nearest Mersenne...
+    </div>
+    
+    <div id="filterResults" style="text-align:center;"></div>
+    
+    <div style="font-size:9px;color:#999;text-align:center;margin-top:5px;">
+        Selected: <span id="countAdd" style="color:#008000;">0</span> add, 
+        <span id="countSub" style="color:#e74c3c;">0</span> sub
+    </div>
+</div>
+
+</div>
+
+<script>
+const MERSENNES = [
+ {label:"M52",value:136279841,seed:2},{label:"M51",value:82589933,seed:3},{label:"M50",value:77232917,seed:3},
+ {label:"M49",value:74207281,seed:2},{label:"M48",value:57885161,seed:3},{label:"M47",value:43112609,seed:3},
+ {label:"M46",value:42643801,seed:2},{label:"M45",value:37156667,seed:3},{label:"M44",value:32582657,seed:3},
+ {label:"M43",value:30402457,seed:2},{label:"M42",value:25964951,seed:2},{label:"M41",value:24036583,seed:2},
+ {label:"M40",value:20996011,seed:2},{label:"M39",value:13466917,seed:2},{label:"M38",value:6972593,seed:2},
+ {label:"M37",value:3021377,seed:2},{label:"M36",value:2976221,seed:2},{label:"M35",value:1398269,seed:2},
+ {label:"M34",value:1257787,seed:2},{label:"M33",value:859433,seed:3},{label:"M32",value:756839,seed:3},
+ {label:"M31",value:216091,seed:3},{label:"M30",value:132049,seed:2},{label:"M29",value:110503,seed:2},
+ {label:"M28",value:86243,seed:2},{label:"M27",value:44497,seed:3},{label:"M26",value:23209,seed:2},
+ {label:"M25",value:21701,seed:3},{label:"M24",value:19937,seed:2},{label:"M23",value:11213,seed:2},
+ {label:"M22",value:9941,seed:2},{label:"M21",value:9689,seed:2},{label:"M20",value:4423,seed:2},
+ {label:"M19",value:4253,seed:3},{label:"M18",value:3217,seed:2},{label:"M17",value:2281,seed:3},
+ {label:"M16",value:2203,seed:2},{label:"M15",value:1279,seed:2},{label:"M14",value:607,seed:2},
+ {label:"M13",value:521,seed:2},{label:"M12",value:127,seed:3},{label:"M11",value:107,seed:3},
+ {label:"M10",value:89,seed:2},{label:"M09",value:61,seed:3},{label:"M08",value:31,seed:3},
+ {label:"M07",value:19,seed:2},{label:"M06",value:17,seed:2},{label:"M05",value:13,seed:3},
+ {label:"M04",value:7,seed:3},{label:"M03",value:5,seed:2},{label:"M02",value:3,seed:2},
+ {label:"M01",value:2,seed:2}
+];
+
+let selectedAdd = [], selectedSub = [];
+
+function getPyramidRows() {
+    const dist = [4, 13, 11, 9, 7, 5, 3];
+    const rows = []; let idx = 0;
+    for (let size of dist) {
+        const row = [];
+        for (let i = 0; i < size && idx < 52; i++) { row.push(MERSENNES[idx]); idx++; }
+        rows.push(row);
+    }
+    return rows;
+}
+
+function init() {
+    const nav = document.getElementById("mersenneNav");
+    const rows = getPyramidRows();
+    for (let r = 0; r < rows.length; r++) {
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "pyramid-row";
+        if (r === 0) rowDiv.style.paddingLeft = "450px";
+        for (let m of rows[r]) {
+            const b = document.createElement("button");
+            b.textContent = m.label;
+            b.className = "mersenne-btn";
+            if (m.label === "M01" || m.label === "M03") b.classList.add("special-purple");
+            else if (m.seed === 2) b.classList.add("seed-2");
+            else b.classList.add("seed-3");
+            b.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (selectedSub.includes(m)) { selectedSub = selectedSub.filter(x => x !== m); b.classList.remove('selected-sub'); }
+                if (selectedAdd.includes(m)) { selectedAdd = selectedAdd.filter(x => x !== m); b.classList.remove('selected-add'); }
+                else { selectedAdd.push(m); b.classList.add('selected-add'); }
+                update();
+            });
+            b.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                if (selectedAdd.includes(m)) { selectedAdd = selectedAdd.filter(x => x !== m); b.classList.remove('selected-add'); }
+                if (selectedSub.includes(m)) { selectedSub = selectedSub.filter(x => x !== m); b.classList.remove('selected-sub'); }
+                else { selectedSub.push(m); b.classList.add('selected-sub'); }
+                update();
+            });
+            rowDiv.appendChild(b);
+        }
+        nav.appendChild(rowDiv);
+    }
+}
+
+function getScaleFactor() { const v = parseInt(document.getElementById("scaleInput").value); return v > 0 ? v : 1; }
+function setScale(v) { document.getElementById("scaleInput").value = v; update(); }
+
+function digitalRoot(n){ if(n===3) return 3; return 1+((n-1)%9); }
+function passesFilters(n){
+    if(n===3) return true;
+    return [1,3,7,9].includes(n%10) && ![3,6,9].includes(digitalRoot(n));
+}
+function nearestMersenne(n){
+    let best=null, dist=Infinity;
+    for(let m of MERSENNES){ const d=Math.abs(n-m.value); if(d<dist){dist=d;best=m;} }
+    return {best,dist};
+}
+
+function update(){
+    const scale = getScaleFactor();
+    const sumAdd = selectedAdd.reduce((a,b) => a + b.value, 0);
+    const sumSub = selectedSub.reduce((a,b) => a + b.value, 0);
+    const sum = scale * (sumAdd - sumSub);
+    
+    document.getElementById("sumDisplay").innerText = sum.toLocaleString();
+    document.getElementById("countAdd").textContent = selectedAdd.length;
+    document.getElementById("countSub").textContent = selectedSub.length;
+    
+    let f = '';
+    if (selectedAdd.length) f += selectedAdd.map(m => m.label).join('+');
+    if (selectedSub.length) f += (f ? '−' : '') + selectedSub.map(m => m.label).join('−');
+    if (scale > 1) f = scale + '×(' + f + ')';
+    document.getElementById("formulaBar").innerHTML = f || 'Click balls...';
+    
+    const ok = passesFilters(sum);
+    document.getElementById("filterResults").innerHTML = ok 
+      ? "<span class='filter-pass'>✓ Prime sieves pass</span>"
+      : "<span class='filter-fail'>✗ Prime sieves fail</span>";
+    
+    const near = nearestMersenne(sum);
+    const diff = sum - near.best.value;
+    const cls = diff === 0 ? 'exact-hit' : Math.abs(diff) < sum * 0.01 ? 'near-hit' : 'far-hit';
+    document.getElementById("distanceDisplay").innerHTML = `
+        Nearest: <b>${near.best.label}</b> (${near.best.value.toLocaleString()})<br>
+        <span class="${cls}">${diff === 0 ? '🎯 EXACT!' : diff > 0 ? '↗ +'+diff.toLocaleString() : '↘ '+diff.toLocaleString()}</span>
+    `;
+}
+
+function clearAll(){ 
+    selectedAdd=[]; selectedSub=[];
+    document.querySelectorAll('.mersenne-btn').forEach(b => b.classList.remove('selected-add','selected-sub'));
+    update(); 
+}
+function removeLast(){ 
+    if (selectedAdd.length) {
+        const last = selectedAdd.pop();
+        document.querySelectorAll('.mersenne-btn').forEach(b => { if (b.textContent === last.label) b.classList.remove('selected-add'); });
+    } else if (selectedSub.length) {
+        const last = selectedSub.pop();
+        document.querySelectorAll('.mersenne-btn').forEach(b => { if (b.textContent === last.label) b.classList.remove('selected-sub'); });
+    }
+    update(); 
+}
+
+document.getElementById("mersenneNav").addEventListener('contextmenu', (e) => e.preventDefault());
+window.onload = init;
+</script>
+</body>
+</html>
