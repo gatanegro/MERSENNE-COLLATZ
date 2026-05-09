@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne TRUE GRAMMAR – No Restrictions – Author Martin Doina</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Courier New', monospace; background: #080812; color: #d0d0d0; padding: 20px; }
+        .container { max-width: 1700px; margin: 0 auto; background: #12121e; padding: 25px; border-radius: 12px; border: 1px solid #2a2a40; }
+        h1 { text-align: center; color: #ffd966; font-size: 1.3em; margin-bottom: 2px; }
+        .subtitle { text-align: center; color: #888; font-size: 0.8em; margin-bottom: 12px; }
+        
+        .grammar-box {
+            background: #0a0a16; border: 2px solid #ffd966; padding: 16px; border-radius: 10px;
+            text-align: center; margin-bottom: 15px;
+        }
+        .grammar-box .big { font-size: 1.3em; color: #ffd966; font-weight: bold; }
+        .grammar-box .types { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+        .ktype { padding: 4px 10px; border-radius: 12px; font-size: 0.7em; font-weight: bold; }
+        .kdiff { background: rgba(76,175,80,0.2); color: #4CAF50; border: 1px solid #4CAF50; }
+        .k2pp { background: rgba(100,181,246,0.2); color: #64b5f6; border: 1px solid #64b5f6; }
+        .k2pm { background: rgba(255,183,77,0.2); color: #ffb74d; border: 1px solid #ffb74d; }
+        .ksingle { background: rgba(206,147,216,0.2); color: #ce93d8; border: 1px solid #ce93d8; }
+        
+        .stats { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 10px 0; }
+        .stat { background: #0a0a16; padding: 8px 14px; border-radius: 5px; border: 1px solid #2a2a40; text-align: center; }
+        .stat .v { color: #ffd966; font-weight: bold; font-size: 1.2em; }
+        .stat .l { font-size: 0.6em; color: #888; }
+        
+        button { padding: 9px 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 12px; font-family: 'Courier New', monospace; margin: 3px; }
+        .gold { background: #ffd966; color: #000; }
+        .green { background: #4CAF50; color: #fff; }
+        button:hover { opacity: 0.85; }
+        
+        #status { color: #ffd966; margin: 6px 0; font-size: 0.8em; text-align: center; min-height: 18px; }
+        #output { background: #0a0a16; padding: 12px; border-radius: 8px; max-height: 600px; overflow-y: auto; font-size: 9px; margin-top: 8px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1a1a30; color: #ffd966; padding: 4px 5px; position: sticky; top: 0; font-size: 8px; z-index: 1; }
+        td { padding: 2px 4px; border-bottom: 1px solid #1a1a30; text-align: center; font-size: 8px; }
+        tr.found { background: rgba(26,58,42,0.2); }
+        tr.miss { background: rgba(58,26,26,0.3); }
+        tr.reused { background: rgba(255,217,102,0.1); }
+        .ok { color: #4CAF50; font-weight: bold; }
+        .no { color: #f44336; font-weight: bold; }
+        .reuse-tag { color: #ffd966; font-size: 0.65em; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1> Mersenne TRUE GRAMMAR — Products Can Reuse</h1>
+    <div class="subtitle">Author: Martin Doina | p<sub>e</sub> = m²×(p<sub>a</sub>×p<sub>b</sub>) ± k | Same product + different k = different exponent</div>
+    
+    <div class="grammar-box">
+        <span class="big">p<sub>e</sub> = m² × (p<sub>a</sub> × p<sub>b</sub>) ± k</span>
+        <div class="types">
+            <span class="ktype kdiff">diff: p<sub>c</sub>−p<sub>d</sub></span>
+            <span class="ktype k2pp">2p+p: 2p<sub>c</sub>+p<sub>d</sub></span>
+            <span class="ktype k2pm">2p-p: 2p<sub>c</sub>−p<sub>d</sub></span>
+            <span class="ktype ksingle">single: p<sub>c</sub></span>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div class="stat"><div class="v" id="sFound">-</div><div class="l">Found</div></div>
+        <div class="stat"><div class="v" id="sGaps">-</div><div class="l">Gaps</div></div>
+        <div class="stat"><div class="v" id="sReused">-</div><div class="l">Reused Products</div></div>
+    </div>
+    
+    <div style="text-align:center;">
+        <button class="gold" onclick="runAll()">▶ Run ALL (M3-M52)</button>
+        <input type="number" id="maxM" value="5000" style="width:80px; padding:6px; background:#0a0a16; border:1px solid #2a2a40; color:#d0d0d0; border-radius:4px; font-family:'Courier New';" title="Max m">
+        <span id="status"></span>
+    </div>
+    
+    <div id="output"></div>
+</div>
+
+<script>
+(function(){
+    const E = [2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,
+        9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,
+        859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,
+        25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,
+        77232917,82589933,136279841];
+    
+    function L(i) { return 'M'+(i+1); }
+    
+    function buildKMap(maxI) {
+        const kmap = new Map();
+        for (let c = 0; c < maxI; c++) {
+            for (let d = 0; d < maxI; d++) {
+                let k = E[c] - E[d];                            // diff
+                if (!kmap.has(k)) kmap.set(k, []);
+                kmap.get(k).push({ type: 'diff', pc: E[c], pd: E[d], ci: c, di: d });
+                
+                k = 2 * E[c] + E[d];                            // 2p+p
+                if (!kmap.has(k)) kmap.set(k, []);
+                kmap.get(k).push({ type: '2p+p', pc: E[c], pd: E[d], ci: c, di: d });
+                
+                k = 2 * E[c] - E[d];                            // 2p-p
+                if (!kmap.has(k)) kmap.set(k, []);
+                kmap.get(k).push({ type: '2p-p', pc: E[c], pd: E[d], ci: c, di: d });
+            }
+            let k = E[c];                                        // single +
+            if (!kmap.has(k)) kmap.set(k, []);
+            kmap.get(k).push({ type: 'single', pc: E[c], pd: 0, ci: c, di: -1 });
+            
+            k = -E[c];                                           // single -
+            if (!kmap.has(k)) kmap.set(k, []);
+            kmap.get(k).push({ type: 'single', pc: -E[c], pd: 0, ci: c, di: -1 });
+        }
+        return kmap;
+    }
+    
+    function findFormula(idx, maxM) {
+        const T = E[idx];
+        const N = idx;
+        const kmap = buildKMap(N);
+        
+        // ALLOW ALL products (including reused ones)
+        // Just collect all pairs
+        const pairs = [];
+        for (let a = 0; a < N; a++) {
+            for (let b = 0; b < N; b++) {
+                pairs.push({ a, b, prod: E[a] * E[b] });
+            }
+        }
+        
+        // Try m=1 first (fast path)
+        for (const { a, b, prod } of pairs) {
+            const k = T - prod;
+            if (kmap.has(k)) {
+                return { m: 1, a, b, prod, scaled: prod, k, kInfo: kmap.get(k)[0] };
+            }
+        }
+        
+        // Try m > 1
+        for (const { a, b, prod } of pairs) {
+            if (prod === 0) continue;
+            const estM = Math.round(Math.sqrt(T / prod));
+            const lo = Math.max(2, estM - 200);
+            const hi = Math.min(maxM, estM + 200);
+            
+            for (let m = lo; m <= hi; m++) {
+                const scaled = prod * m * m;
+                const k = T - scaled;
+                if (kmap.has(k)) {
+                    return { m, a, b, prod, scaled, k, kInfo: kmap.get(k)[0] };
+                }
+            }
+        }
+        return null;
+    }
+    
+    function runAll() {
+        const maxM = parseInt(document.getElementById('maxM').value) || 5000;
+        
+        let html = '<table><thead><tr>';
+        html += '<th>M#</th><th>p<sub>e</sub></th><th>m</th><th>m²</th>';
+        html += '<th>p<sub>a</sub></th><th>p<sub>b</sub></th><th>Prod</th>';
+        html += '<th>m²×Prod</th><th>k</th><th>Type</th>';
+        html += '<th>p<sub>c</sub></th><th>p<sub>d</sub></th><th>✓</th></tr></thead><tbody>';
+        
+        let found = 0, gaps = [], reused = 0;
+        const usedProducts = {}; // Track product usage: prod -> [list of M#]
+        let i = 2; // Start from M3 (index 2)
+        
+        function processNext() {
+            if (i >= E.length) {
+                html += '</tbody></table>';
+                const tot = E.length - 2;
+                html += '<p style="margin-top:8px; text-align:center; font-size:1em;">';
+                html += '<strong style="color:#4CAF50;">' + found + '/' + tot + ' FOUND</strong>';
+                if (gaps.length === 0) html += ' <span style="color:#ffd966; font-size:1.2em;">🎉 ZERO GAPS! GRAMMAR COMPLETE!</span>';
+                else html += ' <span style="color:#f44336;">Gaps: ' + gaps.map(x=>L(x)).join(', ') + '</span>';
+                html += ' | <span style="color:#ffd966;">Reused products: ' + reused + '</span>';
+                html += '</p>';
+                
+                document.getElementById('output').innerHTML = html;
+                document.getElementById('status').textContent = 'Done: ' + found + '/' + tot;
+                document.getElementById('sFound').textContent = found + '/' + tot;
+                document.getElementById('sGaps').textContent = gaps.length;
+                document.getElementById('sReused').textContent = reused;
+                return;
+            }
+            
+            document.getElementById('status').textContent = L(i) + '...';
+            
+            const r = findFormula(i, maxM);
+            
+            if (r) {
+                found++;
+                
+                // Track product reuse
+                const prodKey = r.a + ',' + r.b;
+                if (!usedProducts[prodKey]) usedProducts[prodKey] = [];
+                usedProducts[prodKey].push(L(i));
+                if (usedProducts[prodKey].length > 1) reused++;
+                
+                const kt = r.kInfo.type;
+                const ktClass = kt === 'diff' ? 'kdiff' : kt === '2p+p' ? 'k2pp' : kt === '2p-p' ? 'k2pm' : 'ksingle';
+                const reuseTag = usedProducts[prodKey].length > 1 ? ' <span class="reuse-tag">↻' + usedProducts[prodKey].join(',') + '</span>' : '';
+                
+                html += '<tr class="found">';
+                html += '<td><strong>' + L(i) + '</strong></td>';
+                html += '<td><strong>' + E[i].toLocaleString() + '</strong></td>';
+                html += '<td>' + r.m + '</td>';
+                html += '<td>' + (r.m*r.m).toLocaleString() + '</td>';
+                html += '<td>' + E[r.a].toLocaleString() + ' (' + L(r.a) + ')' + reuseTag + '</td>';
+                html += '<td>' + E[r.b].toLocaleString() + ' (' + L(r.b) + ')</td>';
+                html += '<td>' + r.prod.toLocaleString() + '</td>';
+                html += '<td>' + r.scaled.toLocaleString() + '</td>';
+                html += '<td style="color:#ffd966;">' + r.k.toLocaleString() + '</td>';
+                html += '<td><span class="ktype ' + ktClass + '">' + kt + '</span></td>';
+                html += '<td>' + r.kInfo.pc.toLocaleString() + '</td>';
+                html += '<td>' + (r.kInfo.di >= 0 ? r.kInfo.pd.toLocaleString() : '—') + '</td>';
+                html += '<td class="ok">✅</td>';
+                html += '</tr>';
+            } else {
+                gaps.push(i);
+                html += '<tr class="miss">';
+                html += '<td><strong>' + L(i) + '</strong></td>';
+                html += '<td><strong>' + E[i].toLocaleString() + '</strong></td>';
+                html += '<td colspan="11" class="no">❌ NOT FOUND</td>';
+                html += '</tr>';
+            }
+            
+            i++;
+            setTimeout(processNext, 1);
+        }
+        
+        processNext();
+    }
+    
+    window.runAll = runAll;
+    setTimeout(runAll, 300);
+})();
+</script>
+</body>
+</html>
