@@ -9,7 +9,15 @@ This IS PUBLISHED IN **DOI 10.5281/zenodo.1971398999** by the time that M50 was 
 For Mersenne exponents pe with index e > 5 , the generative formula is:
 
 <img width="178" height="27" alt="image" src="https://github.com/user-attachments/assets/e992eb45-84f2-47c2-9af2-454ab35484f3" />
+The Scaling Multiplier `m`
+The multiplier `m` is not arbitrary—it is drawn from the **lattice branch points** (duplicate numbers). The required `m` increases as the target exponent moves to higher shells. The sequence of valid `m` follows the order of branch points in the lattice.
 
+### 6. The Seed‑Sign Rule
+The algebraic sign is completely determined by the seeds of the factors:
+- **Both factors Seed 2** → `−`
+- **Both factors Seed 3** → `−`
+- **Mixed seeds** → `+`
+- **Neutral (2 or 5)** → either sign.
 ## Summary of What I've Discovered
 
 1. **Pure product formula**:
