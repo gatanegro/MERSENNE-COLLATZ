@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Method + Multiplier</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #0a0a14; color: #e0e0e0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: #1a1a2e; padding: 20px; border-radius: 12px; }
+        h1 { color: #ffd966; font-size: 1.2rem; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 5px; }
+        .gold { background: #ffd966; color: #000; }
+        #output { background: #0f0f1a; padding: 15px; border-radius: 8px; max-height: 600px; overflow-y: auto; font-size: 12px; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #2a2a50; color: #ffd966; padding: 4px; }
+        td { padding: 3px 5px; border-bottom: 1px solid #3a3a5a; }
+        .match { background: #1a3a2a; }
+        .mult { background: #1a2a3a; }
+        .found { color: #4CAF50; }
+        .notfound { color: #f44336; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1> Manual Method — Largest Product + m² Scaling</h1>
+    <p>p_a × p_b = largest product < target. If k too big, scale by m².</p>
+    
+    <button class="gold" id="runBtn"> Run ALL 52</button>
+    <button class="gold" id="gapsBtn"> 7 GAPs Only</button>
+    <span id="status" style="color:#aaa; margin-left:20px;"></span>
+    <div id="output" style="margin-top:15px;"></div>
+</div>
+
+<script>
+    (function(){
+        const exp = [2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841];
+
+        function buildKSet(maxIdx) {
+            const kSet = new Set();
+            // Differences of ALL earlier exponents
+            for (let i = 0; i < maxIdx; i++) {
+                for (let j = 0; j < maxIdx; j++) {
+                    kSet.add(exp[i] - exp[j]);
+                }
+            }
+            // Also sums of earlier exponents
+            for (let i = 0; i < maxIdx; i++) {
+                for (let j = 0; j < maxIdx; j++) {
+                    kSet.add(exp[i] + exp[j]);
+                    kSet.add(-(exp[i] + exp[j]));
+                }
+            }
+            // Simple small numbers
+            for (let i = 1; i <= 1000; i++) {
+                kSet.add(i);
+                kSet.add(-i);
+            }
+            return kSet;
+        }
+
+        function findFormula(targetIdx, kSet) {
+            const target = exp[targetIdx];
+            const N = targetIdx;
+            
+            // Step 1: Find largest product < target
+            let bestProd = 0, bestA = 0, bestB = 0;
+            for (let a = 0; a < N; a++) {
+                for (let b = a; b < N; b++) {
+                    const prod = exp[a] * exp[b];
+                    if (prod < target && prod > bestProd) {
+                        bestProd = prod;
+                        bestA = a;
+                        bestB = b;
+                    }
+                }
+            }
+            
+            // Step 2: Try m=1 with best product
+            const k1 = target - bestProd;
+            if (kSet.has(k1)) {
+                return { m: 1, pa: exp[bestA], pb: exp[bestB], prod: bestProd, k: k1 };
+            }
+            
+            // Step 3: Also try all products close to target with m=1
+            const candidates = [];
+            for (let a = 0; a < N; a++) {
+                for (let b = 0; b < N; b++) {
+                    const prod = exp[a] * exp[b];
+                    const k = target - prod;
+                    if (kSet.has(k)) {
+                        candidates.push({ m: 1, pa: exp[a], pb: exp[b], prod, k });
+                    }
+                }
+            }
+            if (candidates.length > 0) {
+                candidates.sort((x, y) => Math.abs(x.k) - Math.abs(y.k));
+                return candidates[0];
+            }
+            
+            // Step 4: Try m² scaling with best product
+            for (let m = 2; m <= 5000; m++) {
+                const scaled = bestProd * m * m;
+                const k = target - scaled;
+                if (kSet.has(k)) {
+                    return { m, pa: exp[bestA], pb: exp[bestB], prod: scaled, k };
+                }
+                if (scaled > target * 3) break;
+            }
+            
+            // Step 5: Try m² scaling with ALL products
+            for (let a = 0; a < N; a++) {
+                for (let b = 0; b < N; b++) {
+                    const base = exp[a] * exp[b];
+                    const estM = Math.round(Math.sqrt(target / base));
+                    for (let m = Math.max(2, estM - 2); m <= estM + 2; m++) {
+                        const scaled = base * m * m;
+                        const k = target - scaled;
+                        if (kSet.has(k)) {
+                            return { m, pa: exp[a], pb: exp[b], prod: scaled, k };
+                        }
+                    }
+                }
+            }
+            
+            return null;
+        }
+
+        function runAll(targets) {
+            let html = '<table><tr><th>M#</th><th>p_e</th><th>m</th><th>p_a</th><th>p_b</th><th>m²×p_a×p_b</th><th>k</th></tr>';
+            let found = 0;
+            
+            for (let idx of targets) {
+                document.getElementById('status').textContent = 'M' + (idx+1) + '...';
+                const kSet = buildKSet(idx);
+                const r = findFormula(idx, kSet);
+                
+                if (r) {
+                    found++;
+                    const cls = r.m > 1 ? 'mult' : 'match';
+                    html += `<tr class="${cls}"><td>M${idx+1}</td><td>${exp[idx].toLocaleString()}</td>
+                        <td>${r.m}</td><td>${r.pa.toLocaleString()}</td><td>${r.pb.toLocaleString()}</td>
+                        <td>${r.prod.toLocaleString()}</td><td>${r.k.toLocaleString()}</td></tr>`;
+                } else {
+                    html += `<tr><td>M${idx+1}</td><td>${exp[idx].toLocaleString()}</td>
+                        <td colspan="5" class="notfound">NOT FOUND</td></tr>`;
+                }
+            }
+            html += '</table><p><strong>' + found + '/' + targets.length + ' found</strong></p>';
+            document.getElementById('output').innerHTML = html;
+            document.getElementById('status').textContent = 'Done: ' + found + ' found';
+        }
+
+        document.getElementById('runBtn').addEventListener('click', function() {
+            const all = [];
+            for (let i = 4; i < exp.length; i++) all.push(i);
+            runAll(all);
+        });
+
+        document.getElementById('gapsBtn').addEventListener('click', function() {
+            runAll([37, 41, 44, 47, 49, 50, 51]);
+        });
+    })();
+</script>
+</body>
+</html>
