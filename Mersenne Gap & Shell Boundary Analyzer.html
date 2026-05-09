@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mersenne Gap & Shell Boundary Analyzer</title>
+    <style>
+        body { font-family: 'Courier New', monospace; background: #1e1e2f; color: #eee; margin: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; background: #2d2d44; padding: 20px; border-radius: 12px; }
+        h1, h2 { color: #ffd966; }
+        .controls { background: #3a3a55; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button.export { background: #2196F3; }
+        button:hover { opacity: 0.9; }
+        .stats { margin-left: auto; color: #b0cce6; }
+        textarea { width: 100%; height: 100px; background: #0a0a14; color: #0f0; font-family: 'Courier New', monospace; font-size: 13px; border: 1px solid #ffd966; border-radius: 4px; padding: 10px; resize: vertical; margin: 10px 0; }
+        .results-container { max-height: 600px; overflow-y: auto; background: #1a1a2e; border-radius: 8px; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #2a2a50; color: #ffd966; padding: 10px; position: sticky; top: 0; text-align: center; }
+        td { padding: 4px 8px; border-bottom: 1px solid #3a3a5a; text-align: center; }
+        .shell-boundary { background: #7a2a2a; font-weight: bold; }
+        .note { margin-top: 10px; color: #aaa; font-size: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1> Mersenne Gap & Shell Boundary Analyzer</h1>
+    <p>Analyzes the gaps between exponents and identifies where the generative grammar changes.</p>
+
+    <textarea id="exponentsInput" placeholder="Paste Mersenne exponents (comma/space separated)">2, 3, 5, 7, 13, 17, 19, 31, 61, 89, 107, 127, 521, 607, 1279, 2203, 2281, 3217, 4253, 4423, 9689, 9941, 11213, 19937, 21701, 23209, 44497, 86243, 110503, 132049, 216091, 756839, 859433, 1257787, 1398269, 2976221, 3021377, 6972593, 13466917, 20996011, 24036583, 25964951, 30402457, 32582657, 37156667, 42643801, 43112609, 57885161, 74207281, 77232917, 82589933, 136279841</textarea>
+    <div style="color:#aaa; margin-bottom:10px;">Exponents count: <span id="exponentCount">0</span></div>
+
+    <div class="controls">
+        <button id="analyzeBtn"> Analyze Gaps & Boundaries</button>
+        <button id="exportBtn" class="export">📄 Export Analysis (TXT)</button>
+        <span class="stats" id="progressText">Ready. Paste exponents and click Analyze.</span>
+    </div>
+
+    <div id="resultsContainer" class="results-container">
+        <table id="resultsTable">
+            <thead><tr><th>n</th><th>p_n</th><th>p_n / p_{n-1}</th><th>Best Formula</th><th>Shell Boundary?</th></tr></thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+    </div>
+    <div class="note">* Red rows indicate a potential shell boundary where the grammar shifts.</div>
+</div>
+
+<script>
+    (function(){
+        let exponents = [];
+        const resultsBody = document.getElementById('resultsBody');
+        const progressText = document.getElementById('progressText');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const exponentsInput = document.getElementById('exponentsInput');
+        const exponentCount = document.getElementById('exponentCount');
+
+        function parseInput(text) {
+            return text.split(/[,\s]+/).map(s => parseInt(s)).filter(n => !isNaN(n));
+        }
+
+        exponentsInput.addEventListener('input', () => {
+            exponents = parseInput(exponentsInput.value);
+            exponentCount.textContent = exponents.length;
+        });
+        exponents = parseInput(exponentsInput.value);
+        exponentCount.textContent = exponents.length;
+
+        function analyzeGaps() {
+            if (exponents.length < 3) { alert('Need at least 3 exponents.'); return; }
+            
+            resultsBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Analyzing...</td></tr>';
+            progressText.textContent = `Processing ${exponents.length} exponents...`;
+            
+            setTimeout(() => {
+                let html = '';
+                let lastRatio = 0;
+                
+                for (let i = 1; i < exponents.length; i++) {
+                    const pPrev = exponents[i-1];
+                    const pCurr = exponents[i];
+                    const ratio = pCurr / pPrev;
+                    
+                    // Find best formula: check atomic first, then small products
+                    let bestFormula = '';
+                    let isBoundary = false;
+                    
+                    // 1. Check atomic rule: 2 × pPrev ± d
+                    const doubled = 2 * pPrev;
+                    const diff = pCurr - doubled;
+                    if (Math.abs(diff) < pPrev * 0.5) { // Within reasonable range
+                        bestFormula = `2 × ${pPrev} ${diff >= 0 ? '+' : '−'} ${Math.abs(diff)}`;
+                    } else {
+                        // 2. Check product rule: try to find a,b from earlier exponents
+                        for (let j = 0; j < i; j++) {
+                            for (let k = 0; k < i; k++) {
+                                const prod = exponents[j] * exponents[k];
+                                const kDiff = pCurr - prod;
+                                if (Math.abs(kDiff) < pCurr * 0.3) { // Reasonable k
+                                    bestFormula = `${exponents[j]} × ${exponents[k]} ${kDiff >= 0 ? '+' : '−'} ${Math.abs(kDiff)}`;
+                                    break;
+                                }
+                            }
+                            if (bestFormula) break;
+                        }
+                    }
+                    
+                    if (!bestFormula) {
+                        bestFormula = '— (large gap, new shell)';
+                        isBoundary = true;
+                    }
+                    
+                    // Detect boundary: ratio > 3 or formula not found
+                    if (ratio > 3.0 || !bestFormula.includes('×')) {
+                        isBoundary = true;
+                    }
+                    
+                    const rowClass = isBoundary ? 'shell-boundary' : '';
+                    html += `<tr class="${rowClass}"><td>${i+1}</td><td>${pCurr.toLocaleString()}</td><td>${ratio.toFixed(3)}</td><td style="font-family:monospace;">${bestFormula}</td><td>${isBoundary ? ' YES' : ''}</td></tr>`;
+                    
+                    lastRatio = ratio;
+                }
+                
+                resultsBody.innerHTML = html;
+                progressText.textContent = `Done! Analyzed ${exponents.length} exponents.`;
+            }, 10);
+        }
+
+        function exportAnalysis() {
+            if (resultsBody.children.length === 0) { alert('No analysis to export.'); return; }
+            let content = "MERSENNE GAP ANALYSIS\n====================\n";
+            content += `Generated: ${new Date().toLocaleString()}\n\n`;
+            content += "n\tp_n\tRatio\tBest Formula\tShell Boundary?\n";
+            const rows = resultsBody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length === 5) {
+                    content += `${cells[0].textContent}\t${cells[1].textContent}\t${cells[2].textContent}\t${cells[3].textContent}\t${cells[4].textContent}\n`;
+                }
+            });
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `mersenne_gap_analysis.txt`; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        analyzeBtn.addEventListener('click', analyzeGaps);
+        exportBtn.addEventListener('click', exportAnalysis);
+    })();
+</script>
+</body>
+</html>
