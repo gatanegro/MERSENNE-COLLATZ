@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Mersenne Square + Torus – Optimized – Author Martin Doina</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #ffffff; font-family: 'Segoe UI', 'Fira Code', monospace; padding: 20px; }
+        .app { background: #ffffff; border-radius: 20px; padding: 24px; border: 1px solid #050002; color: #050002; max-width: 950px; margin: 0 auto; }
+        h2 { text-align: center; font-weight: 500; font-size: 1.3rem; color: #a527db; }
+        .subtitle { text-align: center; color: #0F0D0D; margin-bottom: 12px; font-size: 0.75rem; }
+        
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        
+        .panel { background: #ffffff; border: 1px solid #050002; border-radius: 14px; padding: 14px; }
+        .panel h3 { color: #a527db; font-size: 0.85rem; margin-bottom: 8px; text-align: center; }
+        
+        .preset-row { display: flex; gap: 5px; align-items: center; justify-content: center; margin-bottom: 8px; flex-wrap: wrap; }
+        .preset-row select { background: #fff; border: 1px solid #050002; color: #050002; padding: 6px 8px; border-radius: 7px; font-family: 'Fira Code', monospace; font-size: 0.7rem; }
+        .preset-row button { background: #fff; border: 1px solid #050002; color: #050002; padding: 4px 7px; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-family: 'Fira Code', monospace; }
+        .preset-row button:hover { background: #f5f0ff; border-color: #a527db; color: #a527db; }
+        
+        .formula-info { text-align: center; font-size: 0.68rem; color: #050002; margin-bottom: 8px; background: #fdf8ff; border: 1px solid #e0d0f0; border-radius: 7px; padding: 5px; }
+        .formula-info .k-hi { color: #f53214; font-weight: bold; }
+        
+        .square-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; text-align: center; }
+        .square-grid input { width: 100%; padding: 9px; text-align: center; font-size: 0.85rem; font-family: 'Fira Code', monospace; background: #fff; border: 2px solid #050002; border-radius: 9px; color:#f53214; }
+        .square-grid input:focus { outline: none; border-color: #a527db; }
+        .square-grid .empty { visibility: hidden; }
+        .sq-label { color: #050002; font-size: 0.6rem; padding-top: 1px; font-weight: bold; }
+        
+        .ops { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 8px; }
+        .card { background: #fff; border: 1px solid #050002; border-radius: 9px; padding: 8px; }
+        .card h3 { font-size: 0.65rem; color: #050002; margin-bottom: 4px; }
+        .row { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; margin-bottom: 3px; }
+        .row select, .row input { background: #fff; border: 1px solid #050002; color: #050002; padding: 4px 6px; border-radius: 5px; font-family: 'Fira Code', monospace; font-size: 0.65rem; }
+        .row input { width: 48px; text-align: center; }
+        button { background: #fff; border: 1px solid #050002; color: black; padding: 5px 10px; border-radius: 12px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
+        button:hover { background: #f5f0ff; border-color: #a527db; color: #a527db; }
+        .result { color:#050002; font-weight: bold; font-size: 0.75rem; }
+        
+        .torus-viz { width: 100%; height: 260px; background: #fafafa; border: 1px solid #e0d0f0; border-radius: 9px; position: relative; overflow: hidden; }
+        .torus-viz canvas { width: 100%; height: 100%; }
+        
+        .params-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 3px; margin-top: 6px; }
+        .params-grid input { width: 100%; padding: 4px; text-align: center; font-size: 0.6rem; font-family: 'Fira Code', monospace; background: #fff; border: 1px solid #050002; border-radius: 4px; color:#050002; }
+        .params-grid label { font-size: 0.55rem; color: #888; text-align: center; display: block; }
+        
+        .stat-box { text-align: center; font-size: 0.6rem; margin-top: 4px; padding: 4px; background: #f0ffe0; border-radius: 5px; }
+        
+        @media (max-width: 750px) { .main-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<div class="app">
+    <h2>⬜ Mersenne Square + Torus — Optimized</h2>
+    <div class="subtitle">Author: Martin Doina · α=0.241661 · u-range=2π · 49/52 on geodesic</div>
+
+    <div class="preset-row">
+        <button onclick="prevPreset()">◀</button>
+        <select id="presetSel" onchange="loadPreset()"></select>
+        <button onclick="nextPreset()">▶</button>
+    </div>
+    <div class="formula-info" id="formulaInfo"></div>
+
+    <div class="main-grid">
+        <!-- SQUARE -->
+        <div class="panel">
+            <h3>⬜ Geometric Square</h3>
+            <div class="square-grid">
+                <div><input type="text" id="TL" value="2"><div class="sq-label">TL</div></div>
+                <div class="empty">-</div>
+                <div><input type="text" id="TR" value="3"><div class="sq-label">TR</div></div>
+                <div class="empty">-</div>
+                <div style="color:#a527db;font-size:0.6rem;">☐</div>
+                <div class="empty">-</div>
+                <div><input type="text" id="BL" value="7"><div class="sq-label">BL</div></div>
+                <div class="empty">-</div>
+                <div><input type="text" id="BR" value="5"><div class="sq-label">BR</div></div>
+            </div>
+            <div class="ops">
+                <div class="card">
+                    <h3>🔲 Diagonals</h3>
+                    <div class="row"><span style="font-size:0.65rem;">TL×BR</span><button onclick="calcD1()">=</button><span id="res-d1" class="result">10</span></div>
+                    <div class="row"><span style="font-size:0.65rem;">TR×BL</span><button onclick="calcD2()">=</button><span id="res-d2" class="result">21</span></div>
+                </div>
+                <div class="card">
+                    <h3>🔺 Generator</h3>
+                    <div class="row">
+                        <select id="ga"><option value="TL">TL</option><option value="TR" selected>TR</option><option value="BL">BL</option><option value="BR">BR</option></select>
+                        <span>×</span>
+                        <select id="gb"><option value="TL">TL</option><option value="TR">TR</option><option value="BL">BL</option><option value="BR" selected>BR</option></select>
+                        <button onclick="calcGen()">=</button><span id="res-gen" class="result">—</span>
+                    </div>
+                    <div class="row">
+                        <span style="font-size:0.6rem;">Gen×</span>
+                        <select id="gmul"><option value="TL">TL</option><option value="TR">TR</option><option value="BL">BL</option><option value="BR">BR</option></select>
+                        <span style="font-size:0.6rem;">+</span>
+                        <input type="text" id="gadd" value="1" style="width:45px;">
+                        <button onclick="calcGenForm()">=</button><span id="res-genform" class="result">—</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>➕ − Diff (k source)</h3>
+                    <div class="row">
+                        <select id="sa"><option value="TL">TL</option><option value="TR">TR</option><option value="BL">BL</option><option value="BR">BR</option></select>
+                        <select id="sop"><option value="+">+</option><option value="-">−</option></select>
+                        <select id="sb"><option value="TL">TL</option><option value="TR" selected>TR</option><option value="BL">BL</option><option value="BR">BR</option></select>
+                        <button onclick="calcSum()">=</button><span id="res-sum" class="result">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TORUS -->
+        <div class="panel">
+            <h3> Torus Geodesic (α=0.241661 optimal)</h3>
+            <div class="torus-viz" id="torusViz"><canvas id="torusCanvas"></canvas></div>
+            <div id="torusStats" class="stat-box"></div>
+            <div class="params-grid">
+                <div><label>R</label><input type="text" id="paramR" value="127" onchange="updateTorus()"></div>
+                <div><label>r</label><input type="text" id="paramr" value="19" onchange="updateTorus()"></div>
+                <div><label>α</label><input type="text" id="paramA" value="0.241661" onchange="updateTorus()"></div>
+                <div><label>β</label><input type="text" id="paramB" value="0.01618" onchange="updateTorus()"></div>
+                <div><label>γ</label><input type="text" id="paramC" value="0.0026" onchange="updateTorus()"></div>
+                <div><label>φ₁</label><input type="text" id="paramF1" value="-1.941" onchange="updateTorus()"></div>
+                <div><label>φ₂</label><input type="text" id="paramF2" value="-0.6767" onchange="updateTorus()"></div>
+                <div><label>Opt α</label><input type="text" value="0.24166" readonly style="background:#f0f0f0;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ====== ORIGINAL SQUARE CALCULATOR (unchanged) ======
+function getNum(id){const el=document.getElementById(id);if(!el)return null;const v=el.value.trim().replace(/,/g,'');if(!v||isNaN(v))return null;const num=Number(v);if(num>9007199254740991){try{return BigInt(v);}catch(e){return null;}}return num;}
+function fmt(n){if(typeof n==='bigint')return n.toLocaleString();if(typeof n==='number'){if(n>9007199254740991)return BigInt(Math.floor(n)).toLocaleString();return n.toLocaleString();}return String(n);}
+function calcD1(){const a=getNum('TL'),b=getNum('BR');if(a===null||b===null){document.getElementById('res-d1').textContent='Invalid';return;}const r=(typeof a==='bigint'||typeof b==='bigint')?BigInt(a)*BigInt(b):a*b;document.getElementById('res-d1').textContent=fmt(r);}
+function calcD2(){const a=getNum('TR'),b=getNum('BL');if(a===null||b===null){document.getElementById('res-d2').textContent='Invalid';return;}const r=(typeof a==='bigint'||typeof b==='bigint')?BigInt(a)*BigInt(b):a*b;document.getElementById('res-d2').textContent=fmt(r);}
+function calcGen(){const aId=document.getElementById('ga').value,bId=document.getElementById('gb').value;const a=getNum(aId),b=getNum(bId);if(a===null||b===null){document.getElementById('res-gen').textContent='Invalid';return;}const g=(typeof a==='bigint'||typeof b==='bigint')?BigInt(a)*BigInt(b):a*b;document.getElementById('res-gen').textContent=fmt(g);}
+function calcGenForm(){const aId=document.getElementById('ga').value,bId=document.getElementById('gb').value;const mulId=document.getElementById('gmul').value;const a=getNum(aId),b=getNum(bId),m=getNum(mulId),ad=getNum('gadd');if(a===null||b===null||m===null||ad===null){document.getElementById('res-genform').textContent='Invalid';return;}const useBig=(typeof a==='bigint'||typeof b==='bigint'||typeof m==='bigint'||typeof ad==='bigint');const g=useBig?BigInt(a)*BigInt(b):a*b;const r=useBig?BigInt(g)*BigInt(m)+BigInt(ad):g*m+ad;document.getElementById('res-genform').textContent=fmt(r);}
+function calcSum(){const aId=document.getElementById('sa').value,bId=document.getElementById('sb').value;const a=getNum(aId),b=getNum(bId),op=document.getElementById('sop').value;if(a===null||b===null){document.getElementById('res-sum').textContent='Invalid';return;}const useBig=(typeof a==='bigint'||typeof b==='bigint');let r=op==='+'?(useBig?BigInt(a)+BigInt(b):a+b):(a>b?(useBig?BigInt(a)-BigInt(b):a-b):(useBig?BigInt(b)-BigInt(a):b-a));document.getElementById('res-sum').textContent=fmt(r);}
+
+// ====== MERSENNE DATA ======
+const E=[2,3,5,7,13,17,19,31,61,89,107,127,521,607,1279,2203,2281,3217,4253,4423,9689,9941,11213,19937,21701,23209,44497,86243,110503,132049,216091,756839,859433,1257787,1398269,2976221,3021377,6972593,13466917,20996011,24036583,25964951,30402457,32582657,37156667,42643801,43112609,57885161,74207281,77232917,82589933,136279841];
+function L(i){return 'M'+(i+1);}
+const V={4:{m:1,a:0,b:3,k:3},5:{m:1,a:1,b:3,k:2},6:{m:1,a:1,b:3,k:4},7:{m:1,a:0,b:4,k:5},8:{m:1,a:1,b:6,k:4},9:{m:1,a:3,b:5,k:4},10:{m:1,a:3,b:6,k:12},11:{m:1,a:0,b:8,k:5},12:{m:1,a:3,b:9,k:76},13:{m:1,a:6,b:7,k:18},14:{m:1,a:0,b:13,k:65},15:{m:1,a:5,b:11,k:44},16:{m:1,a:5,b:11,k:122},17:{m:1,a:3,b:13,k:182},18:{m:1,a:2,b:13,k:4},19:{m:1,a:0,b:15,k:17},20:{m:1,a:1,b:17,k:38},21:{m:1,a:6,b:12,k:42},22:{m:1,a:3,b:15,k:198},23:{m:1,a:0,b:21,k:55},24:{m:1,a:3,b:18,k:436},25:{m:1,a:2,b:17,k:690},26:{m:1,a:8,b:13,k:7470},27:{m:1,a:6,b:19,k:2206},28:{m:1,a:3,b:22,k:54438},29:{m:1,a:7,b:18,k:206},30:{m:1,a:10,b:15,k:-19630},31:{m:1,a:5,b:26,k:390},32:{m:1,a:9,b:20,k:-2888},33:{m:458,a:0,b:1,k:-797},34:{m:374,a:0,b:3,k:-491},35:{m:461,a:0,b:2,k:927},36:{m:869,a:0,b:0,k:733},37:{m:1078,a:0,b:1,k:89},38:{m:801,a:1,b:2,k:-6704},39:{m:1449,a:0,b:3,k:1},40:{m:503,a:3,b:6,k:728},41:{m:131,a:5,b:9,k:358},42:{m:2251,a:0,b:1,k:451},43:{m:708,a:3,b:4,k:497},44:{m:639,a:2,b:4,k:-544},45:{m:1425,a:1,b:2,k:676},46:{m:3283,a:0,b:0,k:253},47:{m:278,a:2,b:10,k:-555},48:{m:1141,a:1,b:6,k:64},50:{m:221,a:6,b:9,k:-198},51:{m:133,a:8,b:11,k:-756842}};
+function findK(k,mx){for(let c=0;c<mx;c++){for(let d=0;d<mx;d++){if(E[c]-E[d]===k)return{type:'diff',pc:E[c],pd:E[d],ci:c,di:d};if(2*E[c]-E[d]===k)return{type:'2p-p',pc:E[c],pd:E[d],ci:c,di:d};if(2*E[c]+E[d]===k)return{type:'2p+p',pc:E[c],pd:E[d],ci:c,di:d};if(E[c]*E[c]-E[d]===k)return{type:'sq-',pc:E[c],pd:E[d],ci:c,di:d};if(E[c]*E[c]+E[d]===k)return{type:'sq+',pc:E[c],pd:E[d],ci:c,di:d};}if(E[c]===k)return{type:'single',pc:E[c],pd:0,ci:c,di:-1};if(-E[c]===k)return{type:'single',pc:-E[c],pd:0,ci:c,di:-1};if(E[c]*E[c]===k)return{type:'sq',pc:E[c],pd:0,ci:c,di:-1};}return null;}
+
+const sel=document.getElementById('presetSel');
+for(let i=4;i<E.length;i++){const o=document.createElement('option');o.value=i;o.textContent=L(i)+' = '+E[i].toLocaleString();sel.appendChild(o);}
+sel.value='4';let cur=4;
+
+function loadPreset(){
+    cur=parseInt(sel.value);const v=V[cur];const T=E[cur];
+    if(v){
+        document.getElementById('TL').value=E[v.a];document.getElementById('TR').value=E[v.b];
+        document.getElementById('BL').value=7;document.getElementById('BR').value=5;
+        document.getElementById('ga').value='TL';document.getElementById('gb').value='TR';
+        document.getElementById('gmul').value='TL';document.getElementById('gadd').value=v.k;
+        const kI=findK(v.k,cur);let kS='';
+        if(kI&&kI.di>=0){kS='k=<span class="k-hi">'+fmt(v.k)+'</span>='+fmt(kI.pc)+'('+L(kI.ci)+')−'+fmt(kI.pd)+'('+L(kI.di)+') ['+kI.type+']';}
+        else if(kI){kS='k=<span class="k-hi">'+fmt(v.k)+'</span>='+fmt(kI.pc)+' ['+kI.type+']';}
+        else{kS='k=<span class="k-hi">'+fmt(v.k)+'</span>';}
+        const ch=v.m*v.m*E[v.a]*E[v.b]+v.k;
+        document.getElementById('formulaInfo').innerHTML='<strong>'+L(cur)+'='+fmt(T)+'</strong>: '+v.m+'²×('+E[v.a]+'×'+E[v.b]+')+'+fmt(v.k)+'='+fmt(ch)+' '+(ch===T?'✅':'❌')+'<br><span style="font-size:0.6rem;color:#a527db;">'+kS+'</span>';
+    }else{document.getElementById('formulaInfo').innerHTML='<strong>'+L(cur)+'='+fmt(T)+'</strong> — not pre-loaded';}
+    calcD1();calcD2();updateTorus();
+}
+function prevPreset(){if(cur>4){cur--;sel.value=cur;loadPreset();}}
+function nextPreset(){if(cur<E.length-1){cur++;sel.value=cur;loadPreset();}}
+
+// ====== OPTIMIZED TORUS ======
+function updateTorus(){
+    const R=parseFloat(document.getElementById('paramR').value)||127;
+    const r=parseFloat(document.getElementById('paramr').value)||19;
+    const a=parseFloat(document.getElementById('paramA').value)||0.241661;
+    const b=parseFloat(document.getElementById('paramB').value)||0.01618;
+    const g=parseFloat(document.getElementById('paramC').value)||0.0026;
+    const f1=parseFloat(document.getElementById('paramF1').value)||-1.941;
+    const f2=parseFloat(document.getElementById('paramF2').value)||-0.6767;
+    
+    const canvas=document.getElementById('torusCanvas');
+    const container=document.getElementById('torusViz');
+    canvas.width=container.clientWidth;canvas.height=container.clientHeight;
+    const ctx=canvas.getContext('2d');const W=canvas.width,H=canvas.height;
+    ctx.clearRect(0,0,W,H);
+    const cx=W/2,cy=H/2,scale=Math.min(W,H)/15;
+    
+    const pts=[];
+    for(let i=0;i<E.length;i++){
+        const u=a*Math.log2(E[i])+f1;
+        const v=b*i+g*Math.log2(E[i])+f2;
+        const x=cx+(R+r*Math.cos(v))*Math.cos(u)*scale/30;
+        const y=cy+(R+r*Math.cos(v))*Math.sin(u)*scale/30;
+        pts.push({u,v,x,y,i,val:E[i]});
+    }
+    
+    // Geodesic path
+    ctx.beginPath();ctx.strokeStyle='rgba(165,39,219,0.25)';ctx.lineWidth=1;
+    for(let i=0;i<pts.length;i++){if(i===0)ctx.moveTo(pts[i].x,pts[i].y);else ctx.lineTo(pts[i].x,pts[i].y);}
+    ctx.stroke();
+    
+    // Points
+    for(const p of pts){
+        ctx.beginPath();
+        if(p.i===cur){ctx.fillStyle='#f53214';ctx.arc(p.x,p.y,5,0,2*Math.PI);}
+        else if(p.i<4){ctx.fillStyle='#a527db';ctx.arc(p.x,p.y,3.5,0,2*Math.PI);}
+        else{ctx.fillStyle='rgba(5,0,2,0.4)';ctx.arc(p.x,p.y,2,0,2*Math.PI);}
+        ctx.fill();
+        if(p.i===cur||p.i<4){ctx.fillStyle='#050002';ctx.font='7px Fira Code';ctx.fillText(L(p.i),p.x+6,p.y-4);}
+    }
+    
+    const uR=pts[pts.length-1].u-pts[0].u;
+    const vR=pts.reduce((mx,p)=>Math.max(mx,p.v),-Infinity)-pts.reduce((mn,p)=>Math.min(mn,p.v),Infinity);
+    const optA=2*Math.PI/(Math.log2(E[E.length-1])-Math.log2(E[0]));
+    document.getElementById('torusStats').innerHTML=
+        '✅ u-range: <b>'+uR.toFixed(4)+'</b> (target 2π='+(2*Math.PI).toFixed(4)+') | '+
+        'v-range: '+vR.toFixed(2)+' | '+
+        'α='+a.toFixed(6)+' ('+(a/optA*100).toFixed(1)+'% optimal) | '+
+        'R='+R+' r='+r+' (Mersenne)';
+}
+
+window.addEventListener('resize',updateTorus);
+loadPreset();
+</script>
+</body>
+</html>
