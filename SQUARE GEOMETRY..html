@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Mersenne Geometric Square Calculator</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            background: #ffffff; 
+            font-family: 'Segoe UI', 'Fira Code', monospace; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            padding: 20px;
+        }
+        .app { 
+            background: #ffffff; 
+            border-radius: 20px; 
+            padding: 24px; 
+            border: 1px solid #050002;
+            color: #f53214;
+            max-width: 600px;
+            width: 100%;
+        }
+        h2 { text-align: center; font-weight: 500; font-size: 1.3rem; margin-bottom: 4px; color: #a527db; }
+        .subtitle { text-align: center; color: #0F0D0D; margin-bottom: 18px; font-size: 0.8rem; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; text-align: center; }
+        .grid input {
+            width: 100%;
+            padding: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            font-family: 'Fira Code', monospace;
+            background: #ffffff;
+            border: 2px solid #050002;
+            border-radius: 12px;
+            color:#f53214;
+        }
+        .grid input:focus { outline: none; border-color: #050002; }
+        .grid .empty { visibility: hidden; }
+        .grid .label { color: #050002; font-size: 0.7rem; padding-top: 4px; }
+
+        .ops { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+        .card { background: #ffffff; border: 1px solid #050002; border-radius: 14px; padding: 14px; }
+        .card h3 { font-size: 0.85rem; color: #050002; margin-bottom: 8px; }
+        .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+        .row select, .row input { 
+            background: #ffffff; border: 1px solid #050002; color: #050002;
+            padding: 7px 10px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 0.8rem;
+        }
+        .row input { width: 70px; text-align: center; }
+        button { 
+            background: #ffffff; border: 1px solid #050002; color: black;
+            padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-weight: bold;
+        }
+        button:hover { background: #ffffff; }
+        button.danger { background: #ffffff; border-color: #050002; }
+        .result { color:#050002; font-weight: bold; font-size: 0.9rem; margin-top: 4px; word-break: break-all; }
+        .history { 
+            background:#ffffff; border: 1px solid #050002; border-radius: 14px; padding: 12px;
+            margin-top: 14px; max-height: 200px; overflow-y: auto; font-size: 0.75rem; color:#050002;
+        }
+        .history .h-item { margin-bottom: 3px; border-bottom: 1px solid #2a62db; padding-bottom: 3px; }
+        .history .h-eq { color:#050002; }
+        .history .h-val { color: #050002; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <h2>⬜ Mersenne Geometric Square</h2>
+    <div class="subtitle">Corners = seeds {2,3,5,7} · Click = buttons to compute</div>
+
+    <div class="grid">
+        <div>
+            <input type="text" id="TL" value="2">
+            <div class="label">TL</div>
+        </div>
+        <div class="empty">-</div>
+        <div>
+            <input type="text" id="TR" value="3">
+            <div class="label">TR</div>
+        </div>
+        <div class="empty">-</div>
+        <div style="color:#2a62db; font-size:0.75rem;">center</div>
+        <div class="empty">-</div>
+        <div>
+            <input type="text" id="BL" value="7">
+            <div class="label">BL</div>
+        </div>
+        <div class="empty">-</div>
+        <div>
+            <input type="text" id="BR" value="5">
+            <div class="label">BR</div>
+        </div>
+    </div>
+
+    <div class="ops">
+        <div class="card">
+            <h3>🔲 Diagonals</h3>
+            <div class="row">
+                <span style="color:#f53214;font-size:0.8rem;">TL × BR</span>
+                <button onclick="calcD1()">=</button>
+                <span id="res-d1" class="result">10</span>
+            </div>
+            <div class="row">
+                <span style="color:#f53214;font-size:0.8rem;">TR × BL</span>
+                <button onclick="calcD2()">=</button>
+                <span id="res-d2" class="result">21</span>
+            </div>
+        </div>
+        <div class="card">
+            <h3>📐 Corner × N + Add</h3>
+            <div class="row">
+                <select id="cornerSel">
+                    <option value="TL">TL</option><option value="TR">TR</option>
+                    <option value="BL">BL</option><option value="BR">BR</option>
+                </select>
+                <span style="color:#2a62db;">×</span>
+                <input type="text" id="mult" value="2" style="width:50px;">
+                <span style="color:#2a62db;">+</span>
+                <input type="text" id="addVal" value="1" style="width:60px;">
+                <button onclick="calcCorner()">=</button>
+            </div>
+            <div id="res-corner" class="result">—</div>
+        </div>
+        <div class="card">
+            <h3>🔺 Generator</h3>
+            <div class="row">
+                <select id="ga"><option value="TL">TL</option><option value="TR" selected>TR</option><option value="BL">BL</option><option value="BR">BR</option></select>
+                <span style="color:#2a62db;">×</span>
+                <select id="gb"><option value="TL">TL</option><option value="TR">TR</option><option value="BL">BL</option><option value="BR" selected>BR</option></select>
+                <button onclick="calcGen()">=</button>
+                <span id="res-gen" class="result">—</span>
+            </div>
+            <div class="row" style="margin-top:6px;">
+                <span style="font-size:0.75rem;color:#2a62db;">Gen ×</span>
+                <select id="gmul"><option value="TL">TL</option><option value="TR">TR</option><option value="BL">BL</option><option value="BR">BR</option></select>
+                <span style="font-size:0.75rem;color:#2a62db;">+</span>
+                <input type="text" id="gadd" value="1" style="width:60px;">
+                <button onclick="calcGenForm()">=</button>
+                <span id="res-genform" class="result">—</span>
+            </div>
+        </div>
+        <div class="card">
+            <h3>➕ Sum / − Diff</h3>
+            <div class="row">
+                <select id="sa"><option value="TL">TL</option><option value="TR">TR</option><option value="BL">BL</option><option value="BR">BR</option></select>
+                <select id="sop"><option value="+">+</option><option value="-">−</option></select>
+                <select id="sb"><option value="TL">TL</option><option value="TR" selected>TR</option><option value="BL">BL</option><option value="BR">BR</option></select>
+                <button onclick="calcSum()">=</button>
+                <span id="res-sum" class="result">—</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="history" id="hist">
+        <div style="color:#2a62db; margin-bottom:6px;">📝 History</div>
+    </div>
+    <button class="danger" onclick="document.getElementById('hist').innerHTML='<div style=color:#8faac0;margin-bottom:6px>📝 History</div>'" style="margin-top:8px;">Clear History</button>
+</div>
+
+<script>
+// Simple number parsing - handles regular integers and big ones
+function getNum(id) {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const v = el.value.trim().replace(/,/g, '');
+    if (!v || isNaN(v)) return null;
+    // Use regular Number for values up to 2^53, switch to BigInt for larger
+    const num = Number(v);
+    if (num > 9007199254740991) {
+        try { return BigInt(v); } catch(e) { return null; }
+    }
+    return num;
+}
+
+function fmt(n) {
+    if (typeof n === 'bigint') return n.toLocaleString();
+    if (typeof n === 'number') {
+        if (n > 9007199254740991) return BigInt(Math.floor(n)).toLocaleString();
+        return n.toLocaleString();
+    }
+    return String(n);
+}
+
+function addH(eq, res) {
+    const h = document.getElementById('hist');
+    const d = document.createElement('div');
+    d.className = 'h-item';
+    d.innerHTML = '<span class="h-eq">' + eq + '</span> = <span class="h-val">' + res + '</span>';
+    h.insertBefore(d, h.firstChild);
+    if (h.children.length > 30) h.removeChild(h.lastChild);
+}
+
+function calcD1() {
+    const a = getNum('TL'), b = getNum('BR');
+    if (a === null || b === null) { document.getElementById('res-d1').textContent = 'Invalid'; return; }
+    const r = (typeof a === 'bigint' || typeof b === 'bigint') ? BigInt(a) * BigInt(b) : a * b;
+    document.getElementById('res-d1').textContent = fmt(r);
+    addH('TL × BR', fmt(r));
+}
+
+function calcD2() {
+    const a = getNum('TR'), b = getNum('BL');
+    if (a === null || b === null) { document.getElementById('res-d2').textContent = 'Invalid'; return; }
+    const r = (typeof a === 'bigint' || typeof b === 'bigint') ? BigInt(a) * BigInt(b) : a * b;
+    document.getElementById('res-d2').textContent = fmt(r);
+    addH('TR × BL', fmt(r));
+}
+
+function calcCorner() {
+    const cornerId = document.getElementById('cornerSel').value;
+    const c = getNum(cornerId), m = getNum('mult'), ad = getNum('addVal');
+    if (c === null || m === null || ad === null) { document.getElementById('res-corner').textContent = 'Invalid'; return; }
+    const useBig = (typeof c === 'bigint' || typeof m === 'bigint' || typeof ad === 'bigint');
+    const r = useBig ? BigInt(c) * BigInt(m) + BigInt(ad) : c * m + ad;
+    document.getElementById('res-corner').textContent = fmt(r);
+    addH(cornerId + ' × ' + fmt(m) + ' + ' + fmt(ad), fmt(r));
+}
+
+function calcGen() {
+    const aId = document.getElementById('ga').value, bId = document.getElementById('gb').value;
+    const a = getNum(aId), b = getNum(bId);
+    if (a === null || b === null) { document.getElementById('res-gen').textContent = 'Invalid'; return; }
+    const g = (typeof a === 'bigint' || typeof b === 'bigint') ? BigInt(a) * BigInt(b) : a * b;
+    document.getElementById('res-gen').textContent = fmt(g);
+    addH('Gen: ' + aId + ' × ' + bId, fmt(g));
+}
+
+function calcGenForm() {
+    const aId = document.getElementById('ga').value, bId = document.getElementById('gb').value;
+    const mulId = document.getElementById('gmul').value;
+    const a = getNum(aId), b = getNum(bId), m = getNum(mulId), ad = getNum('gadd');
+    if (a === null || b === null || m === null || ad === null) { document.getElementById('res-genform').textContent = 'Invalid'; return; }
+    const useBig = (typeof a === 'bigint' || typeof b === 'bigint' || typeof m === 'bigint' || typeof ad === 'bigint');
+    const g = useBig ? BigInt(a) * BigInt(b) : a * b;
+    const r = useBig ? BigInt(g) * BigInt(m) + BigInt(ad) : g * m + ad;
+    document.getElementById('res-genform').textContent = fmt(r);
+    addH(fmt(g) + ' × ' + mulId + ' + ' + fmt(ad), fmt(r));
+}
+
+function calcSum() {
+    const aId = document.getElementById('sa').value, bId = document.getElementById('sb').value;
+    const a = getNum(aId), b = getNum(bId), op = document.getElementById('sop').value;
+    if (a === null || b === null) { document.getElementById('res-sum').textContent = 'Invalid'; return; }
+    const useBig = (typeof a === 'bigint' || typeof b === 'bigint');
+    let r;
+    if (op === '+') r = useBig ? BigInt(a) + BigInt(b) : a + b;
+    else r = (a > b) ? (useBig ? BigInt(a) - BigInt(b) : a - b) : (useBig ? BigInt(b) - BigInt(a) : b - a);
+    document.getElementById('res-sum').textContent = fmt(r);
+    addH(fmt(a) + ' ' + op + ' ' + fmt(b), fmt(r));
+}
+</script>
+</body>
+</html>
