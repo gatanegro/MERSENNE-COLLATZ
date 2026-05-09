@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Mersenne Sum System - Interactive - </title>
+<h5>Author Martin Doina</h5>
+<style>
+* {
+    user-select: none; /* Prevent text selection while clicking fast */
+}
+body { background:#f5f3ff; color:#1a1a2e; font-family:'Segoe UI', 'Courier New', monospace; padding:10px; margin:0; }
+.container { max-width:1500px; margin:auto; background:#ffffff; padding:15px; border-radius:24px; border:2px solid #7c3aed; box-shadow:0 10px 25px rgba(0,0,0,0.05); }
+h1 { text-align:center; color:#4c1d95; margin:0 0 5px 0; font-weight:700; letter-spacing:-0.5px; }
+h5 { text-align:center; color:#4338ca; margin:0 0 12px 0; font-weight:500; }
+.instruction-text { font-size:13px; text-align:center; background:#ede9fe; padding:6px; border-radius:30px; margin-bottom:12px; color:#2e1065; }
+
+.mersenne-btn { 
+    padding:8px 12px; margin:2px; cursor:pointer; font-size:15px; font-weight:bold; 
+    border-radius:50%; user-select:none; min-width:55px; min-height:55px;
+    transition: all 0.15s cubic-bezier(0.2, 0.9, 0.4, 1.1); position:relative;
+    box-shadow:0 3px 8px rgba(0,0,0,0.15);
+    font-family: monospace;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.mersenne-btn.seed-2 { background-color:#ef4444; color:white; border:2px solid #b91c1c; }
+.mersenne-btn.seed-3 { background-color:#3b82f6; color:white; border:2px solid #1e3a8a; }
+.mersenne-btn.special-purple { background-color:#8b5cf6; color:white; border:2px solid #5b21b6; }
+.mersenne-btn:hover { opacity:0.9; transform: scale(1.05); cursor:pointer; }
+.mersenne-btn.draggable { cursor:grab; }
+.mersenne-btn.dragging { opacity:0.7; cursor:grabbing; z-index:10000; box-shadow:0 0 20px #fbbf24; }
+.mersenne-btn.selected { 
+    box-shadow:0 0 0 4px #fbbf24, 0 0 0 8px rgba(251,191,36,0.3); 
+    animation: pulse-glow 0.8s infinite;
+    transform: scale(1.02);
+}
+
+/* Counter badge for self-sum (multi-click indicator) */
+.multi-count-badge {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    background: #f97316;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    border-radius: 30px;
+    min-width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px black;
+    font-family: monospace;
+    z-index: 5;
+    pointer-events: none;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 0 4px #fbbf24, 0 0 0 8px rgba(251,191,36,0.3); }
+    50% { box-shadow: 0 0 0 6px #f59e0b, 0 0 0 12px rgba(245,158,11,0.4); }
+    100% { box-shadow: 0 0 0 4px #fbbf24, 0 0 0 8px rgba(251,191,36,0.3); }
+}
+
+.canvas-container { 
+    position:relative; min-height:620px; background:#faf9ff; 
+    border:3px solid #c7d2fe; border-radius:28px; margin:15px 0;
+    overflow:auto; box-shadow: inset 0 0 0 1px #e0e7ff;
+}
+
+.toolbar {
+    display:flex; justify-content:center; gap:12px; margin:10px 0;
+    flex-wrap:wrap; align-items:center;
+}
+.toolbar-group {
+    display:flex; gap:6px; align-items:center;
+    padding:6px 14px; background:#f1f5f9; border-radius:48px;
+    flex-wrap:wrap;
+}
+
+.layer-list {
+    display:flex; gap:10px; flex-wrap:wrap; margin:10px 0;
+    padding:12px; background:#eef2ff; border-radius:20px;
+    min-height:50px; align-items:center;
+}
+.layer-tag {
+    padding:6px 15px; background:#6366f1; color:white;
+    border-radius:40px; font-size:13px; cursor:pointer;
+    display:flex; align-items:center; gap:10px;
+    transition: all 0.2s;
+}
+.layer-tag:hover { transform: translateY(-2px); background:#4f46e5; }
+.layer-tag.active { background:#ec489a; box-shadow:0 0 12px #ec489a; }
+
+.layer-tag .delete-layer {
+    background:rgba(0,0,0,0.3); border:none; color:white; 
+    cursor:pointer; font-size:16px; padding:2px 8px; border-radius:40px;
+    font-weight:bold;
+}
+.layer-tag .delete-layer:hover { background:#dc2626; }
+
+.scale-simple {
+    width:90px; padding:10px; font-size:16px; text-align:center;
+    border:2px solid #8b5cf6; border-radius:40px; font-weight:bold;
+}
+button { 
+    padding:8px 15px; cursor:pointer; border-radius:40px; 
+    font-family:'Segoe UI', monospace; font-weight:600;
+    transition: all 0.2s; border:none; font-size:13px;
+}
+button:hover { transform: translateY(-2px); box-shadow:0 5px 12px rgba(0,0,0,0.15); }
+
+.btn-primary { background:#3b82f6; color:white; }
+.btn-success { background:#10b981; color:white; }
+.btn-warning { background:#ef4444; color:white; }
+.btn-purple { background:#8b5cf6; color:white; }
+.btn-gray { background:#64748b; color:white; }
+.btn-blue { background:#06b6d4; color:white; }
+
+#sumDisplay { font-size:2.4em; text-align:center; word-break:break-all; padding:10px; background:#f1f5f9; border-radius:30px; margin-top:8px; font-weight:bold; }
+.filter-pass { color:#059669; font-weight:bold; }
+.filter-fail { color:#dc2626; font-weight:bold; }
+
+.modal-overlay {
+    display:none; 
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,0.85); z-index:100000; 
+    justify-content:center; align-items:center;
+}
+.modal-overlay.show { display:flex; }
+
+.modal-box {
+    background:white; padding:30px; border-radius:28px; 
+    max-width:600px; width:90%; max-height:80vh; 
+    box-shadow:0 20px 35px rgba(0,0,0,0.3);
+    border:3px solid #8b5cf6;
+    overflow-y:auto;
+}
+.file-upload-area {
+    border:2px dashed #8b5cf6; padding:20px; text-align:center;
+    border-radius:28px; margin:10px 0; cursor:pointer;
+    transition: all 0.2s;
+}
+.file-upload-area:hover { background:#f3e8ff; border-color:#a855f7; }
+
+.self-sum-notice {
+    background:#fef3c7; border-left:6px solid #f59e0b;
+    font-size:13px; padding:8px 16px; border-radius:40px;
+    margin:8px auto; width:fit-content;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1> Mersenne Self-Sum System</h1>
+<h5> Multi-click SAME ball → adds itself repeatedly (max 5 clicks per ball) </h5>
+<div class="self-sum-notice">
+     <strong>Self-Sum Feature:</strong> Click same ball multiple times (2x, 3x, 4x, up to 5x) → adds its value that many times! <br>
+     2 clicks = value+value | 3 clicks = triple value | 4x = quadruple | 5x = quintuple. Drag with <strong>Right-click</strong> to reposition.
+</div>
+<div class="instruction-text">
+     <b>Left-click</b> to select/deselect ball (self-sum works automatically on repeated clicks!) · <b>Right-click + drag</b> to move balls
+</div>
+
+<div class="color-key" style="display:flex; justify-content:center; gap:20px; margin:10px 0;">
+    <span><span style="background-color:#8b5cf6;width:20px;height:20px;display:inline-block;border-radius:50%;"></span> M01,M03</span>
+    <span><span style="background-color:#3b82f6;width:20px;height:20px;display:inline-block;border-radius:50%;"></span> Seed 3</span>
+    <span><span style="background-color:#ef4444;width:20px;height:20px;display:inline-block;border-radius:50%;"></span> Seed 2</span>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+    <div class="toolbar-group">
+        <label style="font-weight:bold;">Scale: ×</label>
+        <input type="number" class="scale-simple" id="scaleInput" value="1" min="1" oninput="calculateSum()">
+        <button class="btn-primary" onclick="setScale(1)">×1</button>
+        <button class="btn-primary" onclick="setScale(10)">×10</button>
+        <button class="btn-primary" onclick="setScale(100)">×100</button>
+    </div>
+    <div class="toolbar-group">
+        <button class="btn-warning" onclick="toggleDragMode()">
+            <span id="dragModeText">🖱️ Drag: ON</span>
+        </button>
+        <button class="btn-purple" onclick="resetToDefault()"> Reset Layout</button>
+    </div>
+</div>
+
+<!-- LAYER MANAGEMENT -->
+<div class="toolbar">
+    <div class="toolbar-group">
+        <button class="btn-purple" onclick="saveCurrentLayer()"> Save Layer</button>
+        <button class="btn-success" onclick="loadLayerDialog()"> Load Layer</button>
+        <button class="btn-blue" onclick="exportLayers()"> Export JSON</button>
+        <button class="btn-blue" onclick="openImportDialog()"> Import JSON</button>
+        <button class="btn-warning" onclick="clearAllLayers()"> Clear All Layers</button>
+    </div>
+</div>
+
+<div class="layer-list" id="layerList">
+    <span style="color:#6c63ff;"> Save current positions as layer above </span>
+</div>
+
+<!-- DRAGGABLE CANVAS -->
+<div class="canvas-container" id="canvas"></div>
+
+<!-- SELECTION DISPLAY -->
+<div id="currentNumbers" style="text-align:center;margin:10px;font-size:1.1em;min-height:45px;padding:12px;background:#f1f5f9;border-radius:40px;font-weight:500;"></div>
+
+<div style="text-align:center;margin:10px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+<button class="btn-warning" onclick="clearAll()"> Clear Selection</button>
+<button class="btn-primary" onclick="removeLast()"> Remove Last</button>
+<button class="btn-purple" onclick="calculateSum()"> Calculate Sum</button>
+</div>
+
+<div id="sumDisplay">0</div>
+<div id="filterResults" style="text-align:center;"></div>
+<div id="nearestResult" style="text-align:center;"></div>
+
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="modal-overlay" id="importModal">
+    <div class="modal-box">
+        <h3> Import Layers from JSON</h3>
+        <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+            <p> Click to Select JSON File</p>
+            <p id="fileNameDisplay" style="font-size:12px;">No file selected</p>
+        </div>
+        <input type="file" id="fileInput" accept=".json" style="display:none;" onchange="handleFileSelect(event)">
+        <textarea id="importTextarea" rows="6" placeholder='Paste JSON data here...'></textarea>
+        <div class="btn-row" style="display:flex; gap:12px; margin-top:20px;">
+            <button class="btn-success" onclick="doImport()">Import Layers</button>
+            <button class="btn-warning" onclick="closeImportDialog()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- LOAD LAYER DIALOG -->
+<div class="modal-overlay" id="loadLayerModal">
+    <div class="modal-box">
+        <h3>📋 Load Saved Layer</h3>
+        <div id="loadLayerList" style="margin:15px 0;"></div>
+        <button class="btn-gray" onclick="closeLoadDialog()">Close</button>
+    </div>
+</div>
+
+<script>
+// ==================== MERSENNE DATA ====================
+const MERSENNES = [
+ {label:"M52",value:136279841,color:"seed-2"},{label:"M51",value:82589933,color:"seed-2"},
+ {label:"M50",value:77232917,color:"seed-2"},{label:"M49",value:74207281,color:"seed-2"},
+ {label:"M48",value:57885161,color:"seed-3"},{label:"M47",value:43112609,color:"seed-2"},
+ {label:"M46",value:42643801,color:"seed-2"},{label:"M45",value:37156667,color:"seed-2"},
+ {label:"M44",value:32582657,color:"seed-3"},{label:"M43",value:30402457,color:"seed-3"},
+ {label:"M42",value:25964951,color:"seed-3"},{label:"M41",value:24036583,color:"seed-2"},
+ {label:"M40",value:20996011,color:"seed-2"},{label:"M39",value:13466917,color:"seed-3"},
+ {label:"M38",value:6972593,color:"seed-3"},{label:"M37",value:3021377,color:"seed-2"},
+ {label:"M36",value:2976221,color:"seed-2"},{label:"M35",value:1398269,color:"seed-2"},
+ {label:"M34",value:1257787,color:"seed-2"},{label:"M33",value:859433,color:"seed-3"},
+ {label:"M32",value:756839,color:"seed-2"},{label:"M31",value:216091,color:"seed-3"},
+ {label:"M30",value:132049,color:"seed-2"},{label:"M29",value:110503,color:"seed-3"},
+ {label:"M28",value:86243,color:"seed-2"},{label:"M27",value:44497,color:"seed-2"},
+ {label:"M26",value:23209,color:"seed-2"},{label:"M25",value:21701,color:"seed-2"},
+ {label:"M24",value:19937,color:"seed-2"},{label:"M23",value:11213,color:"seed-2"},
+ {label:"M22",value:9941,color:"seed-2"},{label:"M21",value:9689,color:"seed-2"},
+ {label:"M20",value:4423,color:"seed-2"},{label:"M19",value:4253,color:"seed-2"},
+ {label:"M18",value:3217,color:"seed-3"},{label:"M17",value:2281,color:"seed-2"},
+ {label:"M16",value:2203,color:"seed-2"},{label:"M15",value:1279,color:"seed-2"},
+ {label:"M14",value:607,color:"seed-2"},{label:"M13",value:521,color:"seed-2"},
+ {label:"M12",value:127,color:"seed-3"},{label:"M11",value:107,color:"seed-3"},
+ {label:"M10",value:89,color:"seed-2"},{label:"M09",value:61,color:"seed-3"},
+ {label:"M08",value:31,color:"seed-3"},{label:"M07",value:19,color:"seed-2"},
+ {label:"M06",value:17,color:"seed-2"},{label:"M05",value:13,color:"seed-3"},
+ {label:"M04",value:7,color:"seed-3"},{label:"M03",value:5,color:"special-purple"},
+ {label:"M02",value:3,color:"seed-3"},{label:"M01",value:2,color:"special-purple"}
+];
+
+// Global state
+let currentNumbers = [];        // stores each individual added value (including repeated self-sums)
+let dragMode = true;
+let layers = {};
+let activeLayer = null;
+let buttonElements = new Map();
+
+// Track per-ball click count for self-summing (max 5)
+// Structure: Map<label, clickCountOnBall> (count how many times currently selected for THIS ball)
+// But because we need each click to add value sequentially, we store a multiplier map for each ball's active contribution.
+// More robust: maintain an object that records how many times this ball is currently "selected" in the currentNumbers array
+// Implementation: we store a multiplier per ball (multiplicity). When user clicks same ball, we increase its multiplier if <5, and push its value again.
+// Also we need to reflect count visually with badge.
+
+let ballMultiplicity = new Map(); // label -> multiplicity (1..5)
+
+// Helper: get current multiplicity of a ball
+function getMultiplicity(label) {
+    return ballMultiplicity.get(label) || 0;
+}
+
+function setMultiplicity(label, mult) {
+    if (mult <= 0) {
+        ballMultiplicity.delete(label);
+    } else {
+        ballMultiplicity.set(label, Math.min(5, mult));
+    }
+    updateBadge(label);
+}
+
+// update badge on button element
+function updateBadge(label) {
+    const btn = buttonElements.get(label);
+    if (!btn) return;
+    const mult = getMultiplicity(label);
+    let existingBadge = btn.querySelector('.multi-count-badge');
+    if (mult >= 2) {
+        if (existingBadge) {
+            existingBadge.textContent = `×${mult}`;
+        } else {
+            const badge = document.createElement('span');
+            badge.className = 'multi-count-badge';
+            badge.textContent = `×${mult}`;
+            btn.style.position = 'relative';
+            btn.appendChild(badge);
+        }
+    } else {
+        if (existingBadge) existingBadge.remove();
+    }
+}
+
+// Rebuild currentNumbers array based on ballMultiplicity map (sync selection state)
+function rebuildCurrentNumbersFromMultiplicity() {
+    const newArr = [];
+    for (let [label, mult] of ballMultiplicity.entries()) {
+        const mers = MERSENNES.find(m => m.label === label);
+        if (mers && mult > 0) {
+            for (let i = 0; i < mult; i++) {
+                newArr.push(mers.value);
+            }
+        }
+    }
+    currentNumbers = newArr;
+    // also update button selection style
+    for (let [label, btn] of buttonElements.entries()) {
+        const mult = getMultiplicity(label);
+        if (mult > 0) {
+            btn.classList.add('selected');
+        } else {
+            btn.classList.remove('selected');
+        }
+    }
+    update();
+}
+
+// Toggle selection with SELF-SUM logic: multiple clicks on same ball increase multiplicity up to 5
+function handleBallClick(btn, m) {
+    const label = m.label;
+    const currentMult = getMultiplicity(label);
+    
+    if (currentMult === 0) {
+        // new selection: add once
+        setMultiplicity(label, 1);
+    } else {
+        // already selected: increase multiplier but max 5
+        if (currentMult < 5) {
+            setMultiplicity(label, currentMult + 1);
+        } else {
+            // already max 5, do nothing but maybe visual feedback
+            btn.style.transform = 'scale(0.98)';
+            setTimeout(() => { btn.style.transform = ''; }, 150);
+            return; // no change
+        }
+    }
+    rebuildCurrentNumbersFromMultiplicity();
+}
+
+// remove a specific ball entirely (zero multiplicity)
+function removeBallCompletely(label) {
+    setMultiplicity(label, 0);
+    rebuildCurrentNumbersFromMultiplicity();
+}
+
+function clearAll() {
+    ballMultiplicity.clear();
+    for (let btn of buttonElements.values()) {
+        btn.classList.remove('selected');
+        const badge = btn.querySelector('.multi-count-badge');
+        if (badge) badge.remove();
+    }
+    currentNumbers = [];
+    update();
+}
+
+function removeLast() {
+    if (currentNumbers.length === 0) return;
+    // remove one occurrence from the end of array -> need to decrement multiplier of the last ball
+    const lastValue = currentNumbers[currentNumbers.length - 1];
+    // find which label contributed this last occurrence
+    let foundLabel = null;
+    for (let [label, mult] of ballMultiplicity.entries()) {
+        const mers = MERSENNES.find(m => m.label === label);
+        if (mers && mers.value === lastValue && mult > 0) {
+            foundLabel = label;
+            break;
+        }
+    }
+    if (foundLabel) {
+        const newMult = getMultiplicity(foundLabel) - 1;
+        if (newMult <= 0) {
+            setMultiplicity(foundLabel, 0);
+        } else {
+            setMultiplicity(foundLabel, newMult);
+        }
+    }
+    rebuildCurrentNumbersFromMultiplicity();
+}
+
+// ============ DRAG & DROP LOGIC (right-click drag) ============
+let wasDragged = false;
+
+function makeDraggable(el) {
+    let startX, startY, origLeft, origTop, rect;
+    el.addEventListener('mousedown', function(e) {
+        if (e.button !== 2) return;
+        if (!dragMode) return;
+        e.preventDefault();
+        e.stopPropagation();
+        wasDragged = false;
+        
+        rect = el.getBoundingClientRect();
+        const canvasRect = document.getElementById("canvas").getBoundingClientRect();
+        startX = e.clientX;
+        startY = e.clientY;
+        origLeft = rect.left - canvasRect.left;
+        origTop = rect.top - canvasRect.top;
+        
+        el.style.position = 'fixed';
+        el.style.left = rect.left + 'px';
+        el.style.top = rect.top + 'px';
+        el.style.zIndex = '9999';
+        el.classList.add('dragging');
+        
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        document.addEventListener('contextmenu', blockContext);
+    });
+    
+    function onMove(e2) {
+        const dx = e2.clientX - startX;
+        const dy = e2.clientY - startY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) wasDragged = true;
+        el.style.left = (rect.left + dx) + 'px';
+        el.style.top = (rect.top + dy) + 'px';
+    }
+    
+    function onUp(e2) {
+        el.classList.remove('dragging');
+        const canvasRect = document.getElementById("canvas").getBoundingClientRect();
+        let finalX = parseFloat(el.style.left) - canvasRect.left;
+        let finalY = parseFloat(el.style.top) - canvasRect.top;
+        finalX = Math.max(5, Math.min(finalX, canvasRect.width - 70));
+        finalY = Math.max(5, Math.min(finalY, canvasRect.height - 70));
+        el.style.position = 'absolute';
+        el.style.left = finalX + 'px';
+        el.style.top = finalY + 'px';
+        el.style.zIndex = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('contextmenu', blockContext);
+        setTimeout(() => { wasDragged = false; }, 100);
+    }
+    function blockContext(e2) { e2.preventDefault(); }
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+}
+
+function createButton(m, x, y) {
+    const btn = document.createElement("button");
+    btn.textContent = m.label;
+    btn.className = `mersenne-btn ${m.color}`;
+    btn.style.position = 'absolute';
+    btn.style.left = x + 'px';
+    btn.style.top = y + 'px';
+    btn.dataset.label = m.label;
+    btn.dataset.value = m.value;
+    if (dragMode) btn.classList.add('draggable');
+    
+    btn.addEventListener('click', (e) => {
+        if (!wasDragged) {
+            e.stopPropagation();
+            handleBallClick(btn, m);
+        }
+        wasDragged = false;
+    });
+    makeDraggable(btn);
+    return btn;
+}
+
+// Default positions pyramid style
+function getDefaultPositions() {
+    const distribution = [4, 6, 8, 7, 5, 4];
+    const positions = [];
+    let y = 520;
+    const spacing = 60;
+    let mersenneIndex = 51;
+    for (let row = 0; row < distribution.length; row++) {
+        const count = distribution[row];
+        const startX = (1400 - (count * spacing)) / 2 + 20;
+        for (let i = 0; i < count && mersenneIndex >= 0; i++) {
+            positions[mersenneIndex] = { x: startX + i * spacing, y: y };
+            mersenneIndex--;
+        }
+        y -= 80;
+    }
+    return positions;
+}
+
+function init() {
+    const canvas = document.getElementById("canvas");
+    canvas.innerHTML = '';
+    buttonElements.clear();
+    const positions = getDefaultPositions();
+    MERSENNES.forEach((m, idx) => {
+        const pos = positions[idx] || { x: 50 + (idx * 55), y: 100 + (idx % 10) * 65 };
+        const btn = createButton(m, pos.x, pos.y);
+        canvas.appendChild(btn);
+        buttonElements.set(m.label, btn);
+    });
+    clearAll();
+}
+
+function resetToDefault() {
+    if (!confirm("Reset all balls to original layout and clear selection?")) return;
+    const canvas = document.getElementById("canvas");
+    canvas.innerHTML = '';
+    buttonElements.clear();
+    const positions = getDefaultPositions();
+    MERSENNES.forEach((m, idx) => {
+        const pos = positions[idx] || { x: 50 + (idx * 55), y: 100 + (idx % 10) * 65 };
+        const btn = createButton(m, pos.x, pos.y);
+        canvas.appendChild(btn);
+        buttonElements.set(m.label, btn);
+    });
+    clearAll();
+}
+
+function toggleDragMode() {
+    dragMode = !dragMode;
+    document.getElementById("dragModeText").textContent = dragMode ? ' Drag: ON' : ' Drag: OFF';
+    document.querySelectorAll('.mersenne-btn').forEach(btn => {
+        if (dragMode) btn.classList.add('draggable');
+        else btn.classList.remove('draggable');
+    });
+}
+
+// ============ LAYER (save/load) ============
+function saveCurrentLayer() {
+    const name = prompt(" Layer name:", "Layer " + (Object.keys(layers).length + 1));
+    if (!name) return;
+    const positions = {};
+    document.querySelectorAll('.mersenne-btn').forEach(btn => {
+        positions[btn.dataset.label] = {
+            x: parseFloat(btn.style.left),
+            y: parseFloat(btn.style.top)
+        };
+    });
+    const multiData = {};
+    for (let [label, mult] of ballMultiplicity.entries()) {
+        multiData[label] = mult;
+    }
+    layers[name] = {
+        positions: positions,
+        multiplicities: multiData,
+        selectedNumbers: [...currentNumbers],
+        timestamp: new Date().toISOString()
+    };
+    activeLayer = name;
+    updateLayerList();
+    alert(` Layer "${name}" saved! (Self-sum multipliers preserved)`);
+}
+
+function loadLayerByName(name) {
+    const layer = layers[name];
+    if (!layer) return;
+    activeLayer = name;
+    // restore positions
+    Object.entries(layer.positions).forEach(([label, pos]) => {
+        const btn = buttonElements.get(label);
+        if (btn) {
+            btn.style.left = pos.x + 'px';
+            btn.style.top = pos.y + 'px';
+        }
+    });
+    // restore multiplicities
+    ballMultiplicity.clear();
+    if (layer.multiplicities) {
+        Object.entries(layer.multiplicities).forEach(([label, mult]) => {
+            if (mult > 0) setMultiplicity(label, mult);
+        });
+    } else if (layer.selectedNumbers) {
+        // fallback for old layers
+        const counts = new Map();
+        for (let val of layer.selectedNumbers) {
+            const mers = MERSENNES.find(m => m.value === val);
+            if (mers) counts.set(mers.label, (counts.get(mers.label) || 0) + 1);
+        }
+        counts.forEach((mult, label) => setMultiplicity(label, mult));
+    }
+    rebuildCurrentNumbersFromMultiplicity();
+    updateLayerList();
+}
+
+function deleteLayer(name) { if (confirm(`Delete "${name}"?`)) { delete layers[name]; if (activeLayer === name) activeLayer = null; updateLayerList(); } }
+function activateLayer(name) { loadLayerByName(name); }
+function clearAllLayers() { if(confirm(" Delete ALL layers?")) { layers = {}; activeLayer = null; updateLayerList(); } }
+function updateLayerList() {
+    const listDiv = document.getElementById("layerList");
+    const names = Object.keys(layers);
+    if (names.length === 0) { listDiv.innerHTML = '<span> No layers yet. Save current layout!</span>'; return; }
+    listDiv.innerHTML = names.map(name => `
+        <div class="layer-tag ${activeLayer === name ? 'active' : ''}">
+            <span onclick="activateLayer('${name}')" style="flex:1;cursor:pointer;">${name}</span>
+            <button class="delete-layer" onclick="event.stopPropagation(); deleteLayer('${name}')">✖</button>
+        </div>
+    `).join('');
+}
+function exportLayers() { if(Object.keys(layers).length===0){ alert("No layers"); return; } const data = { layers, activeLayer, exportDate: new Date().toISOString() }; const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`mersenne_layers.json`; a.click(); URL.revokeObjectURL(a.href); alert("Exported!"); }
+function openImportDialog() { document.getElementById("importModal").classList.add("show"); }
+function closeImportDialog() { document.getElementById("importModal").classList.remove("show"); }
+function handleFileSelect(e) { const file=e.target.files[0]; if(file){ const reader=new FileReader(); reader.onload=ev=>document.getElementById("importTextarea").value=ev.target.result; reader.readAsText(file); } }
+function doImport(){ const text=document.getElementById("importTextarea").value.trim(); if(!text){ alert("Paste JSON"); return; } try{ const data=JSON.parse(text); if(data.layers){ layers={...layers,...data.layers}; if(data.activeLayer && layers[data.activeLayer]) activeLayer=data.activeLayer; updateLayerList(); alert("Import success"); closeImportDialog(); } else throw new Error(); }catch(e){ alert("Invalid JSON"); } }
+function loadLayerDialog() { const modal=document.getElementById("loadLayerModal"); const listDiv=document.getElementById("loadLayerList"); const names=Object.keys(layers); if(names.length===0){ alert("No layers"); return; } listDiv.innerHTML=names.map(n=>`<div onclick="loadLayerByName('${n}');closeLoadDialog()" style="padding:12px;margin:8px;background:#f1f5f9;border-radius:24px;cursor:pointer;">${n}</div>`).join(''); modal.classList.add("show"); }
+function closeLoadDialog(){ document.getElementById("loadLayerModal").classList.remove("show"); }
+
+// Calculation helpers
+function digitalRoot(n){ if(n===3) return 3; return 1+((n-1)%9); }
+function passesFilters(n){ if(n===3) return true; const last=n%10, root=digitalRoot(n); return [1,3,7,9].includes(last) && ![3,6,9].includes(root); }
+function nearestMersenne(n){ let best=null, dist=Infinity; for(let m of MERSENNES){ const d=Math.abs(n-m.value); if(d<dist){ dist=d; best=m; } } return {best,dist}; }
+function setScale(v){ document.getElementById("scaleInput").value=v; calculateSum(); }
+function getScaleFactor(){ return Math.max(1, parseInt(document.getElementById("scaleInput").value) || 1); }
+function calculateSum(){ const scale=getScaleFactor(); const base=currentNumbers.reduce((a,b)=>a+b,0); const sum=scale*base; document.getElementById("sumDisplay").innerText=sum.toLocaleString(); const ok=passesFilters(sum); document.getElementById("filterResults").innerHTML=ok?"<p class='filter-pass'> Passes prime sieves</p>":"<p class='filter-fail'> Fails prime sieves</p>"; const near=nearestMersenne(sum); document.getElementById("nearestResult").innerHTML=`<p> Nearest Mersenne: <b>${near.best.label}</b> (${near.best.value.toLocaleString()}) — diff ${Math.abs(sum-near.best.value).toLocaleString()}</p>`; }
+function update(){ document.getElementById("currentNumbers").innerHTML=currentNumbers.length? currentNumbers.map(n=>n.toLocaleString()).join(" + ") : " Click balls to select (multi-click same ball self-sums up to ×5)"; calculateSum(); }
+
+window.onload = () => { init(); };
+document.addEventListener('click',(e)=>{ if(e.target.classList?.contains('modal-overlay')) e.target.classList.remove('show'); });
+</script>
+</body>
+</html>
