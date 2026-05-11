@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
+  <title>Mersenne Constraint Lab · v9 ·</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', 'Fira Code', system-ui, monospace; }
+    body { background: #0b1016; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .app { max-width: 2000px; width: 100%; background: #16202a; border-radius: 38px; box-shadow: 0 25px 50px #00000060, 0 0 0 1px #3e5a70; padding: 28px 34px; color: #e3ecf5; }
+    h1 { margin: 0 0 4px; font-weight: 450; font-size: 2.3rem; background: linear-gradient(145deg, #f2d98b, #b0d0ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .subtitle { margin-left: 12px; margin-bottom: 22px; color: #aac1da; border-left: 5px solid #d9a822; padding-left: 20px; }
+    .panel { background: #101b25; border-radius: 28px; padding: 22px 24px; border: 1px solid #2e4a5e; margin-bottom: 22px; }
+    .flex-row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-weight: 600; color: #b0cce6; }
+    .input-group input { background: #0c1721; border: 1px solid #456983; padding: 12px 18px; border-radius: 40px; font-size: 1rem; color: #ffe9b6; font-family: 'Fira Code', monospace; outline: none; }
+    button { background: #1e4b6e; border: 1px solid #8bb1d4; color: white; font-weight: bold; padding: 12px 26px; border-radius: 60px; cursor: pointer; font-size: 1rem; transition: 0.2s; }
+    button:hover { background: #2f6790; box-shadow: 0 0 14px #6f9ac2; }
+    button.small { padding: 6px 16px; font-size: 0.9rem; }
+    button.danger { background: #5a2e2e; border-color: #c47a7a; }
+    button.success { background: #2e5a3a; border-color: #7ac48a; }
+    button.active-filter { background: #d9a822; border-color: #f0d87b; color: #0c121c; }
+    .filter-panel { background: #0f1922; border-radius: 20px; padding: 16px 20px; margin: 15px 0; border: 1px solid #3e5a70; }
+    .filter-title { font-weight: 600; color: #c6d9f0; margin-bottom: 12px; }
+    .constraint-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, auto)); gap: 6px 16px; max-height: 360px; overflow-y: auto; padding-right: 10px; }
+    .table-container { max-height: 520px; overflow-y: auto; border-radius: 20px; background: #0b141c; border: 1px solid #2f4d64; margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+    th { background: #1c3343; color: #e2ecf7; padding: 8px 4px; position: sticky; top: 0; font-weight: 600; white-space: nowrap; }
+    td { padding: 4px 3px; text-align: center; border-bottom: 1px solid #2c4a61; color: #d5e6ff; }
+    .prime-badge { background: #1b5e1b; color: #bef5b4; padding: 2px 8px; border-radius: 30px; display:inline-block; font-size:0.7rem; }
+    .comp-badge { background: #962828; color: #ffcfcf; padding: 2px 8px; border-radius: 30px; display:inline-block; font-size:0.7rem; }
+    .base2 { color: #8fc99c; font-weight: bold; }
+    .base3 { color: #f0b37b; font-weight: bold; }
+    .label-cell { font-family: 'Fira Code', monospace; color: #f0d87b; font-weight: bold; letter-spacing: 1px; }
+    .label-invalid { color: #f07b7b !important; }
+    .section-title { font-size: 1.4rem; font-weight: 400; margin: 0 0 16px 0; color: #d7e6ff; border-bottom: 1px solid #3f627b; padding-bottom: 8px; }
+    .export-btn { background: #3a6b4a; border-color: #8fc99c; margin-left: 10px; }
+    .mersenne-row { background: #2a4a1a !important; }
+    .candidate-row { background: #3a3a1a !important; }
+    .falsepos-row { background: #4a1a1a !important; }
+    .rejected-row { opacity: 0.4; }
+    .mersenne-badge { background: #e6b422; color: #0c121c; padding: 2px 7px; border-radius: 20px; font-weight: bold; margin-left: 3px; font-size:0.7rem; }
+    .candidate-badge { background: #d9a822; color: #0c121c; padding: 2px 7px; border-radius: 20px; font-weight: bold; margin-left: 3px; font-size:0.7rem; }
+    .fp-badge { background: #ff4444; color: white; padding: 2px 7px; border-radius: 20px; font-weight: bold; margin-left: 3px; font-size:0.7rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, auto)); gap: 8px; margin: 12px 0; }
+    .stat-card { background: #0f1922; border-radius: 12px; padding: 10px 12px; border: 1px solid #2e4a5e; text-align: center; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; }
+    .stat-label { font-size: 0.7rem; color: #8fa8c0; margin-top: 2px; }
+    .stat-green { color: #8fc99c; } .stat-yellow { color: #f0d87b; } .stat-red { color: #f07b7b; } .stat-blue { color: #7bb8f0; }
+    .hard-rule { color: #f0b37b; font-weight: 700; }
+    .single-test-panel { background: #0f1922; border-radius: 16px; padding: 16px; margin: 10px 0; border: 1px solid #3e5a70; }
+    .path-display { font-family: 'Fira Code', monospace; background: #0a1119; padding: 10px 16px; border-radius: 12px; color: #b0d0ff; margin-top: 8px; word-break: break-all; font-size: 0.85rem; }
+    .rule-box { background: #0c1721; border-radius: 14px; padding: 10px 14px; border: 1px solid #2e5a4e; font-size:0.82rem; }
+    .filter-layer-box { background: #0c1721; border-radius: 14px; padding: 10px 14px; border: 1px solid #2e5a4e; }
+    .end-digit-bar { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; align-items: center; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1> 2k+1 · Mersenne Constraint Lab · v9 </h1>
+  <h5>Author Martin Doina</h5>
+  <div class="subtitle">13 Structural Sieve for Mersenne Prime Exponents</div>
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-value stat-blue" id="statTotal">0</div><div class="stat-label">Scanned</div></div>
+    <div class="stat-card"><div class="stat-value stat-green" id="statHardPass">0</div><div class="stat-label">Hard Rules</div></div>
+    <div class="stat-card"><div class="stat-value stat-green" id="statAllPass">0</div><div class="stat-label">ALL FILTERS</div></div>
+    <div class="stat-card"><div class="stat-value stat-yellow" id="statMersenne">0</div><div class="stat-label">Mersenne</div></div>
+    <div class="stat-card"><div class="stat-value stat-yellow" id="statCandidate">0</div><div class="stat-label">Candidates</div></div>
+    <div class="stat-card"><div class="stat-value stat-red" id="statFalsePos">0</div><div class="stat-label">False+</div></div>
+  </div>
+
+  <div class="single-test-panel">
+    <div class="filter-title"> Test Single p (fixed labels)</div>
+    <div class="flex-row">
+      <div class="input-group"><label>Enter p</label><input type="text" id="singleP" placeholder="e.g. 77232917"></div>
+      <button id="testSingleBtn" class="success">Test</button>
+    </div>
+    <div id="singleResult" class="path-display" style="min-height:60px;"></div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title"> Scan k Range (p = 2k+1)</div>
+    <div class="flex-row">
+      <div class="input-group"><label>Start k</label><input type="text" id="startK" value="1"></div>
+      <div class="input-group"><label>End k</label><input type="text" id="endK" value="5000"></div>
+      <button id="generateKTableBtn">🔍 Generate</button>
+      <button id="stopKBtn" class="danger">⏹ Stop</button>
+      <button id="exportCsvBtn" class="export-btn">📥 CSV</button>
+      <button id="exportTxtBtn" class="export-btn">📥 TXT</button>
+    </div>
+
+    <div style="margin:15px 0; display:flex; gap:14px; flex-wrap:wrap;">
+      <div class="filter-layer-box"><span class="hard-rule">🔒 L1-4: Hard Rules</span></div>
+      <label><input type="checkbox" id="highlightMersenne" checked> Mers</label>
+      <label><input type="checkbox" id="highlightCandidates" checked> Cand</label>
+      <label><input type="checkbox" id="showAllRows"> Show rejected</label>
+    </div>
+
+    <div class="filter-panel">
+      <div class="filter-title"> L5: Constraint Table</div>
+      <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+        <button id="selectAllConstraints" class="small">All</button>
+        <button id="selectSelfPairs" class="small">Self</button>
+        <button id="selectCrossPairs" class="small">Cross</button>
+        <button id="clearConstraints" class="small danger">Clear</button>
+        <span style="margin-left:auto; color:#9fb7d0;" id="constraintCount"></span>
+      </div>
+      <div class="constraint-grid" id="constraintContainer"></div>
+    </div>
+
+    <div style="margin:10px 0; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <label><input type="checkbox" id="enableDualSeed" checked> L6:Dual*</label>
+      <label><input type="checkbox" id="enableLengthValue" checked> L7:Len*</label>
+      <label><input type="checkbox" id="enableLabelDecomp" checked> L8:Label*</label>
+      <label><input type="checkbox" id="enableFillerZeroOnly" checked> L9:F0*</label>
+      <label><input type="checkbox" id="enableEndLabel" checked> L10:End*</label>
+      <label><input type="checkbox" id="enableAdjacency" checked> L11:Adj*</label>
+      <label><input type="checkbox" id="enableSeed3Lead1" checked> L12:S3L1*</label>
+      <label><input type="checkbox" id="enableNestedFiller" checked> L13:FM*</label>
+    </div>
+
+    <div class="end-digit-bar">
+      <span style="color:#b0cce6; font-weight:600;"> End digit:</span>
+      <button class="small active-filter end-digit-btn" data-end="all">All</button>
+      <button class="small end-digit-btn" data-end="1">1</button>
+      <button class="small end-digit-btn" data-end="3">3</button>
+      <button class="small end-digit-btn" data-end="7">7</button>
+      <button class="small end-digit-btn" data-end="9">9</button>
+      <button class="small end-digit-btn" data-end="odd" style="background:#2e5a3a;border-color:#7ac48a;">Odd</button>
+      <span id="endDigitCount" style="margin-left:12px; color:#9fb7d0;"></span>
+    </div>
+
+    <div class="rule-box">
+      <strong> v9 Fixed:</strong> Block→Label map: a→5 b→6 c→7 d→8 e→9 f→a g→b h→c · 0=filler · 1=invalid filler (red)
+    </div>
+
+    <div class="table-container">
+      <table id="kTable">
+        <thead><tr><th>k</th><th>p</th><th>B</th><th>Label</th><th>Pattern</th><th>F0</th><th>End</th><th>Adj</th><th>S3L1</th><th>FM</th><th>P?</th><th>St</th></tr></thead>
+        <tbody id="kTableBody"><tr><td colspan="12">Enter range and click Generate</td></tr></tbody>
+      </table>
+    </div>
+    <div id="kProgress" class="info-note"></div>
+    <div style="display:flex; justify-content:space-between; margin-top:8px;">
+      <span id="kRowCount"></span>
+      <span>B2:<span class="base2">●</span> B3:<span class="base3">●</span> | <span style="background:#2a4a1a;padding:2px 6px;border-radius:14px;">M</span> <span style="background:#3a3a1a;padding:2px 6px;border-radius:14px;">C</span> <span style="background:#4a1a1a;padding:2px 6px;border-radius:14px;">F</span></span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ========== KNOWN MERSENNE DATA (with hierarchical labels) ==========
+  const knownMersenneData = new Map([
+    [3,    { label: '1',  pattern: '1',        base: 3 }],
+    [5,    { label: '2',  pattern: '1',        base: 2 }],
+    [7,    { label: '3',  pattern: '1',        base: 3 }],
+    [13,   { label: '5',  pattern: '01',       base: 3 }],
+    [17,   { label: '6',  pattern: '001',      base: 2 }],
+    [19,   { label: '7',  pattern: '011',      base: 2 }],
+    [31,   { label: '8',  pattern: '111',      base: 3 }],
+    [61,   { label: '9',  pattern: '1101',     base: 3 }],
+    [89,   { label: 'a',  pattern: '11001',    base: 2 }],
+    [107,  { label: 'b',  pattern: '01011',    base: 3 }],
+    [127,  { label: 'c',  pattern: '11111',    base: 3 }],
+    [521,  { label: '0066', pattern: '00001001', base: 2 }],
+    [607,  { label: '578', pattern: '01011111', base: 2 }],
+    [1279, { label: '788', pattern: '011111111', base: 2 }],
+    [2203, { label: '6077', pattern: '0010011011', base: 2 }],
+    [2281, { label: '696', pattern: '0011101001', base: 2 }],
+    [3217, { label: '6606', pattern: '0010010001', base: 3 }],
+    [4253, { label: '0669', pattern: '00010011101', base: 2 }],
+    [4423, { label: '650008', pattern: '00101000111', base: 2 }],
+    [9689, { label: '50876', pattern: '010111011001', base: 2 }],
+    [9941, { label: '77555', pattern: '011011010101', base: 2 }],
+    [11213,{ label: '158075', pattern: '101111001101', base: 2 }],
+    [19937,{ label: '098006', pattern: '0110111100001', base: 2 }],
+    [21701,{ label: '1507065', pattern: '1010011000101', base: 2 }],
+    [23209,{ label: '95556', pattern: '1101010101001', base: 2 }],
+    [44497,{ label: '175906', pattern: '10110111010001', base: 2 }],
+    [86243,{ label: '1500008007', pattern: '101000011100011', base: 2 }],
+    [110503,{ label: '5785008', pattern: '010111110100111', base: 3 }],
+    [132049,{ label: '00000585005', pattern: '0000001111010001', base: 2 }],
+    [216091,{ label: '507000077', pattern: '0100110000011011', base: 3 }],
+    [756839,{ label: '8007007008', pattern: '111000110001100111', base: 2 }],
+    [859433,{ label: '5000850556', pattern: '010001110100101001', base: 3 }],
+    [1257787,{ label: '707060087', pattern: '0110011000100111011', base: 2 }],
+    [1398269,{ label: '155555885', pattern: '1010101010111111101', base: 2 }],
+    [2976221,{ label: '975699', pattern: '11010110100111011101', base: 2 }],
+    [3021377,{ label: '80007560006', pattern: '11100001101001000001', base: 2 }],
+    [6972593,{ label: '550766706', pattern: '010100110010010110001', base: 3 }],
+    [13466917,{ label: '07508905055', pattern: '0011010111110100100101', base: 3 }],
+    [20996011,{ label: '10000005088557', pattern: '10000000101111110101011', base: 2 }],
+    [24036583,{ label: '1108706008008', pattern: '11011101100010011100111', base: 2 }],
+    [25964951,{ label: '0070007007608', pattern: '00011000011000110010111', base: 3 }],
+    [30402457,{ label: '10588058076', pattern: '10011111110011110011001', base: 3 }],
+    [32582657,{ label: '800505700000006', pattern: '11100010010110000000001', base: 3 }],
+    [37156667,{ label: '07758080087', pattern: '001101101111011100111011', base: 2 }],
+    [42643801,{ label: '10055570005576', pattern: '100010101011000101011001', base: 2 }],
+    [43112609,{ label: '16000870055006', pattern: '100100011101100010100001', base: 2 }],
+    [57885161,{ label: '08009000058505', pattern: '011100110100000111101001', base: 3 }],
+    [74207281,{ label: '077005500000706', pattern: '0011011000101000000110001', base: 2 }],
+    [77232917,{ label: '5009058700555', pattern: '0100110100111101100010101', base: 2 }],
+    [82589933,{ label: '0870000800080809', pattern: '0111011000011100011101101', base: 2 }],
+    [136279841,{ label: '00007808086006', pattern: '00000111110111011100100001', base: 2 }]
+  ]);
+
+  const knownMersenneP = new Set(knownMersenneData.keys());
+
+  // ========== BLOCK TO LABEL MAP ==========
+  const blockToLabel = { 'a':'5', 'b':'6', 'c':'7', 'd':'8', 'e':'9', 'f':'a', 'g':'b', 'h':'c' };
+
+  const fundamentalBlocks = ['11111','01011','11001','1101','111','011','001','01'];
+  const blockNames = { '01':'a','001':'b','011':'c','111':'d','1101':'e','11001':'f','01011':'g','11111':'h' };
+
+  const zeroFillerAdjacencyWhitelist = new Set(['gd','be','eb','ea','aa','ab']);
+
+  function decomposeBlocks(pattern) {
+    let remaining = pattern;
+    const blocks = [];
+    while (remaining.length > 0) {
+      let matched = false;
+      for (const fb of fundamentalBlocks) {
+        if (remaining.startsWith(fb)) { blocks.push(blockNames[fb]); remaining = remaining.slice(fb.length); matched = true; break; }
+      }
+      if (!matched) { blocks.push(remaining[0]); remaining = remaining.slice(1); }
+    }
+    return blocks.join('');
+  }
+
+  // FIXED: Convert old block letters to new label digits
+  function convertToLabel(blockSeq) {
+    let label = '';
+    for (const ch of blockSeq) {
+      if (ch === '0') label += '0';
+      else if (ch === '1') label += '1'; // invalid filler flag
+      else if (blockToLabel[ch]) label += blockToLabel[ch];
+      else label += ch; // fallback
+    }
+    return label;
+  }
+
+  function endsWithLabelComponent(label) { return /[1-9a-c]$/.test(label); }
+  function seed3HasLeading1(label, base) { return base === 3 && /^1/.test(label); }
+
+  function checkFillerZeroOnly(label) {
+    if (!label.includes('1')) return true;
+    // Check if any '1' is a filler (0 between components) rather than M3 component
+    for (let i = 0; i < label.length; i++) {
+      if (label[i] === '1') {
+        const prev = i > 0 ? label[i-1] : null;
+        const next = i < label.length-1 ? label[i+1] : null;
+        // If '1' is at start of seed-2 label, valid
+        if (i === 0 && !next) continue;
+        // Check against known labels for this substring
+        let foundInKnown = false;
+        for (const [p, data] of knownMersenneData) {
+          if (data.label.includes(label.substring(Math.max(0,i-2), Math.min(label.length, i+3)))) {
+            foundInKnown = true;
+            break;
+          }
+        }
+        if (!foundInKnown) return false;
+      }
+    }
+    return true;
+  }
+
+  function checkZeroFillerAdjacency(label) {
+    const components = label.replace(/0/g, '');
+    if (components.length < 2) return true;
+    if (label.includes('0')) return true;
+    for (let i = 0; i < components.length - 1; i++) {
+      const pair = components[i] + components[i+1];
+      const blockMap = { '5':'a','6':'b','7':'c','8':'d','9':'e','a':'f','b':'g','c':'h' };
+      const bp = (blockMap[pair[0]]||pair[0]) + (blockMap[pair[1]]||pair[1]);
+      if (!zeroFillerAdjacencyWhitelist.has(bp)) {
+        let foundInKnown = false;
+        for (const [p, data] of knownMersenneData) {
+          const compNoZero = data.label.replace(/0/g, '');
+          if (compNoZero.includes(pair)) { foundInKnown = true; break; }
+        }
+        if (!foundInKnown) return false;
+      }
+    }
+    return true;
+  }
+
+  function digitalRootBI(bi) { if (bi===0n) return 0; const m=bi%9n; return m===0n?9:Number(m); }
+  function modPow(b,e,m){ let r=1n; b%=m; while(e>0n){ if(e&1n) r=(r*b)%m; b=(b*b)%m; e>>=1n; } return r; }
+  function isProbablePrime(n,iters=8){ if(n<2n)return false; if(n===2n||n===3n)return true; if(n%2n===0n)return false; let d=n-1n,s=0n; while(d%2n===0n){d/=2n;s++;} const bases=[2n,3n,5n,7n,11n,13n,17n,19n,23n,29n]; WitnessLoop: for(let i=0;i<Math.min(iters,bases.length);i++){ let a=bases[i]; if(a>=n)continue; let x=modPow(a,d,n); if(x===1n||x===n-1n)continue; let j=0n; while(j<s-1n){ x=(x*x)%n; if(x===n-1n)continue WitnessLoop; j++; } return false; } return true; }
+
+  function detectBase(p) { let val=BigInt(p); while(val>3n){ if(val%2n===0n) val=val/2n; else val=(val-1n)/2n; } return Number(val); }
+
+  function getBinaryPathAndPattern(p) {
+    let val=p; const steps=[], path=[val.toString()];
+    while(val>3n){ if(val%2n===0n){ steps.unshift('0'); val=val/2n; } else { steps.unshift('1'); val=(val-1n)/2n; } path.unshift(val.toString()); }
+    path.unshift('seed '+val.toString());
+    return { pattern: steps.join(''), pathStr: path.join(' → '), seed: Number(val), length: steps.length };
+  }
+
+  function computeDualSeedTerminal(pattern, originalSeed) {
+    const otherSeed = originalSeed === 2 ? 3n : 2n;
+    let val = otherSeed;
+    for (const ch of pattern) { if (ch === '0') val = val * 2n; else val = val * 2n + 1n; }
+    return val;
+  }
+
+  function passesLengthValue(p, seed, patternLength) {
+    const minVal = BigInt(seed) * (1n << BigInt(patternLength));
+    const maxVal = minVal + ((1n << BigInt(patternLength)) - 1n);
+    return BigInt(p) >= minVal && BigInt(p) <= maxVal;
+  }
+
+  function nestedDecompose(pattern) {
+    const subPatterns = [...new Set([...knownMersenneP].filter(p=>p>3).map(p=>getBinaryPathAndPattern(BigInt(p)).pattern))];
+    subPatterns.sort((a,b)=>b.length-a.length);
+    let remaining=pattern, m=0, f=0;
+    while(remaining.length>0){
+      let matched=false;
+      for(const sub of subPatterns){ if(sub.length>=2&&remaining.startsWith(sub)){ m+=sub.length; remaining=remaining.slice(sub.length); matched=true; break; } }
+      if(!matched){ f++; remaining=remaining.slice(1); }
+    }
+    return { mersenneBits:m, fillerBits:f, passes: f<=m };
+  }
+
+  const constraintTable = [
+    {kLast:0,pLast:1,kDR:3,pDR:7,base:3},{kLast:0,pLast:1,kDR:8,pDR:8,base:2},{kLast:0,pLast:1,kDR:6,pDR:4,base:2},
+    {kLast:0,pLast:1,kDR:2,pDR:5,base:2},{kLast:0,pLast:1,kDR:5,pDR:2,base:2},{kLast:0,pLast:1,kDR:9,pDR:1,base:2},
+    {kLast:0,pLast:1,kDR:2,pDR:5,base:3},{kLast:1,pLast:3,kDR:3,pDR:7,base:2},{kLast:1,pLast:3,kDR:6,pDR:4,base:2},
+    {kLast:1,pLast:3,kDR:2,pDR:5,base:2},{kLast:1,pLast:3,kDR:9,pDR:1,base:3},{kLast:1,pLast:3,kDR:6,pDR:4,base:3},
+    {kLast:3,pLast:7,kDR:8,pDR:8,base:3},{kLast:3,pLast:7,kDR:9,pDR:1,base:3},{kLast:3,pLast:7,kDR:6,pDR:4,base:2},
+    {kLast:3,pLast:7,kDR:9,pDR:1,base:2},{kLast:3,pLast:7,kDR:2,pDR:5,base:2},{kLast:3,pLast:7,kDR:3,pDR:7,base:3},
+    {kLast:4,pLast:9,kDR:8,pDR:8,base:2},{kLast:4,pLast:9,kDR:2,pDR:5,base:2},{kLast:4,pLast:9,kDR:3,pDR:7,base:2},
+    {kLast:4,pLast:9,kDR:9,pDR:1,base:2},{kLast:4,pLast:9,kDR:5,pDR:2,base:2},{kLast:5,pLast:1,kDR:6,pDR:4,base:3},
+    {kLast:5,pLast:1,kDR:9,pDR:1,base:3},{kLast:5,pLast:1,kDR:9,pDR:1,base:2},{kLast:5,pLast:1,kDR:2,pDR:5,base:3},
+    {kLast:6,pLast:3,kDR:6,pDR:4,base:3},{kLast:6,pLast:3,kDR:2,pDR:5,base:3},{kLast:6,pLast:3,kDR:8,pDR:8,base:2},
+    {kLast:6,pLast:3,kDR:5,pDR:2,base:2},{kLast:6,pLast:3,kDR:2,pDR:5,base:2},{kLast:8,pLast:7,kDR:8,pDR:8,base:2},
+    {kLast:8,pLast:7,kDR:6,pDR:4,base:3},{kLast:8,pLast:7,kDR:5,pDR:2,base:2},{kLast:8,pLast:7,kDR:9,pDR:1,base:2},
+    {kLast:8,pLast:7,kDR:2,pDR:5,base:2},{kLast:8,pLast:7,kDR:9,pDR:1,base:3},{kLast:8,pLast:7,kDR:3,pDR:7,base:3},
+    {kLast:8,pLast:7,kDR:5,pDR:2,base:3},{kLast:9,pLast:9,kDR:9,pDR:1,base:2},{kLast:9,pLast:9,kDR:5,pDR:2,base:2}
+  ];
+  const uniqueConstraints = [...new Map(constraintTable.map(c=>[`${c.kLast}|${c.pLast}|${c.kDR}|${c.pDR}|${c.base}`,c])).values()];
+
+  function passesHardRules(k, p, kLast, drk, drp, base) {
+    if (p > 5n && (kLast === 2 || kLast === 7)) return false;
+    if (p !== 3n && (drp === 3 || drp === 6 || drp === 9)) return false;
+    if (drk === 1 || drk === 4 || drk === 7) return false;
+    if (Number(p%10n) === 9 && base === 3) return false;
+    return true;
+  }
+
+  const constraintContainer = document.getElementById('constraintContainer');
+  const constraintCount = document.getElementById('constraintCount');
+  function renderConstraintCheckboxes() {
+    constraintContainer.innerHTML = uniqueConstraints.map(c => `<label style="font-size:0.82rem;">
+      <input type="checkbox" class="constraint-item" data-klast="${c.kLast}" data-plast="${c.pLast}" data-kdr="${c.kDR}" data-pdr="${c.pDR}" data-base="${c.base}" checked>
+      k${c.kLast}→p${c.pLast} | DR${c.kDR}→${c.pDR} | <span class="${c.base===2?'base2':'base3'}">B${c.base}</span></label>`).join('');
+    updateConstraintCount();
+  }
+  function updateConstraintCount(){ constraintCount.textContent = `${document.querySelectorAll('.constraint-item:checked').length} / ${uniqueConstraints.length}`; }
+  function getSelectedConstraints(){
+    return new Set([...document.querySelectorAll('.constraint-item:checked')].map(cb=>`${cb.dataset.klast}|${cb.dataset.plast}|${cb.dataset.kdr}|${cb.dataset.pdr}|${cb.dataset.base}`));
+  }
+  renderConstraintCheckboxes();
+
+  function updateStats(total,hard,all,mCount,candCount,fp){
+    document.getElementById('statTotal').textContent=total;
+    document.getElementById('statHardPass').textContent=hard;
+    document.getElementById('statAllPass').textContent=all;
+    document.getElementById('statMersenne').textContent=mCount;
+    document.getElementById('statCandidate').textContent=candCount;
+    document.getElementById('statFalsePos').textContent=fp;
+  }
+
+  const startKInput=document.getElementById('startK'), endKInput=document.getElementById('endK');
+  const generateKBtn=document.getElementById('generateKTableBtn'), stopKBtn=document.getElementById('stopKBtn');
+  const kTableBody=document.getElementById('kTableBody'), kRowCountSpan=document.getElementById('kRowCount'), kProgress=document.getElementById('kProgress');
+  const highlightMersenneCB=document.getElementById('highlightMersenne'), highlightCandidatesCB=document.getElementById('highlightCandidates');
+  const showAllRowsCB=document.getElementById('showAllRows');
+  const enableDualSeed=document.getElementById('enableDualSeed'), enableLengthValue=document.getElementById('enableLengthValue');
+  const enableLabelDecomp=document.getElementById('enableLabelDecomp'), enableFillerZeroOnly=document.getElementById('enableFillerZeroOnly');
+  const enableEndLabel=document.getElementById('enableEndLabel'), enableAdjacency=document.getElementById('enableAdjacency');
+  const enableSeed3Lead1=document.getElementById('enableSeed3Lead1'), enableNestedFiller=document.getElementById('enableNestedFiller');
+
+  let kAbortController=null, masterRows=[], filteredRows=[], currentEndFilter='all';
+
+  function applyAll(){
+    const selectedConstraints=getSelectedConstraints();
+    const dualOn=enableDualSeed.checked, lenOn=enableLengthValue.checked;
+    const labelOn=enableLabelDecomp.checked, f0On=enableFillerZeroOnly.checked;
+    const endOn=enableEndLabel.checked, adjOn=enableAdjacency.checked;
+    const s3l1On=enableSeed3Lead1.checked, nestedOn=enableNestedFiller.checked;
+
+    filteredRows=masterRows.filter(r=>{
+      if(!selectedConstraints.has(`${r.kLast}|${r.pLast}|${r.drk}|${r.drp}|${r.base}`)) return false;
+      if (r.isMersenne) return true;
+      if(dualOn && !r.dualSeedPass) return false;
+      if(lenOn && !r.lengthValuePass) return false;
+      if(labelOn && !r.labelDecompPass) return false;
+      if(f0On && !r.fillerZeroOnlyPass) return false;
+      if(endOn && !r.endLabelPass) return false;
+      if(adjOn && !r.adjacencyPass) return false;
+      if(s3l1On && !r.seed3Lead1Pass) return false;
+      if(nestedOn && !r.nestedPass) return false;
+      return true;
+    });
+    applyEndFilter();
+  }
+
+  function applyEndFilter(){
+    let displayRows = showAllRowsCB.checked ? masterRows : filteredRows;
+    if (currentEndFilter === 'odd') {
+      displayRows = displayRows.filter(r => [1,3,5,7,9].includes(r.pLast));
+    } else if (currentEndFilter !== 'all') {
+      displayRows = displayRows.filter(r => r.pLast === parseInt(currentEndFilter));
+    }
+    const total=masterRows.length;
+    const allPass=filteredRows.length;
+    const mCount=filteredRows.filter(r=>r.isMersenne).length;
+    const candCount=filteredRows.filter(r=>!r.isMersenne && r.prime).length;
+    const fpCount=filteredRows.filter(r=>!r.prime).length;
+    updateStats(total,masterRows.length,allPass,mCount,candCount,fpCount);
+    renderKTable(displayRows);
+    kRowCountSpan.textContent=`Showing ${displayRows.length} (${filteredRows.length} pass all, ${masterRows.length} scanned)`;
+    document.getElementById('endDigitCount').textContent = currentEndFilter==='all'? '' : `${displayRows.length} with end=${currentEndFilter}`;
+  }
+
+  function renderKTable(rows){
+    if(!rows.length){ kTableBody.innerHTML='<tr><td colspan="12">No rows</td></tr>'; return; }
+    kTableBody.innerHTML=rows.map(r=>{
+      let rowClass='', statusBadge='';
+      const inFiltered = filteredRows.includes(r);
+      if(!inFiltered) rowClass='rejected-row';
+      const hasInvalidFiller = r.label && r.label.includes('1') && !r.isMersenne;
+      const labelClass = hasInvalidFiller ? 'label-invalid' : '';
+      if(r.isMersenne && highlightMersenneCB.checked){ rowClass='mersenne-row'; statusBadge='<span class="mersenne-badge">M</span>'; }
+      else if(r.prime && highlightCandidatesCB.checked && !r.isMersenne && inFiltered){ rowClass='candidate-row'; statusBadge='<span class="candidate-badge">C</span>'; }
+      else if(!r.prime && inFiltered){ rowClass='falsepos-row'; statusBadge='<span class="fp-badge">F</span>'; }
+      return `<tr class="${rowClass}">
+        <td>${r.k}</td><td>${r.p}</td>
+        <td class="${r.base===2?'base2':'base3'}">${r.base}</td>
+        <td class="label-cell ${labelClass}">${r.label || '—'}</td>
+        <td style="font-family:monospace;font-size:0.6rem;">${r.pattern}</td>
+        <td>${r.f0Mark}</td><td>${r.endMark}</td><td>${r.adjMark}</td>
+        <td>${r.s3l1Mark}</td><td>${r.fmRatio} ${r.fmPass}</td>
+        <td>${r.prime?'<span class="prime-badge">P</span>':'<span class="comp-badge">C</span>'}</td>
+        <td>${statusBadge}</td></tr>`;
+    }).join('');
+  }
+
+  async function generateKRange(){
+    if(kAbortController) kAbortController.abort();
+    kAbortController=new AbortController(); const signal=kAbortController.signal;
+    let s=BigInt(startKInput.value), e=BigInt(endKInput.value); if(s>e) [s,e]=[e,s];
+    kTableBody.innerHTML='<tr><td colspan="12">Scanning...</td></tr>';
+    masterRows=[]; let cnt=0;
+
+    for(let k=s; k<=e && !signal.aborted; k++){
+      cnt++; if(cnt%2000===0){ kProgress.textContent=`Scanned ${cnt}...`; await new Promise(r=>setTimeout(r,0)); }
+      const kLast=Number(k%10n), p=2n*k+1n, drk=digitalRootBI(k), drp=digitalRootBI(p);
+      const base=detectBase(p);
+      if(!passesHardRules(k,p,kLast,drk,drp,base)) continue;
+
+      const prime=isProbablePrime(p,6);
+      const isMersenne=knownMersenneP.has(Number(p));
+      const pathInfo=getBinaryPathAndPattern(p);
+      const pattern=pathInfo.pattern, seed=pathInfo.seed, length=pathInfo.length;
+
+      let dualSeedPass=true, lengthValuePass=true, labelDecompPass=true;
+      let fillerZeroOnlyPass=true, endLabelPass=true, adjacencyPass=true;
+      let seed3Lead1Pass=true, nestedPass=true;
+      let label='';
+
+      if (isMersenne) {
+        const data = knownMersenneData.get(Number(p));
+        label = data ? data.label : convertToLabel(decomposeBlocks(pattern));
+      } else {
+        const otherTerm=computeDualSeedTerminal(pattern,seed);
+        dualSeedPass=!isProbablePrime(otherTerm,6);
+        lengthValuePass=passesLengthValue(p,seed,length);
+        // FIXED: Convert block letters to label digits
+        const blockSeq = decomposeBlocks(pattern);
+        label = convertToLabel(blockSeq);
+        labelDecompPass = label.length > 0;
+        fillerZeroOnlyPass = checkFillerZeroOnly(label);
+        endLabelPass = endsWithLabelComponent(label);
+        adjacencyPass = checkZeroFillerAdjacency(label);
+        seed3Lead1Pass = !seed3HasLeading1(label, base);
+      }
+      const nestedInfo=nestedDecompose(pattern);
+      nestedPass=nestedInfo.passes;
+
+      masterRows.push({
+        k:k.toString(),kLast,drk,p:p.toString(),pLast:Number(p%10n),drp,base,prime,isMersenne,
+        pattern,label,pathStr:pathInfo.pathStr,seed,length,
+        dualSeedPass,lengthValuePass,labelDecompPass,fillerZeroOnlyPass,endLabelPass,adjacencyPass,seed3Lead1Pass,nestedPass,
+        f0Mark: fillerZeroOnlyPass?'✅':(label.includes('1')?'❌':'—'),
+        endMark: endLabelPass?'✅':'❌',
+        adjMark: adjacencyPass?'✅':'❌',
+        s3l1Mark: seed3Lead1Pass?'✅':'❌',
+        fmRatio: `${nestedInfo.fillerBits}/${nestedInfo.mersenneBits}`,
+        fmPass: nestedPass?'✅':'❌'
+      });
+    }
+    if(!signal.aborted){ kProgress.textContent=`Done. ${masterRows.length} rows.`; applyAll(); }
+    kAbortController=null;
+  }
+
+  generateKBtn.addEventListener('click',(e)=>{ e.preventDefault(); generateKRange(); });
+  stopKBtn.addEventListener('click',()=>{ if(kAbortController){ kAbortController.abort(); kProgress.textContent='Stopped.'; kAbortController=null; } });
+
+  document.getElementById('testSingleBtn').addEventListener('click',()=>{
+    const pStr=document.getElementById('singleP').value.trim();
+    const div=document.getElementById('singleResult');
+    if(!/^\d+$/.test(pStr)){ div.innerHTML='<span style="color:#f07b7b;">Enter a valid integer</span>'; return; }
+    const p=BigInt(pStr); if(p<2n){ div.innerHTML='<span style="color:#f07b7b;">p≥2</span>'; return; }
+    const k=(p-1n)/2n, kLast=Number(k%10n), pLast=Number(p%10n), drk=digitalRootBI(k), drp=digitalRootBI(p), base=detectBase(p);
+    const prime=isProbablePrime(p,10), isMersenne=knownMersenneP.has(Number(p));
+    const pathInfo=getBinaryPathAndPattern(p);
+    const hardPass=passesHardRules(k,p,kLast,drk,drp,base);
+    const conMatch=uniqueConstraints.some(c=>c.kLast===kLast&&c.pLast===pLast&&c.kDR===drk&&c.pDR===drp&&c.base===base);
+    let dualPass=true, lenPass=true, f0Pass=true, endPass=true, adjPass=true, s3l1Pass=true, nestedPass=true, label='';
+    const knownData = knownMersenneData.get(Number(p));
+    if(isMersenne && knownData){ label = knownData.label; }
+    else {
+      const ot=computeDualSeedTerminal(pathInfo.pattern,pathInfo.seed); dualPass=!isProbablePrime(ot,6);
+      lenPass=passesLengthValue(p,pathInfo.seed,pathInfo.length);
+      label=convertToLabel(decomposeBlocks(pathInfo.pattern));
+      f0Pass=checkFillerZeroOnly(label);
+      endPass=endsWithLabelComponent(label);
+      adjPass=checkZeroFillerAdjacency(label);
+      s3l1Pass=!seed3HasLeading1(label, base);
+    }
+    const nestedInfo=nestedDecompose(pathInfo.pattern); nestedPass=nestedInfo.passes;
+    const hasInvalid = label.includes('1') && !isMersenne;
+
+    let html=`<strong>p=${pStr}</strong> | k=${k} | B${base} | ${prime?'PRIME':'COMP'}<br>`;
+    html+=`Label: <span class="label-cell ${hasInvalid?'label-invalid':''}">${label}</span> | Pattern: ${pathInfo.pattern}<br>`;
+    html+=`L1-4:${hardPass?'✅':'❌'} L5:${conMatch?'✅':'❌'} L6:${dualPass?'✅':'❌'} L7:${lenPass?'✅':'❌'} L8:${label.length>0?'✅':'❌'} L9:${f0Pass?'✅':'❌'} L10:${endPass?'✅':'❌'} L11:${adjPass?'✅':'❌'} L12:${s3l1Pass?'✅':'❌'} L13:${nestedPass?'✅':'❌'}<br>`;
+    if(isMersenne) html+=`<span style="color:#e6b422;font-size:1.2rem;">⭐ KNOWN MERSENNE</span>`;
+    else if(hardPass&&conMatch&&dualPass&&lenPass&&f0Pass&&endPass&&adjPass&&s3l1Pass&&nestedPass&&prime) html+=`<span style="color:#f0d87b;font-size:1.2rem;">🔶 PRIME CANDIDATE</span>`;
+    else if(!prime) html+=`<span style="color:#f07b7b;">Composite</span>`;
+    else html+=`<span style="color:#8fa8c0;">Filtered out</span>`;
+    div.innerHTML=html;
+  });
+
+  function exportData(ext){
+    if(!filteredRows.length) return alert('No data');
+    const hdr="k,p,base,label,pattern,primality,is_mersenne\n";
+    const body=filteredRows.map(r=>`${r.k},${r.p},${r.base},${r.label||''},${r.pattern},${r.prime?'PRIME':'COMPOSITE'},${r.isMersenne?'YES':'NO'}`).join('\n');
+    const blob=new Blob([hdr+body],{type:ext==='csv'?'text/csv':'text/plain'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`mersenne_v9.${ext}`; a.click();
+  }
+  document.getElementById('exportCsvBtn').addEventListener('click',()=>exportData('csv'));
+  document.getElementById('exportTxtBtn').addEventListener('click',()=>exportData('txt'));
+
+  document.getElementById('selectAllConstraints').addEventListener('click',()=>{ document.querySelectorAll('.constraint-item').forEach(cb=>cb.checked=true); updateConstraintCount(); if(masterRows.length) applyAll(); });
+  document.getElementById('clearConstraints').addEventListener('click',()=>{ document.querySelectorAll('.constraint-item').forEach(cb=>cb.checked=false); updateConstraintCount(); if(masterRows.length) applyAll(); });
+  document.getElementById('selectSelfPairs').addEventListener('click',()=>{ document.querySelectorAll('.constraint-item').forEach(cb=>{ const kdr=+cb.dataset.kdr,pdr=+cb.dataset.pdr; cb.checked=(kdr===2&&pdr===5)||(kdr===5&&pdr===2)||(kdr===8&&pdr===8); }); updateConstraintCount(); if(masterRows.length) applyAll(); });
+  document.getElementById('selectCrossPairs').addEventListener('click',()=>{ document.querySelectorAll('.constraint-item').forEach(cb=>{ const kdr=+cb.dataset.kdr,pdr=+cb.dataset.pdr; cb.checked=(kdr===3&&pdr===7)||(kdr===6&&pdr===4)||(kdr===9&&pdr===1); }); updateConstraintCount(); if(masterRows.length) applyAll(); });
+
+  document.querySelectorAll('.end-digit-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.end-digit-btn').forEach(b => b.classList.remove('active-filter'));
+      this.classList.add('active-filter');
+      currentEndFilter = this.dataset.end;
+      if(masterRows.length) applyEndFilter();
+    });
+  });
+
+  [highlightMersenneCB,highlightCandidatesCB,showAllRowsCB,enableDualSeed,enableLengthValue,enableLabelDecomp,enableFillerZeroOnly,enableEndLabel,enableAdjacency,enableSeed3Lead1,enableNestedFiller].forEach(el=>el.addEventListener('change',()=>{ if(masterRows.length) applyAll(); }));
+  constraintContainer.addEventListener('change',(e)=>{ if(e.target.classList.contains('constraint-item')){ updateConstraintCount(); if(masterRows.length) applyAll(); } });
+
+  generateKRange();
+})();
+</script>
+</body>
+</html>
